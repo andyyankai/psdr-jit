@@ -1,6 +1,7 @@
 #pragma once
 
 #include <psdr/psdr.h>
+#include <misc/Exception.h>
 
 namespace psdr
 {
@@ -10,11 +11,11 @@ struct Ray {
     inline Ray() = default;
 
     inline Ray(const Vector3f<ad> &o, const Vector3f<ad> &d, const Float<ad> &tmax) : o(o), d(d), tmax(tmax) {
-        assert(o.size() == d.size() && d.size() == tmax.size());
+        PSDR_ASSERT(o.size() == d.size() && d.size() == tmax.size());
     }
 
     inline Ray(const Vector3f<ad> &o, const Vector3f<ad> &d) : o(o), d(d) {
-        assert(o.size() == d.size());
+        PSDR_ASSERT(o.size() == d.size());
         tmax = full<Float<ad>>(Infinity, o.size());
     }
 

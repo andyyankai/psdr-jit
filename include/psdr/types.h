@@ -32,6 +32,9 @@ using FloatD    = Float<true>;
 using IntC      = Int<false>;
 using IntD      = Int<true>;
 
+using ScalarFloat    = scalar_t<float>;
+using ScalarVector2f = Array<ScalarFloat, 2>;
+using ScalarVector2u = Array<uint32_t, 2>;
 // Vector arrays (GPU)
 
 template <int n, bool ad>
