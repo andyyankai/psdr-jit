@@ -34,7 +34,7 @@ void Sampler::seed(UInt64C seed_value) {
 
     UInt64C idx = arange<UInt64C>(seed_value.size());
 
-    // m_rng->seed(1);
+    m_rng->seed(seed_value.size(), sample_tea_64(seed_value, idx), sample_tea_64(idx, seed_value));
 
     m_sample_count = static_cast<int64_t>(seed_value.size());
 }
