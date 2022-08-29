@@ -1,0 +1,12 @@
+*.o
+*.so
+*.log
+*.exe
+__pycache__
+build/
+ext/
+ext_win64/
+local/
+examples/
+dist/
+**/*.log
