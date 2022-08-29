@@ -82,6 +82,11 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("next_1d", &Sampler::next_1d<false>)
         .def("next_2d", &Sampler::next_2d<false>);
 
-
+    py::class_<DiscreteDistribution>(m, "DiscreteDistribution")
+        .def(py::init<>())
+        .def("init", &DiscreteDistribution::init)
+        .def("sample", &DiscreteDistribution::sample)
+        .def_readonly("sum", &DiscreteDistribution::m_sum)
+        .def("pmf", &DiscreteDistribution::pmf);
 
 }
