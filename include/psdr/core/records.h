@@ -27,8 +27,6 @@ struct SampleRecord_ {
     DRJIT_STRUCT(SampleRecord_, pdf, is_valid)
 };
 
-
-
 template <typename Float_>
 struct SampleRecordDual_ {
     static constexpr bool ad = std::is_same_v<Float_, FloatD>;

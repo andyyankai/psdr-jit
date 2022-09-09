@@ -249,4 +249,20 @@ struct AQ_Option {
     int guiding_option;
 };
 
+template <typename Float_>
+struct BSDFSample_ {
+    static constexpr bool ad = std::is_same_v<Float_, FloatD>;
+
+    Float<ad>       pdf;
+    Mask<ad>        is_valid;
+    
+    Vector3f<ad> wo;
+    Float<ad> eta;
+
+    DRJIT_STRUCT(BSDFSample_, pdf, is_valid, wo, eta)
+
+};
+
+
+
 } // namespace psdr

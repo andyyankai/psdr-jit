@@ -142,6 +142,9 @@ set(PSDR_SOURCE_FILES
     ${PSDR_INCLUDE_DIR}/core/pmf.h
     ${PSDR_SOURCE_DIR}/core/pmf.cpp
 
+    ${PSDR_INCLUDE_DIR}/bsdf/bsdf.h
+    ${PSDR_INCLUDE_DIR}/bsdf/diffuse.h
+    ${PSDR_SOURCE_DIR}/bsdf/diffuse.cpp
 
 
     ${PSDR_INCLUDE_DIR}/core/tinyexr.h

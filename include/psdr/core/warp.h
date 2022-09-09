@@ -2,6 +2,9 @@
 
 #include <psdr/psdr.h>
 #include "frame.h"
+#include <drjit/math.h>
+#include <drjit/util.h>
+#include <drjit/array_constants.h>
 
 namespace psdr
 {
@@ -32,8 +35,8 @@ inline Vector2f<ad> square_to_uniform_disk_concentric(const Vector2f<ad> &sample
         }
     */
 
-    Mask<ad> is_zero         = eq(x, zero<Float<ad>>()) &&
-                               eq(y, zero<Float<ad>>()),
+    Mask<ad> is_zero         = eq(x, 0.f) &&
+                               eq(y, 0.f),
              quadrant_1_or_3 = abs(x) < abs(y);
 
     Float<ad> r  = select(quadrant_1_or_3, y, x),
@@ -41,7 +44,7 @@ inline Vector2f<ad> square_to_uniform_disk_concentric(const Vector2f<ad> &sample
 
     Float<ad> phi = .25f * Pi * rp / r;
     masked(phi, quadrant_1_or_3) = .5f * Pi - phi;
-    masked(phi, is_zero) = zero<Float<ad>>();
+    masked(phi, is_zero) = 0.f;
 
     auto [s, c] = sincos(phi);
     return { r * c, r * s };
