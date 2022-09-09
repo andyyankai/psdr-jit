@@ -8,7 +8,9 @@ void DiscreteDistribution::init(const FloatC &pmf) {
     m_size = static_cast<int>((pmf.size()));
     m_sum = sum(pmf);
     m_pmf = pmf;
-    m_cmf = compute_cdf(m_pmf);
+    FloatC temp = drjit::migrate(m_pmf, AllocType::Host);
+    drjit::sync_thread();
+    m_cmf = compute_cdf(temp);
     m_pmf_normalized = pmf/m_sum;
     m_cmf_normalized = m_cmf/m_sum;
 }

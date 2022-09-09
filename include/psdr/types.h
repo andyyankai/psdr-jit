@@ -18,10 +18,13 @@ using Type      = typename std::conditional<ad,
                                             DiffArray<CUDAArray<T>>,
                                             CUDAArray<T>>::type;
 
+
 // Scalar arrays (GPU)
 
 template <bool ad>
 using Float     = Type<float, ad>;
+
+
 
 template <bool ad>
 using Int       = Type<int32_t, ad>;
