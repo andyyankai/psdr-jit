@@ -51,6 +51,9 @@ if __name__ == "__main__":
 	test_ray()
 	test_DiscreteDistribution()
 
+
+	print(psdr.IntersectionD)
+
 # print("testing drjit autodiff")
 # psdr.drjit_test()
 

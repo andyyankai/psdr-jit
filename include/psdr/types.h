@@ -3,6 +3,7 @@
 #include <drjit/jit.h>
 #include <drjit/autodiff.h>
 #include <drjit/struct.h>
+#include <drjit/vcall.h>
 
 using namespace drjit;
 
