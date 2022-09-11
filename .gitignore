@@ -10,3 +10,4 @@ local/
 examples/
 dist/
 **/*.log
+unit_test/*.exr
