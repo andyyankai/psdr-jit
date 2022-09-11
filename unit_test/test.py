@@ -21,7 +21,7 @@ def test_scene():
 
 	sc.configure()
 
-	integrator = psdr.FieldExtractionIntegrator("depth")
+	integrator = psdr.FieldExtractionIntegrator("segmentation 1")
 
 	img = integrator.renderC(sc, 0)
 	print(img)
@@ -29,7 +29,12 @@ def test_scene():
 	# print(img)
 	# print()
 	output = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-	cv2.imwrite("debug.exr", output)
+
+
+	if test_psdrjit:
+		cv2.imwrite("psdr_jit_debug.exr", output)
+	else:
+		cv2.imwrite("psdr_cuda_debug.exr", output)
 
 
 	print("FIN test scene")

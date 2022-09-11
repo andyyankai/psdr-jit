@@ -65,7 +65,17 @@ public:
         return IntC(m_mesh_id+1);
     };
 
+    
+    // inline const BSDF *bsdf_fun() const {
+    //     return m_bsdf.get();
+    // }
+
+    const BSDF* bsdf() {
+        return m_bsdf;
+    }
+
     void dump(const char *fname) const;
+
 
     std::string to_string() const override;
 
@@ -88,6 +98,8 @@ public:
 
     const BSDF*         m_bsdf = nullptr;
     const Emitter*      m_emitter = nullptr;
+
+    // ref<BSDF> mm_bsdr;
 
     int                 m_num_vertices = 0,
                         m_num_faces = 0;
@@ -135,8 +147,11 @@ PSDR_CLASS_DECL_END(Mesh)
 } // namespace psdr
 
 DRJIT_VCALL_BEGIN(psdr::Mesh)
-    // DRJIT_VCALL_GETTER(bsdf, m_bsdf)
+    // DRJIT_VCALL_GETTER(m_bsdf, const Emitter *)
     // DRJIT_VCALL_GETTER(m_emitter, const typename Class::Emitter *)
+
+    // DRJIT_VCALL_GETTER(flags, uint32_t)
+    DRJIT_VCALL_METHOD(bsdf)
     DRJIT_VCALL_METHOD(get_obj_mask)
     DRJIT_VCALL_METHOD(get_obj_id)
     DRJIT_VCALL_METHOD(sample_position)

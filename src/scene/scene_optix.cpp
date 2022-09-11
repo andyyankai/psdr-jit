@@ -94,15 +94,9 @@ bool Scene_OptiX::is_ready() const {
 
 template <bool ad>
 Vector2i<ad> Scene_OptiX::ray_intersect(const Ray<ad> &ray, Mask<ad> &active) const {
-
-    std::cout << "OPTIX Ray Intersection_OptiX" << std::endl;
-
-    std::cout << m_its.triangle_id << std::endl;
-
     const int m = static_cast<int>(slices(ray.o));
     m_its.reserve(m);
 
-    drjit::eval();
 
     m_accel->params.ray_o_x         = ray.o.x().data();
     m_accel->params.ray_o_y         = ray.o.y().data();
@@ -138,10 +132,7 @@ Vector2i<ad> Scene_OptiX::ray_intersect(const Ray<ad> &ray, Mask<ad> &active) co
             1               // launch depth
         )
     );
-    drjit::eval();
     CUDA_SYNC_CHECK();
-
-    std::cout << m_its.triangle_id << std::endl;
 
     active &= (m_its.shape_id >= 0) && (m_its.triangle_id >= 0);
     return Vector2i<ad>(m_its.shape_id, m_its.triangle_id);

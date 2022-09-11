@@ -49,16 +49,50 @@ Spectrum<ad> FieldExtractionIntegrator::__Li(const Scene &scene, const Ray<ad> &
     Intersection<ad> its = scene.ray_intersect<ad>(ray);
     Vector3f<ad> result;
 
-    result = full<Spectrum<ad>>(1.f);
+
+    BSDFArray<ad> bsdf_array = its.shape->bsdf();
+    if ( scene.m_emitter_env != nullptr ) {
+        // Skip reflectance computations for intersections on the bounding mesh
+        active &= neq(bsdf_array, nullptr);
+    }
+    Mask<ad> valid_obj(1);
+    if (m_object != "") {
+        if constexpr ( !ad ) { 
+            valid_obj = its.shape->get_obj_mask(m_object);
+        } else {
+            valid_obj = detach(its.shape)->get_obj_mask(m_object);
+        }
+    }
 
 
-    result = its.t;
+    if ( m_field == "segmentation" ) {
+        if constexpr ( !ad ) { 
+            IntC rresult = (its.shape)->get_obj_id();
+            result = Vector3f<ad>(rresult,rresult,rresult);
+            // result = rresult;
+        } else {
+            IntC rresult = detach(its.shape)->get_obj_id();
+            result = Vector3f<ad>(rresult,rresult,rresult);
+            // result = rresult;
+        }
+    } else if ( m_field == "silhouette" ) {
+        result = full<Spectrum<ad>>(1.f);
+    } else if ( m_field == "position" ) {
+        result = its.p;
+    } else if ( m_field == "depth" ) {
+        result = its.t;
+    } else if ( m_field == "geoNormal" ) {
+        result = its.n;
+    } else if ( m_field == "shNormal" ) {
+        result = its.sh_frame.n;
+    } else if ( m_field == "uv" ) {
+        result = Vector3f<ad>(its.uv[0], its.uv[1], 0.f);
+    } else {
+        PSDR_ASSERT(0);
+    }
 
-    // result = ray.d;
+    return result & (active && (its.is_valid()) && valid_obj);
 
-    // return result & (active && (its.is_valid()));
-
-    return result;
 }
 
 

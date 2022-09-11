@@ -11,9 +11,6 @@ struct Ray {
     inline Ray() = default;
 
     inline Ray(const Vector3f<ad> &o, const Vector3f<ad> &d, const Float<ad> &tmax) : o(o), d(d), tmax(tmax) {
-        PSDR_ASSERT(o.size() == d.size() && d.size() == tmax.size());
-        PSDR_ASSERT(slices<Vector3f<ad>>(o) == slices<Vector3f<ad>>(d));
-
     }
 
     inline Ray(const Vector3f<ad> &o, const Vector3f<ad> &d) : o(o), d(d) {
