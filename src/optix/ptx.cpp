@@ -8,6 +8,7 @@
 #endif
 #include <misc/Exception.h>
 #include <psdr/optix/ptx.h>
+#include <iostream>
 
 namespace psdr
 {
@@ -55,6 +56,8 @@ static std::string samplePTXFilePath( const char* sampleName, const char* fileNa
             path += "_generated_";
             path += fileName;
             path += ".ptx";
+
+            std::cout << "LOAD PTX: " << path.c_str() << std::endl;
             if( fileExists( path ) )
                 return path;
         }

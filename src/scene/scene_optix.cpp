@@ -1,8 +1,12 @@
 #include <misc/Exception.h>
 #include <psdr/core/ray.h>
+// #include <drjit-core/optix.h>
+
 #include <psdr/scene/optix.h>
 #include <psdr/scene/scene_optix.h>
 #include <psdr/shape/mesh.h>
+
+
 
 namespace psdr
 {
@@ -32,14 +36,19 @@ Scene_OptiX::~Scene_OptiX() {
 
 
 void Scene_OptiX::configure(const std::vector<Mesh *> &meshes) {
+    drjit::sync_thread(); drjit::eval();
     PSDR_ASSERT(!meshes.empty());
     size_t num_meshes = meshes.size();
-
+    std::cout << "num_meshes" << num_meshes << std::endl;
+    
     if ( m_accel == nullptr ) {
         std::vector<int> face_offset(num_meshes + 1);
         face_offset[0] = 0;
-        for ( size_t i = 0; i < num_meshes; ++i )
+        for ( size_t i = 0; i < num_meshes; ++i ) {
             face_offset[i + 1] = face_offset[i] + meshes[i]->m_num_faces;
+            std::cout << face_offset[i + 1] << std::endl;
+        }
+        
         m_accel = new PathTracerState();
         optix_config(*m_accel, face_offset);
     }
@@ -68,7 +77,13 @@ void Scene_OptiX::configure(const std::vector<Mesh *> &meshes) {
         build_inputs[i].triangleArray.flags                 = triangle_input_flags;
         build_inputs[i].triangleArray.numSbtRecords         = 1;
     }
+    drjit::sync_thread(); drjit::eval();
+
     build_accel(*m_accel, build_inputs);
+
+    std::cout << "finish optix config" << std::endl;
+    // PSDR_ASSERT(0);
+    drjit::sync_thread(); drjit::eval();
 }
 
 
@@ -79,10 +94,15 @@ bool Scene_OptiX::is_ready() const {
 
 template <bool ad>
 Vector2i<ad> Scene_OptiX::ray_intersect(const Ray<ad> &ray, Mask<ad> &active) const {
+
+    std::cout << "OPTIX Ray Intersection_OptiX" << std::endl;
+
+    std::cout << m_its.triangle_id << std::endl;
+
     const int m = static_cast<int>(slices(ray.o));
     m_its.reserve(m);
 
-    // cuda_eval();
+    drjit::eval();
 
     m_accel->params.ray_o_x         = ray.o.x().data();
     m_accel->params.ray_o_y         = ray.o.y().data();
@@ -118,8 +138,10 @@ Vector2i<ad> Scene_OptiX::ray_intersect(const Ray<ad> &ray, Mask<ad> &active) co
             1               // launch depth
         )
     );
-
+    drjit::eval();
     CUDA_SYNC_CHECK();
+
+    std::cout << m_its.triangle_id << std::endl;
 
     active &= (m_its.shape_id >= 0) && (m_its.triangle_id >= 0);
     return Vector2i<ad>(m_its.shape_id, m_its.triangle_id);

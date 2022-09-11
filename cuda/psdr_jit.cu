@@ -9,6 +9,7 @@ __constant__ Params params;
 extern "C" __global__ void __raygen__psdr_rg()
 {
     const int tid = optixGetLaunchIndex().x;
+
     optixTrace(
         params.handle,
         make_float3(params.ray_o_x[tid], params.ray_o_y[tid], params.ray_o_z[tid]),

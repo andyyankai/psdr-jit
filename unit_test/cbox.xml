@@ -11,15 +11,15 @@
 		<transform name="toWorld">
 			<lookAt origin="278, 273, -800" target="278, 273, -799" up="0, 1, 0"/>
 		</transform>
-		<float name="fov" value="39.3077"/>
+		<float name="fov" value="30"/>
 
 		<sampler type="ldsampler">
-			<integer name="sampleCount" value="128"/>
+			<integer name="sampleCount" value="1"/>
 		</sampler>
 
 		<film type="hdrfilm">
-			<integer name="width" value="256"/>
-			<integer name="height" value="256"/>
+			<integer name="width" value="64"/>
+			<integer name="height" value="64"/>
 		</film>
 	</sensor>
 

@@ -54,6 +54,13 @@ template <int n, bool ad>
 using Matrixf   = Matrix<Float<ad>, n>;
 
 template <bool ad>
+using Vector1f  = Vectorf<1, ad>;
+
+template <bool ad>
+using Vector1i  = Vectori<1, ad>;
+
+
+template <bool ad>
 using Vector2f  = Vectorf<2, ad>;
 
 template <bool ad>
@@ -70,6 +77,9 @@ using Vector4f  = Vectorf<4, ad>;
 
 template <bool ad>
 using Vector4i  = Vectori<4, ad>;
+
+using Vector1fC = Vector1f<false>;
+using Vector1fD = Vector1f<true>;
 
 using Vector2fC = Vector2f<false>;
 using Vector2fD = Vector2f<true>;

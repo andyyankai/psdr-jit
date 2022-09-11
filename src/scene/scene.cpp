@@ -272,8 +272,8 @@ template <bool ad, bool path_space>
 Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active) const {
     static_assert(ad || !path_space);
     Intersection<ad> its;
-
-
+    Vector2i<ad> idx = m_optix->ray_intersect<ad>(ray, active);
+    its.t = idx[0];
     return its;
 }
 

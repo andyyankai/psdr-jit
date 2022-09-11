@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cuda_runtime.h>
+
 #include <optix.h>
 #include <optix_function_table_definition.h>
 #include <optix_stubs.h>
@@ -64,8 +65,8 @@ void optix_release( PathTracerState& state )
     CUDA_CHECK( cudaFree( reinterpret_cast<void*>( state.sbt.raygenRecord ) ) );
     CUDA_CHECK( cudaFree( reinterpret_cast<void*>( state.sbt.missRecordBase ) ) );
     CUDA_CHECK( cudaFree( reinterpret_cast<void*>( state.sbt.hitgroupRecordBase ) ) );
-    CUDA_CHECK( cudaFree( reinterpret_cast<void*>( state.d_gas_output_buffer ) ) );
-    // cuda_free(reinterpret_cast<void*>(state.d_gas_output_buffer));
+    // CUDA_CHECK( cudaFree( reinterpret_cast<void*>( state.d_gas_output_buffer ) ) );
+    jit_free(reinterpret_cast<void*>(state.d_gas_output_buffer));
     CUDA_CHECK( cudaFree( reinterpret_cast<void*>( state.d_params ) ) );
 }
 
@@ -291,10 +292,8 @@ void build_accel(PathTracerState& state, const std::vector<OptixBuildInput>& tri
                 &buffer_sizes
                 ) );
 
-    void* d_temp_buffer;
-    cudaMalloc(&d_temp_buffer, buffer_sizes.tempSizeInBytes);
-    void* output_buffer;
-    cudaMalloc(&output_buffer, buffer_sizes.outputSizeInBytes + 8);
+    void* d_temp_buffer = jit_malloc(AllocType::Device, buffer_sizes.tempSizeInBytes);
+    void* output_buffer = jit_malloc(AllocType::Device, buffer_sizes.outputSizeInBytes + 8);
 
     OptixAccelEmitDesc emit_property = {};
     emit_property.type   = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
@@ -315,14 +314,13 @@ void build_accel(PathTracerState& state, const std::vector<OptixBuildInput>& tri
                 1
                 ) );
 
-    cudaFree(d_temp_buffer);
+    jit_free(d_temp_buffer);
 
     size_t compact_size;
     CUDA_CHECK( cudaMemcpy( &compact_size, reinterpret_cast<void*>(emit_property.result), sizeof(size_t), cudaMemcpyDeviceToHost ) );
 
         if (compact_size < buffer_sizes.outputSizeInBytes) {
-            void* compact_buffer;
-            cudaMalloc(&compact_buffer, compact_size);
+            void* compact_buffer = jit_malloc(AllocType::Device, compact_size);
             OPTIX_CHECK(optixAccelCompact(
                 state.context,
                 0, // CUDA stream
@@ -331,7 +329,7 @@ void build_accel(PathTracerState& state, const std::vector<OptixBuildInput>& tri
                 compact_size,
                 &state.gas_handle
             ));
-            cudaFree(output_buffer);
+            jit_free(output_buffer);
             output_buffer = compact_buffer;
         }
 
@@ -339,6 +337,6 @@ void build_accel(PathTracerState& state, const std::vector<OptixBuildInput>& tri
     state.params.handle         = state.gas_handle;
 
     if (state.d_gas_output_buffer)
-        cudaFree(reinterpret_cast<void*>(state.d_gas_output_buffer));
+        jit_free(reinterpret_cast<void*>(state.d_gas_output_buffer));
     state.d_gas_output_buffer = (CUdeviceptr)output_buffer;
 }

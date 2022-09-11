@@ -51,6 +51,11 @@ Spectrum<ad> FieldExtractionIntegrator::__Li(const Scene &scene, const Ray<ad> &
 
     result = full<Spectrum<ad>>(1.f);
 
+
+    result = its.t;
+
+    // result = ray.d;
+
     // return result & (active && (its.is_valid()));
 
     return result;

@@ -1,5 +1,6 @@
 import cv2
 
+
 test_psdrjit = 1
 
 if test_psdrjit:
@@ -24,7 +25,7 @@ def test_scene():
 
 	img = integrator.renderC(sc, 0)
 	print(img)
-	img = img.numpy().reshape((256, 256, 3))
+	img = img.numpy().reshape((64, 64, 3))
 	# print(img)
 	# print()
 	output = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
