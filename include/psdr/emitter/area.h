@@ -26,8 +26,6 @@ public:
     SpectrumD m_radiance;
     const Mesh *m_mesh;
 
-    ENOKI_PINNED_OPERATOR_NEW(FloatD)
-
 protected:
     template <bool ad>
     PositionSample<ad> __sample_position(const Vector2f<ad>&, Mask<ad>) const;

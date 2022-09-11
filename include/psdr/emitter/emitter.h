@@ -26,14 +26,14 @@ public:
     bool m_ready = false;
     float m_sampling_weight = 1.f;
 
-    ENOKI_PINNED_OPERATOR_NEW(FloatD)
+    DRJIT_VCALL_REGISTER(FloatD, Emitter);
 
 PSDR_CLASS_DECL_END(Emitter)
 
 } // namespace psdr
 
-ENOKI_CALL_SUPPORT_BEGIN(psdr::Emitter)
-    ENOKI_CALL_SUPPORT_METHOD(eval)
-    ENOKI_CALL_SUPPORT_METHOD(sample_position)
-    ENOKI_CALL_SUPPORT_METHOD(sample_position_pdf)
-ENOKI_CALL_SUPPORT_END(psdr::Emitter)
+DRJIT_VCALL_BEGIN(psdr::Emitter)
+    DRJIT_VCALL_METHOD(eval)
+    DRJIT_VCALL_METHOD(sample_position)
+    DRJIT_VCALL_METHOD(sample_position_pdf)
+DRJIT_VCALL_END(psdr::Emitter)

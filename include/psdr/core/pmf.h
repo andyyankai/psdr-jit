@@ -22,7 +22,6 @@ inline FloatC compute_cdf(const FloatC &pmf) {
     double sum = 0.0;
     for (uint32_t i = 0; i < size; ++i) {
         double value = (double) *ptr_pmf++;
-        std::cout << value << std::endl;
         sum += value;
         cdf[i] = (ScalarFloat) sum;
 

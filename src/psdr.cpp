@@ -16,11 +16,21 @@
 #include <psdr/core/transform.h>
 #include <psdr/core/records.h>
 
+#include <psdr/edge/edge.h>
+
+
 #include <psdr/bsdf/bsdf.h>
 #include <psdr/bsdf/diffuse.h>
 
 
 #include <psdr/core/pmf.h>
+
+#include <psdr/emitter/emitter.h>
+
+#include <psdr/emitter/area.h>
+// #include <psdr/emitter/envmap.h>
+
+#include <psdr/shape/mesh.h>
 
 
 namespace py = pybind11;
@@ -42,12 +52,30 @@ void drjit_test() {
     backward(b);
     std::cout << "grad: " << grad(a) << std::endl;
 
+
+    Matrix4fD           m_to_world_raw = identity<Matrix4fD>();
+    std::cout << m_to_world_raw << std::endl;
+
+}
+
+
+void drjit_memory() {
+    FloatC a(1.f, 2.f, 3.f, 4.f);
+    std::vector<float> b;
+    b.resize(a.size());
+    // std::cout << a.slices() << std::endl;
+
+
+    std::cout << slices<Vector3fC>(a) << std::endl;
+    drjit::store(b.data(), a);
 }
 
 PYBIND11_MODULE(psdr_jit, m) {
     m.doc() = "Path-space differentiable renderer";
 
     m.def("drjit_test", &drjit_test);
+
+    m.def("drjit_memory", &drjit_memory);
 
     // Core classes
 
@@ -203,11 +231,53 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readonly("p", &PositionSampleD::p)
         .def_readonly("J", &PositionSampleD::J);
 
+
+    py::class_<BSDF, Object>(m, "BSDF");
+
     py::class_<Diffuse, BSDF>(m, "DiffuseBSDF")
         .def(py::init<>())
         .def(py::init<const ScalarVector3f&>())
         .def(py::init<const char*>())
         .def(py::init<const Bitmap3fD&>())
         .def_readwrite("reflectance", &Diffuse::m_reflectance);
+
+    // Shapes
+
+    py::class_<Mesh, Object>(m, "Mesh")
+        .def(py::init<>())
+        .def("load", &Mesh::load, "filename"_a, "verbose"_a = false)
+        .def("configure", &Mesh::configure)
+        .def("set_transform", &Mesh::set_transform, "mat"_a, "set_left"_a = true)
+        .def("append_transform", &Mesh::append_transform, "mat"_a, "append_left"_a = true)
+        .def("sample_position", py::overload_cast<const Vector2fC&, MaskC>(&Mesh::sample_position, py::const_), "sample2"_a, "active"_a = true)
+        .def("sample_position", py::overload_cast<const Vector2fD&, MaskD>(&Mesh::sample_position, py::const_), "sample2"_a, "active"_a = true)
+        .def_readonly("num_vertices", &Mesh::m_num_vertices)
+        .def_readonly("num_faces", &Mesh::m_num_faces)
+        .def_readonly("bsdf", &Mesh::m_bsdf)
+        .def_readwrite("to_world", &Mesh::m_to_world_raw)
+        .def_readwrite("vertex_positions", &Mesh::m_vertex_positions_raw, "Object-space vertex positions")
+        .def_readonly("vertex_normals", &Mesh::m_vertex_normals_raw, "Object-space vertex normals")
+        .def_readwrite("vertex_uv", &Mesh::m_vertex_uv)
+        .def_readwrite("face_indices", &Mesh::m_face_indices)
+        .def_readwrite("face_uv_indices", &Mesh::m_face_uv_indices)
+        .def_readwrite("valid_edge_indices", &Mesh::m_valid_edge_indices)
+        .def_readwrite("use_face_normal", &Mesh::m_use_face_normals)
+        .def_readwrite("enable_edges", &Mesh::m_enable_edges) // TODO
+        .def("edge_indices", [](const Mesh &mesh) { return head<4>(mesh.m_edge_indices); })
+        .def("dump", &Mesh::dump);
+
+
+    py::class_<Emitter, Object>(m, "Emitter");
+
+    // py::class_<AreaLight, Emitter>(m, "AreaLight")
+    //     .def(py::init<const ScalarVector3f&, const Mesh*>());
+
+    // py::class_<EnvironmentMap, Emitter>(m, "EnvironmentMap")
+    //     .def(py::init<const char *>())
+    //     .def_readonly("to_world", &EnvironmentMap::m_to_world_raw)
+    //     .def("set_transform", &EnvironmentMap::set_transform)
+    //     .def_readwrite("radiance", &EnvironmentMap::m_radiance)
+    //     .def_readwrite("scale", &EnvironmentMap::m_scale);
+
 
 }

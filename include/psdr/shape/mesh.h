@@ -5,45 +5,11 @@
 #include <psdr/core/records.h>
 #include <psdr/edge/edge.h>
 #include <map>
+#include <array>
+#include <vector>
 
 namespace psdr
 {
-
-struct Edge_Graph {
-    std::map<int, std::vector<int>>           vertices;
-    std::map<std::pair<int,int>, std::pair<bool, int>>        edge_map;
-
-    std::vector<int> edge_id;
-
-    Vector2iD                                 sorted_indices;
-    IntD                                      sorted_edge_id;
-
-    std::array<std::vector<float>, 3> m_vertex_positions;
-    std::array<std::vector<int  >, 2> m_edge_indices;
-
-    std::map<std::pair<int,int>, int>         m_edge_indices_map;
-
-    std::vector<std::pair<int,int>>           draw;
-    std::vector<int>                          jump;
-
-    bool                                      m_ready = false;
-
-    std::vector<double>                        cos_data;
-    std::vector<double>                        length_data;
-
-    float                                     cut_thold = 1.0f;
-    float                                     global_cut_thold = 1.0f;
-
-    EdgeSortOption      m_edge_sort;
-
-
-    Edge_Graph() {};
-    void config(const Vector3fD& vertex_positions, const Vector2iD& valid_edge_indices, int vertex_size, const EdgeSortOption &sort_option);
-    void Greedy(int edge_key, int prev);
-    void print();
-
-};
-
 
 PSDR_CLASS_DECL_BEGIN(Mesh, final, Object)
 public:
@@ -72,15 +38,11 @@ public:
         m_ready = false;
     }
 
-#ifdef PSDR_MESH_ENABLE_1D_VERTEX_OFFSET
-    void shift_vertices();
-#endif
-
     PositionSampleC sample_position(const Vector2fC &sample2, MaskC active = true) const;
     PositionSampleD sample_position(const Vector2fD &sample2, MaskD active = true) const;
 
     FloatC sample_position_pdf(const IntersectionC &its, MaskC active = true) const;
-    FloatD sample_position_pdf(const IntersectionD &its, MaskD active = true) const;
+    FloatD sample_position_pdfD(const IntersectionD &its, MaskD active = true) const;
 
     MaskC get_obj_mask(std::string obj_name) const{
         if (m_id != "") {
@@ -114,7 +76,7 @@ public:
     bool                m_use_face_normals = false,
                         m_has_uv = false;
 
-    bool                m_enable_edges = true; 
+    bool                m_enable_edges = false; // we disable boundary term for now
 
     EdgeSortOption      m_edge_sort;
 
@@ -137,17 +99,8 @@ public:
     Vector3fD           m_vertex_positions_raw,
                         m_vertex_normals_raw;
 
-#ifdef PSDR_MESH_ENABLE_1D_VERTEX_OFFSET
-    FloatD              m_vertex_offset;
-#endif
     Vector2fD           m_vertex_uv;
 
-    // When PSDR_MESH_ENABLE_1D_VERTEX_OFFSET is defined:
-    //   m_vertex_positions = m_to_world * (m_vertex_positions_raw +
-    //                                      m_vertex_offset * m_vertex_normals_raw)
-    // Otherwise:
-    //   m_vertex_positions = m_to_world * m_vertex_positions_raw
-    //
     Vector3fD           m_vertex_positions;
 
     Vector3iD           m_face_indices,
@@ -172,9 +125,7 @@ public:
     FloatC              m_vertex_buffer;
     IntC                m_face_buffer;
 
-    Edge_Graph          edge_graph;
-
-    ENOKI_PINNED_OPERATOR_NEW(FloatD)
+    DRJIT_VCALL_REGISTER(FloatD, Mesh);
 
 protected:
     template <bool ad>
@@ -183,11 +134,12 @@ PSDR_CLASS_DECL_END(Mesh)
 
 } // namespace psdr
 
-ENOKI_CALL_SUPPORT_BEGIN(psdr::Mesh)
-    ENOKI_CALL_SUPPORT_GETTER(bsdf, m_bsdf)
-    ENOKI_CALL_SUPPORT_GETTER(emitter, m_emitter)
-    ENOKI_CALL_SUPPORT_METHOD(get_obj_mask)
-    ENOKI_CALL_SUPPORT_METHOD(get_obj_id)
-    ENOKI_CALL_SUPPORT_METHOD(sample_position)
-    ENOKI_CALL_SUPPORT_METHOD(sample_position_pdf)
-ENOKI_CALL_SUPPORT_END(psdr::Mesh)
+DRJIT_VCALL_BEGIN(psdr::Mesh)
+    DRJIT_VCALL_GETTER(bsdf, m_bsdf)
+    DRJIT_VCALL_GETTER(emitter, m_emitter)
+    DRJIT_VCALL_METHOD(get_obj_mask)
+    DRJIT_VCALL_METHOD(get_obj_id)
+    DRJIT_VCALL_METHOD(sample_position)
+    DRJIT_VCALL_METHOD(sample_position_pdf)
+    DRJIT_VCALL_METHOD(sample_position_pdfD)
+DRJIT_VCALL_END(psdr::Mesh)

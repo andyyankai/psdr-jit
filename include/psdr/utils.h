@@ -1,36 +1,48 @@
 #pragma once
 
+#include <misc/Exception.h>
+
+
 namespace psdr
 {
 	
 template <typename ArrayD>
 DRJIT_INLINE ArrayD compressD(const ArrayD &array, const MaskD &active) {
-    PSDR_ASSERT(slices(array) == slices(active));
-    IntD idx = IntD(compress(arange<IntC>(slices(array)), detach(active)));
-    return gather<ArrayD>(array, idx);
+    // PSDR_ASSERT((array.size()) == (active.size()));
+    // int temp_size = array.size();
+    // IntD idx = IntD(compress(arange<IntC>((temp_size)), detach(active)));
+    // return gather<ArrayD>(array, idx);
+
+    return array;
 }
+
+
+template <typename ArrayD>
+DRJIT_INLINE size_t slices(const ArrayD &cuda_array) {
+    size_t m;
+    if constexpr (array_depth_v<ArrayD> == 1) {
+        m = cuda_array.size();
+    } else {
+        m = cuda_array[0].size();
+    }
+    return m;
+}
+
 
 
 template <typename T, int n, bool async = false>
 DRJIT_INLINE void copy_cuda_array(const Array<CUDAArray<T>, n> &cuda_array, std::array<std::vector<T>, n> &cpu_array) {
-    if constexpr ( !async ) {
-        cuda_eval();
-    }
-    size_t m = slices(cuda_array);
+    size_t m = slices<Array<CUDAArray<T>, n>>(cuda_array);
     for ( int i = 0; i < n; ++i ) {
         cpu_array[i].resize(m);
-        if constexpr ( async ) {
-            cuda_memcpy_from_device_async(cpu_array[i].data(), cuda_array[i].data(), m*sizeof(T));
-        } else {
-            cuda_memcpy_from_device(cpu_array[i].data(), cuda_array[i].data(), m*sizeof(T));
-        }
+        drjit::store(cpu_array[i].data(), cuda_array[i]);
     }
 }
 
 
 template <bool ad>
 DRJIT_INLINE Int<ad> sign(const Float<ad> &x, float eps) {
-    Int<ad> result = zero<Int<ad>>(slices(x));
+    Int<ad> result = zeros<Int<ad>>((x.size()));
     masked(result, x > eps) = 1;
     masked(result, x < -eps) = -1;
     return result;
@@ -80,7 +92,7 @@ DRJIT_INLINE auto ray_intersect_triangle(const Vector3f<ad> &p0, const Vector3f<
 template <int ndim, bool ad>
 DRJIT_INLINE auto argmin(const Vectorf<ndim, ad> &vector) {
     Float<ad> result = vector[0];
-    Int<ad> idx = zero<Int<ad>>(slices(vector));
+    Int<ad> idx = zeros<Int<ad>>((vector.size()));
     for ( int i = 1; i < ndim; ++i ) {
         Mask<ad> less = vector[i] < result;
         masked(result, less) = vector[i];
@@ -93,7 +105,7 @@ DRJIT_INLINE auto argmin(const Vectorf<ndim, ad> &vector) {
 template <int ndim, bool ad>
 DRJIT_INLINE std::pair<Float<ad>, Int<ad>> argmax(const Vectorf<ndim, ad> &vector) {
     Float<ad> result = vector[0];
-    Int<ad> idx = zero<Int<ad>>(slices(vector));
+    Int<ad> idx = zeros<Int<ad>>((vector.size()));
     for ( int i = 1; i < ndim; ++i ) {
         Mask<ad> greater = vector[i] > result;
         masked(result, greater) = vector[i];
@@ -107,7 +119,7 @@ template <bool ad>
 DRJIT_INLINE auto ray_intersect_box(const Ray<ad> &ray, const Vector3f<ad> &lower, const Vector3f<ad> &upper) {
     /* First, ensure that the ray either has a nonzero slope on each axis,
        or that its origin on a zero-valued axis is within the box bounds */
-    Mask<ad> active = all(neq(ray.d, zero<Vector3f<ad>>()) || ((ray.o > lower) || (ray.o < upper)));
+    Mask<ad> active = all(neq(ray.d, zeros<Vector3f<ad>>()) || ((ray.o > lower) || (ray.o < upper)));
 
     // Compute intersection intervals for each axis
     Vector3f<ad> t1 = (lower - ray.o)/ray.d,
@@ -136,7 +148,7 @@ DRJIT_INLINE auto ray_intersect_scene_aabb(const Ray<ad> &ray, const Vector3f<ad
 
     // Intersect intervals
     auto [t, idx] = argmin<3, ad>(t2p);
-    Vector3f<ad> n = zero<Vector3f<ad>>(slices(ray));
+    Vector3f<ad> n = zeros<Vector3f<ad>>((ray.size()));
     for ( int i = 0; i < 3; ++i ) {
         masked(n[i], eq(idx, i)) = -drjit::sign(ray.d[i]);
     }

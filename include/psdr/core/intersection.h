@@ -49,21 +49,7 @@ struct Intersection_ : public Interaction_<Float_> {
     Vector2f<ad>        uv;
     Float<ad>           J;                  // Jacobian determinant for material-form reparam
 
-    DRJIT_STRUCT(Intersection_, Interaction_<Float_>, shape, n, dp_du, dp_dv, sh_frame, uv, J)
+    DRJIT_STRUCT(Intersection_, wi, p, t, shape, n, dp_du, dp_dv, sh_frame, uv, J)
 };
-
-
-//inline IntersectionC detach(const IntersectionD &its) {
-//    IntersectionC result;
-//    result.wi       = detach(its.wi);
-//    result.p        = detach(its.p);
-//    result.t        = detach(its.t);
-//    result.shape    = detach(its.shape);
-//    result.n        = detach(its.n);
-//    result.sh_frame = detach(its.sh_frame);
-//    result.uv       = detach(its.uv);
-//    result.J        = detach(its.J);
-//    return result;
-//}
 
 } // namespace psdr

@@ -9,6 +9,15 @@ namespace psdr
 
 
 
+template <typename Float_>
+struct BSDFSample_ : public SampleRecord_<Float_> {
+    PSDR_IMPORT_BASE(SampleRecord_<Float_>, ad, pdf, is_valid)
+
+    Vector3f<ad> wo;
+    Float<ad> eta;
+
+    DRJIT_STRUCT(BSDFSample_, pdf, is_valid, wo, eta)
+};
 
 
 // PSDR_CLASS_DECL_BEGIN(BSDF,, Object)

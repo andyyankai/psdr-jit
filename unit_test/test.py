@@ -45,14 +45,40 @@ def test_DiscreteDistribution():
 	print(distrb.sample(sampler.next_1d()))
 
 
+def test_mesh():
+	print("before mesh")
+	mesh = psdr.Mesh()
+	mesh.load("cube_uv.obj", True)
+	print("load")
+	mesh.configure()
+	print(mesh.to_world)
+	print("dump")
+	mesh.dump("out.obj")
+
+
+	
+	print("after mesh")
+
+
+
+	# print(mesh)
+
 if __name__ == "__main__":
-	test_drjit_init()
-	test_sampler()
-	test_ray()
-	test_DiscreteDistribution()
+	# test_drjit_init()
+	# test_sampler()
+	# test_ray()
+	# test_DiscreteDistribution()
+	test_mesh()
+	# psdr.drjit_memory()
 
 
-	print(psdr.IntersectionD)
+	if test_psdrjit:
+		print("FINISH psdr-jit")
+	else:
+		print("FINISH psdr-cuda")
+
+
+	# print(psdr.IntersectionD)
 
 # print("testing drjit autodiff")
 # psdr.drjit_test()

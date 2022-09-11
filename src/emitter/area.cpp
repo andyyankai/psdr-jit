@@ -9,10 +9,10 @@ namespace psdr
 
 void AreaLight::configure() {
     PSDR_ASSERT((m_mesh != nullptr) && m_mesh->m_ready);
-    PSDR_ASSERT(slices(m_radiance) == 1U);
+    PSDR_ASSERT((m_radiance).size() == 1U);
 
-    m_sampling_weight = m_mesh->m_total_area*
-        rgb2luminance<false>(detach(m_radiance))[0];
+    // m_sampling_weight = m_mesh->m_total_area*
+    //     rgb2luminance<false>(detach(m_radiance))[0];
     m_ready = true;
 }
 
@@ -42,23 +42,40 @@ PositionSampleD AreaLight::sample_position(const Vector3fD &ref_p, const Vector2
 template <bool ad>
 PositionSample<ad> AreaLight::__sample_position(const Vector2f<ad> &sample2, Mask<ad> active) const {
     PSDR_ASSERT(m_ready);
+    // PositionSample<ad> rs = m_mesh->sample_position(sample2, active);
+    // return rs;
     return m_mesh->sample_position(sample2, active);
 }
 
 
 FloatC AreaLight::sample_position_pdf(const Vector3fC &ref_p, const IntersectionC &its, MaskC active) const {
-    return __sample_position_pdf<false>(ref_p, its, active);
+    return m_sampling_weight*its.shape->sample_position_pdf(its, active);
 }
 
 
 FloatD AreaLight::sample_position_pdf(const Vector3fD &ref_p, const IntersectionD &its, MaskD active) const {
-    return __sample_position_pdf<true>(ref_p, its, active);
+
+    // FloatD temp = its.shape->sample_position_pdf(its, active);
+    return m_sampling_weight*its.shape->sample_position_pdfD(its, active);
+    // return m_sampling_weight*its.shape->sample_position_pdf(its, active);
+    // return __sample_position_pdf<true>(ref_p, its, active);
 }
 
 
 template <bool ad>
 Float<ad> AreaLight::__sample_position_pdf(const Vector3f<ad> &ref_p, const Intersection<ad> &its, Mask<ad> active) const {
-    return m_sampling_weight*its.shape->sample_position_pdf(its, active);
+    // return 1.f;
+
+    // auto temp = its.shape->sample_position_pdf(its, active);
+    return 1.f;
+    // Float<ad> rs;
+    // if constexpr (!ad) {
+    //     rs = m_sampling_weight*its.shape->sample_position_pdf(detach(its), detach(active));
+    // } else {
+    //     rs = m_sampling_weight*its.shape->sample_position_pdf(its, active);
+    // }
+    // // Float<ad> rs = m_sampling_weight*its.shape->sample_position_pdf(its, active);
+    // return rs;
 }
 
 

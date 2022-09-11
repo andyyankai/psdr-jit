@@ -142,10 +142,28 @@ set(PSDR_SOURCE_FILES
     ${PSDR_INCLUDE_DIR}/core/pmf.h
     ${PSDR_SOURCE_DIR}/core/pmf.cpp
 
+    ${PSDR_INCLUDE_DIR}/optix/ptx.h
+    ${PSDR_SOURCE_DIR}/optix/ptx.cpp
+
+
     ${PSDR_INCLUDE_DIR}/bsdf/bsdf.h
     ${PSDR_INCLUDE_DIR}/bsdf/diffuse.h
     ${PSDR_SOURCE_DIR}/bsdf/diffuse.cpp
 
+    ${PSDR_INCLUDE_DIR}/edge/edge.h
+
+    ${PSDR_INCLUDE_DIR}/shape/mesh.h
+    ${PSDR_SOURCE_DIR}/shape/mesh.cpp
+
+    ${PSDR_INCLUDE_DIR}/emitter/emitter.h
+    ${PSDR_INCLUDE_DIR}/emitter/area.h
+    ${PSDR_SOURCE_DIR}/emitter/area.cpp
+
+    ${PSDR_INCLUDE_DIR}/sensor/sensor.h
+    ${PSDR_SOURCE_DIR}/sensor/sensor.cpp
+
+    ${PSDR_INCLUDE_DIR}/sensor/perspective.h
+    ${PSDR_SOURCE_DIR}/sensor/perspective.cpp
 
     ${PSDR_INCLUDE_DIR}/core/tinyexr.h
     ${PSDR_INCLUDE_DIR}/core/miniz.h

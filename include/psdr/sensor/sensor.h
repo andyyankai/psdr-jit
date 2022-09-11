@@ -16,10 +16,7 @@ struct SensorDirectSample_ : public SampleRecord_<Float_> {
     Int<ad>         pixel_idx;
     Float<ad>       sensor_val;
 
-    ENOKI_DERIVED_STRUCT(SensorDirectSample_, Base,
-        ENOKI_BASE_FIELDS(pdf, is_valid),
-        ENOKI_DERIVED_FIELDS(q, pixel_idx, sensor_val)
-    )
+    DRJIT_STRUCT(SensorDirectSample_, pdf, is_valid, q, pixel_idx, sensor_val)
 };
 
 PSDR_CLASS_DECL_BEGIN(Sensor,, Object)
@@ -70,9 +67,7 @@ PSDR_CLASS_DECL_END(Sensor)
 
 } // namespace psdr
 
-ENOKI_STRUCT_SUPPORT(psdr::SensorDirectSample_, pdf, is_valid, q, pixel_idx, sensor_val)
-
-ENOKI_CALL_SUPPORT_BEGIN(psdr::Sensor)
-    ENOKI_CALL_SUPPORT_METHOD(sample_primary_ray)
-    ENOKI_CALL_SUPPORT_METHOD(sample_primary_edge)
-ENOKI_CALL_SUPPORT_END(psdr::Sensor)
+DRJIT_VCALL_BEGIN(psdr::Sensor)
+    DRJIT_VCALL_METHOD(sample_primary_ray)
+    DRJIT_VCALL_METHOD(sample_primary_edge)
+DRJIT_VCALL_END(psdr::Sensor)
