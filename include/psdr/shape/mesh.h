@@ -135,8 +135,8 @@ PSDR_CLASS_DECL_END(Mesh)
 } // namespace psdr
 
 DRJIT_VCALL_BEGIN(psdr::Mesh)
-    DRJIT_VCALL_GETTER(bsdf, m_bsdf)
-    DRJIT_VCALL_GETTER(m_emitter, const typename Class::Emitter *)
+    // DRJIT_VCALL_GETTER(bsdf, m_bsdf)
+    // DRJIT_VCALL_GETTER(m_emitter, const typename Class::Emitter *)
     DRJIT_VCALL_METHOD(get_obj_mask)
     DRJIT_VCALL_METHOD(get_obj_id)
     DRJIT_VCALL_METHOD(sample_position)

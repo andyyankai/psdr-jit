@@ -65,31 +65,29 @@ Spectrum<ad> Integrator::__render(const Scene &scene, int sensor_id) const {
     const int num_pixels = opts.width*opts.height;
 
     Spectrum<ad> result = zeros<Spectrum<ad>>(num_pixels);
-    // if ( likely(opts.spp > 0) ) {
-    //     int64_t num_samples = static_cast<int64_t>(num_pixels)*opts.spp;
-    //     PSDR_ASSERT(num_samples <= std::numeric_limits<int>::max());
+    if ( likely(opts.spp > 0) ) {
+        int64_t num_samples = static_cast<int64_t>(num_pixels)*opts.spp;
+        PSDR_ASSERT(num_samples <= std::numeric_limits<int>::max());
 
-    //     Int<ad> idx = arange<Int<ad>>(num_samples);
-    //     if ( likely(opts.spp > 1) ) idx /= opts.spp;
+        Int<ad> idx = arange<Int<ad>>(num_samples);
+        if ( likely(opts.spp > 1) ) idx /= opts.spp;
 
-    //     Vector2f<ad> data_base = meshgrid(arange<Float<ad>>(opts.width),arange<Float<ad>>(opts.height));
+        auto [dx, dy] = meshgrid(arange<Float<ad>>(opts.width),arange<Float<ad>>(opts.height));
 
-        
+        Vector2f<ad> samples_base = gather<Vector2f<ad>>(Vector2f<ad>(dx, dy), idx);
 
-    //     Vector2f<ad> samples_base = gather<Vector2f<ad>>(data_base, idx);
-
-    //     Vector2f<ad> samples = (samples_base + scene.m_samplers[0].next_2d<ad>())
-    //                             /ScalarVector2f(opts.width, opts.height);
-    //     Ray<ad> camera_ray = scene.m_sensors[sensor_id]->sample_primary_ray(samples);
-    //     Spectrum<ad> value = Li(scene, scene.m_samplers[0], camera_ray);
-    //     // masked(value, ~enoki::isfinite<Spectrum<ad>>(value)) = 0.f;
-    //     for (int j=0; j<3; ++j) {
-    //         scatter_reduce(ReduceOp::Add, result[j], value[j], idx);
-    //     }
-    //     if ( likely(opts.spp > 1) ) {
-    //         result /= static_cast<float>(opts.spp);
-    //     }
-    // }
+        Vector2f<ad> samples = (samples_base + scene.m_samplers[0].next_2d<ad>())
+                                /ScalarVector2f(opts.width, opts.height);
+        Ray<ad> camera_ray = scene.m_sensors[sensor_id]->sample_primary_ray(samples);
+        Spectrum<ad> value = Li(scene, scene.m_samplers[0], camera_ray);
+        // masked(value, ~enoki::isfinite<Spectrum<ad>>(value)) = 0.f;
+        for (int j=0; j<3; ++j) {
+            scatter_reduce(ReduceOp::Add, result[j], value[j], idx);
+        }
+        if ( likely(opts.spp > 1) ) {
+            result /= static_cast<float>(opts.spp);
+        }
+    }
     
     return result;
 }

@@ -73,11 +73,18 @@ static Matrix<Float, 4> look_at(const Array<Float, 3> &origin, const Array<Float
     Array<Float, 3> left = normalize(cross(up, dir));
     Array<Float, 3> new_up = cross(dir, left);
 
-    return Matrix<Float, 4>::from_cols(
-        concat(left, 0.0f),
-        concat(new_up, 0.0f),
-        concat(dir, 0.0f),
-        concat(origin, 1.0f)
+    Array<Float, 1> z(0);
+
+    return Matrix<Float, 4>(
+        concat(left, z),
+        concat(new_up, z),
+        concat(dir, z),
+        Array<Float, 4>(
+             dot(left, origin),
+             dot(new_up, origin),
+             dot(dir, origin),
+             1.f
+        )
     );
 }
 

@@ -31,6 +31,12 @@
 // #include <psdr/emitter/envmap.h>
 
 #include <psdr/shape/mesh.h>
+#include <psdr/scene/scene.h>
+#include <psdr/scene/scene_loader.h>
+
+
+#include <psdr/integrator/integrator.h>
+#include <psdr/integrator/field.h>
 
 
 namespace py = pybind11;
@@ -269,8 +275,8 @@ PYBIND11_MODULE(psdr_jit, m) {
 
     py::class_<Emitter, Object>(m, "Emitter");
 
-    // py::class_<AreaLight, Emitter>(m, "AreaLight")
-    //     .def(py::init<const ScalarVector3f&, const Mesh*>());
+    py::class_<AreaLight, Emitter>(m, "AreaLight")
+        .def(py::init<const ScalarVector3f&, const Mesh*>());
 
     // py::class_<EnvironmentMap, Emitter>(m, "EnvironmentMap")
     //     .def(py::init<const char *>())
@@ -278,6 +284,26 @@ PYBIND11_MODULE(psdr_jit, m) {
     //     .def("set_transform", &EnvironmentMap::set_transform)
     //     .def_readwrite("radiance", &EnvironmentMap::m_radiance)
     //     .def_readwrite("scale", &EnvironmentMap::m_scale);
+
+    py::class_<Scene, Object>(m, "Scene")
+        .def(py::init<>())
+        .def("load_file", &Scene::load_file, "file_name"_a, "auto_configure"_a = true)
+        .def("load_string", &Scene::load_string, "scene_xml"_a, "auto_configure"_a = true)
+        .def("configure", &Scene::configure)
+        .def_readwrite("opts", &Scene::m_opts, "Render options")
+        .def_readwrite("seed", &Scene::seed, "Sample seed")
+        .def_readonly("num_sensors", &Scene::m_num_sensors)
+        .def_readonly("num_meshes", &Scene::m_num_meshes)
+        .def_readonly("param_map", &Scene::m_param_map, "Parameter map");
+
+
+
+    py::class_<Integrator, Object>(m, "Integrator")
+        .def("renderC", &Integrator::renderC, "scene"_a, "sensor_id"_a = 0, "npass"_a = 1)
+        .def("renderD", &Integrator::renderD, "scene"_a, "sensor_id"_a = 0);
+
+    py::class_<FieldExtractionIntegrator, Integrator>(m, "FieldExtractionIntegrator")
+        .def(py::init<char*>());
 
 
 }

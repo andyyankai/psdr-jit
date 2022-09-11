@@ -1,3 +1,5 @@
+import cv2
+
 test_psdrjit = 1
 
 if test_psdrjit:
@@ -8,6 +10,29 @@ else:
 	import psdr_cuda as psdr
 	import enoki
 	print("testing psdr-cuda")
+
+
+def test_scene():
+	print("INIT test scene")
+	sc = psdr.Scene()
+
+	sc.load_file("cbox.xml", False)
+
+	sc.configure()
+
+	integrator = psdr.FieldExtractionIntegrator("depth")
+
+	img = integrator.renderC(sc, 0)
+	print(img)
+	img = img.numpy().reshape((256, 256, 3))
+	# print(img)
+	# print()
+	output = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+	cv2.imwrite("debug.exr", output)
+
+
+	print("FIN test scene")
+
 
 def test_drjit_init():
 	psdr.drjit_test()
@@ -56,7 +81,7 @@ def test_mesh():
 	mesh.dump("out.obj")
 
 
-	
+
 	print("after mesh")
 
 
@@ -68,7 +93,10 @@ if __name__ == "__main__":
 	# test_sampler()
 	# test_ray()
 	# test_DiscreteDistribution()
-	test_mesh()
+	# test_mesh()
+
+	test_scene()
+
 	# psdr.drjit_memory()
 
 
