@@ -82,7 +82,7 @@ Vector2i<ad> Scene_OptiX::ray_intersect(const Ray<ad> &ray, Mask<ad> &active) co
     const int m = static_cast<int>(slices(ray.o));
     m_its.reserve(m);
 
-    cuda_eval();
+    // cuda_eval();
 
     m_accel->params.ray_o_x         = ray.o.x().data();
     m_accel->params.ray_o_y         = ray.o.y().data();

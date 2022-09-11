@@ -139,6 +139,10 @@ set(PSDR_SOURCE_FILES
     ${PSDR_INCLUDE_DIR}/core/warp.h
     ${PSDR_INCLUDE_DIR}/core/transform.h
 
+    ${PSDR_INCLUDE_DIR}/core/cube_distrb.h
+    ${PSDR_SOURCE_DIR}/core/cube_distrb.cpp
+
+
     ${PSDR_INCLUDE_DIR}/core/pmf.h
     ${PSDR_SOURCE_DIR}/core/pmf.cpp
 
@@ -158,6 +162,8 @@ set(PSDR_SOURCE_FILES
     ${PSDR_INCLUDE_DIR}/emitter/emitter.h
     ${PSDR_INCLUDE_DIR}/emitter/area.h
     ${PSDR_SOURCE_DIR}/emitter/area.cpp
+    ${PSDR_INCLUDE_DIR}/emitter/envmap.h
+    ${PSDR_SOURCE_DIR}/emitter/envmap.cpp
 
     ${PSDR_INCLUDE_DIR}/sensor/sensor.h
     ${PSDR_SOURCE_DIR}/sensor/sensor.cpp
@@ -168,6 +174,18 @@ set(PSDR_SOURCE_FILES
     ${PSDR_INCLUDE_DIR}/core/tinyexr.h
     ${PSDR_INCLUDE_DIR}/core/miniz.h
     ${PSDR_SOURCE_DIR}/core/miniz.cpp
+
+    ${PSDR_INCLUDE_DIR}/scene/optix.h
+    ${PSDR_INCLUDE_DIR}/scene/scene_optix.h
+    ${PSDR_SOURCE_DIR}/scene/scene_optix.cpp
+
+    ${PSDR_INCLUDE_DIR}/scene/scene.h
+    ${PSDR_SOURCE_DIR}/scene/scene.cpp
+
+
+    ${PSDR_INCLUDE_DIR}/integrator/integrator.h
+    ${PSDR_SOURCE_DIR}/integrator/integrator.cpp
+
 
     ${PSDR_SOURCE_DIR}/psdr.cpp
 )

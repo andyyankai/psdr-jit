@@ -47,7 +47,6 @@ public:
 
     CubeDistribution        m_cube_distrb;
 
-    ENOKI_PINNED_OPERATOR_NEW(FloatD)
 
     template <bool ad>
     PositionSample<ad> __sample_position(const Vector3f<ad> &ref_p, const Vector2f<ad>&, Mask<ad>) const;

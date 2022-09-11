@@ -26,6 +26,10 @@ struct Ray {
 
     Vector3f<ad> operator() (const Float<ad> &t) const { return fmadd(d, t, o); }
 
+    inline size_t size() {
+        return slices<Vector3f<ad>>(o);
+    }
+
     inline Ray reversed() const { return Ray(o, -d, tmax); }
 };
 

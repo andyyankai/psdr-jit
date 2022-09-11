@@ -94,17 +94,17 @@ void Scene::configure2(std::vector<int> active_sensor) {
         mesh->m_edge_sort = m_edge_sort;
         mesh->configure();
         face_offset.push_back(face_offset.back() + mesh->m_num_faces);
-        if ( m_opts.sppse > 0 && mesh->m_enable_edges ) {
-            edge_offset.push_back(edge_offset.back() + static_cast<int>(slices(*(mesh->m_sec_edge_info))));
-            cut_offset.push_back(cut_offset.back() + static_cast<int>(slices(mesh->m_cut_position)));
-        }
-        else {
+        // if ( m_opts.sppse > 0 && mesh->m_enable_edges ) {
+        //     edge_offset.push_back(edge_offset.back() + static_cast<int>(slices(*(mesh->m_sec_edge_info))));
+        //     cut_offset.push_back(cut_offset.back() + static_cast<int>(slices(mesh->m_cut_position)));
+        // }
+        // else {
                 edge_offset.push_back(edge_offset.back());
                 cut_offset.push_back(cut_offset.back());
-             }
+             // }
         for ( int i = 0; i < 3; ++i ) {
-            m_lower[i] = enoki::min(m_lower[i], hmin(detach(mesh->m_vertex_positions[i])));
-            m_upper[i] = enoki::max(m_upper[i], hmax(detach(mesh->m_vertex_positions[i])));
+            m_lower[i] = minimum(m_lower[i], min(detach(mesh->m_vertex_positions[i])));
+            m_upper[i] = maximum(m_upper[i], max(detach(mesh->m_vertex_positions[i])));
         }
     }
 
@@ -120,8 +120,8 @@ void Scene::configure2(std::vector<int> active_sensor) {
 
         for ( int i = 0; i < 3; ++i ) {
             if ( PerspectiveCamera *camera = dynamic_cast<PerspectiveCamera *>(m_sensors[sensor_id]) ) {
-                m_lower[i] = enoki::min(m_lower[i], detach(camera->m_camera_pos[i]));
-                m_upper[i] = enoki::max(m_upper[i], detach(camera->m_camera_pos[i]));
+                m_lower[i] = minimum(m_lower[i], detach(camera->m_camera_pos[i]));
+                m_upper[i] = maximum(m_upper[i], detach(camera->m_camera_pos[i]));
             }
         }
     }
@@ -142,7 +142,7 @@ void Scene::configure2(std::vector<int> active_sensor) {
 
     // Handling env. lighting
     if ( m_emitter_env != nullptr && !m_has_bound_mesh ) {
-        FloatC margin = hmin((m_upper - m_lower)*0.05f);
+        FloatC margin = min((m_upper - m_lower)*0.05f);
         m_lower -= margin; m_upper += margin;
 
         m_emitter_env->m_lower = m_lower;
@@ -172,8 +172,8 @@ void Scene::configure2(std::vector<int> active_sensor) {
         bound_mesh->m_bsdf = nullptr;
         bound_mesh->m_emitter = m_emitter_env;
         for ( int i = 0; i < 3; ++i ) {
-            bound_mesh->m_vertex_positions_raw[i] = FloatD::copy(vtx_data[i], 8);
-            bound_mesh->m_face_indices[i] = IntD::copy(face_data[i], 12);
+            bound_mesh->m_vertex_positions_raw[i] = load<FloatD>(vtx_data[i], 8);
+            bound_mesh->m_face_indices[i] = load<IntD>(face_data[i], 12);
         }
         bound_mesh->configure();
         m_meshes.push_back(bound_mesh);
@@ -196,7 +196,7 @@ void Scene::configure2(std::vector<int> active_sensor) {
             e->configure();
             weights.push_back(e->m_sampling_weight);
         }
-        m_emitters_distrb->init(FloatC::copy(weights.data(), weights.size()));
+        m_emitters_distrb->init(load<FloatC>(weights.data(), weights.size()));
 
         float inv_total_weight = rcp(m_emitters_distrb->m_sum)[0];
         for ( Emitter *e : m_emitters ) {
@@ -206,13 +206,14 @@ void Scene::configure2(std::vector<int> active_sensor) {
 
     // Initialize CUDA arrays
     if ( !m_emitters.empty() ) {
-        m_emitters_cuda = EmitterArrayD::copy(m_emitters.data(), m_emitters.size());
+        m_emitters_cuda = load<EmitterArrayD>(m_emitters.data(), m_emitters.size());
+
     }
-    m_meshes_cuda = MeshArrayD::copy(m_meshes.data(), m_num_meshes);
+    m_meshes_cuda = load<MeshArrayD>(m_meshes.data(), m_num_meshes);
 
     // Generate global triangle arrays
     m_triangle_info = empty<TriangleInfoD>(face_offset.back());
-    m_triangle_uv = zero<TriangleUVD>(face_offset.back());
+    m_triangle_uv = zeros<TriangleUVD>(face_offset.back());
     m_triangle_face_normals = empty<MaskD>(face_offset.back());
     for ( int i = 0; i < m_num_meshes; ++i ) {
         const Mesh &mesh = *m_meshes[i];
@@ -230,16 +231,16 @@ void Scene::configure2(std::vector<int> active_sensor) {
         m_sec_edge_info = empty<SecondaryEdgeInfo>(edge_offset.back());
         for ( int i = 0; i < m_num_meshes; ++i ) {
             const Mesh &mesh = *m_meshes[i];
-            if ( mesh.m_enable_edges ) {
-                PSDR_ASSERT(mesh.m_sec_edge_info != nullptr);
-                const int m = static_cast<int>(slices(*mesh.m_sec_edge_info));
-                const IntD idx = arange<IntD>(m) + edge_offset[i];
-                scatter(m_sec_edge_info, *mesh.m_sec_edge_info, idx);
+            // if ( mesh.m_enable_edges ) {
+            //     PSDR_ASSERT(mesh.m_sec_edge_info != nullptr);
+            //     const int m = static_cast<int>(slices(*mesh.m_sec_edge_info));
+            //     const IntD idx = arange<IntD>(m) + edge_offset[i];
+            //     scatter(m_sec_edge_info, *mesh.m_sec_edge_info, idx);
 
-                const int n = static_cast<int>(slices(mesh.m_cut_position));
-                const IntC idc = arange<IntC>(n) + cut_offset[i];
-                scatter(m_edge_cut, mesh.m_cut_position + edge_offset[i], idc);
-            }
+            //     const int n = static_cast<int>(slices(mesh.m_cut_position));
+            //     const IntC idc = arange<IntC>(n) + cut_offset[i];
+            //     scatter(m_edge_cut, mesh.m_cut_position + edge_offset[i], idc);
+            // }
         }
         m_sec_edge_distrb->init(norm(detach(m_sec_edge_info.e1)));
         if ( m_opts.log_level > 0 ) {
@@ -252,7 +253,7 @@ void Scene::configure2(std::vector<int> active_sensor) {
     }
 
     // Initialize OptiX
-    cuda_eval();
+
     m_optix->configure(m_meshes);
 
     // Cleanup
@@ -345,17 +346,17 @@ void Scene::configure() {
         mesh->m_edge_sort = m_edge_sort;
         mesh->configure();
         face_offset.push_back(face_offset.back() + mesh->m_num_faces);
-        if ( m_opts.sppse > 0 && mesh->m_enable_edges ) {
-            edge_offset.push_back(edge_offset.back() + static_cast<int>(slices(*(mesh->m_sec_edge_info))));
-            cut_offset.push_back(cut_offset.back() + static_cast<int>(slices(mesh->m_cut_position)));
-        }
-        else {
+        // if ( m_opts.sppse > 0 && mesh->m_enable_edges ) {
+        //     edge_offset.push_back(edge_offset.back() + static_cast<int>(slices(*(mesh->m_sec_edge_info))));
+        //     cut_offset.push_back(cut_offset.back() + static_cast<int>(slices(mesh->m_cut_position)));
+        // }
+        // else {
                 edge_offset.push_back(edge_offset.back());
                 cut_offset.push_back(cut_offset.back());
-             }
+             // }
         for ( int i = 0; i < 3; ++i ) {
-            m_lower[i] = enoki::min(m_lower[i], hmin(detach(mesh->m_vertex_positions[i])));
-            m_upper[i] = enoki::max(m_upper[i], hmax(detach(mesh->m_vertex_positions[i])));
+            m_lower[i] = minimum(m_lower[i], min(detach(mesh->m_vertex_positions[i])));
+            m_upper[i] = maximum(m_upper[i], max(detach(mesh->m_vertex_positions[i])));
         }
     }
 
@@ -371,8 +372,8 @@ void Scene::configure() {
 
         for ( int i = 0; i < 3; ++i ) {
             if ( PerspectiveCamera *camera = dynamic_cast<PerspectiveCamera *>(sensor) ) {
-                m_lower[i] = enoki::min(m_lower[i], detach(camera->m_camera_pos[i]));
-                m_upper[i] = enoki::max(m_upper[i], detach(camera->m_camera_pos[i]));
+                m_lower[i] = minimum(m_lower[i], detach(camera->m_camera_pos[i]));
+                m_upper[i] = maximum(m_upper[i], detach(camera->m_camera_pos[i]));
             }
         }
     }
@@ -392,7 +393,7 @@ void Scene::configure() {
 
     // Handling env. lighting
     if ( m_emitter_env != nullptr && !m_has_bound_mesh ) {
-        FloatC margin = hmin((m_upper - m_lower)*0.05f);
+        FloatC margin = min((m_upper - m_lower)*0.05f);
         m_lower -= margin; m_upper += margin;
 
         m_emitter_env->m_lower = m_lower;
@@ -407,7 +408,7 @@ void Scene::configure() {
         for ( int i = 0; i < 8; ++i )
             for ( int j = 0; j < 3; ++j )
                 vtx_data[j][i] = (i & (1 << j)) ? upper_[j][0] : lower_[j][0];
-
+            
         const int face_data[3][12] = {
             0, 0, 1, 1, 2, 2, 0, 0, 0, 0, 4, 4,
             1, 3, 5, 7, 3, 7, 5, 4, 2, 6, 7, 6,
@@ -422,8 +423,8 @@ void Scene::configure() {
         bound_mesh->m_bsdf = nullptr;
         bound_mesh->m_emitter = m_emitter_env;
         for ( int i = 0; i < 3; ++i ) {
-            bound_mesh->m_vertex_positions_raw[i] = FloatD::copy(vtx_data[i], 8);
-            bound_mesh->m_face_indices[i] = IntD::copy(face_data[i], 12);
+            bound_mesh->m_vertex_positions_raw[i] = load<FloatD>(vtx_data[i], 8);
+            bound_mesh->m_face_indices[i] = load<IntD>(face_data[i], 12);
         }
         bound_mesh->configure();
         m_meshes.push_back(bound_mesh);
@@ -438,6 +439,7 @@ void Scene::configure() {
         }
     }
 
+
     // Preprocess emitters
     if ( !m_emitters.empty() ) {
         std::vector<float> weights;
@@ -446,7 +448,7 @@ void Scene::configure() {
             e->configure();
             weights.push_back(e->m_sampling_weight);
         }
-        m_emitters_distrb->init(FloatC::copy(weights.data(), weights.size()));
+        m_emitters_distrb->init(load<FloatC>(weights.data(), weights.size()));
 
         float inv_total_weight = rcp(m_emitters_distrb->m_sum)[0];
         for ( Emitter *e : m_emitters ) {
@@ -454,15 +456,17 @@ void Scene::configure() {
         }
     }
 
+
     // Initialize CUDA arrays
     if ( !m_emitters.empty() ) {
-        m_emitters_cuda = EmitterArrayD::copy(m_emitters.data(), m_emitters.size());
+        m_emitters_cuda = load<EmitterArrayD>(m_emitters.data(), m_emitters.size());
+
     }
-    m_meshes_cuda = MeshArrayD::copy(m_meshes.data(), m_num_meshes);
+    m_meshes_cuda = load<MeshArrayD>(m_meshes.data(), m_num_meshes);
 
     // Generate global triangle arrays
     m_triangle_info = empty<TriangleInfoD>(face_offset.back());
-    m_triangle_uv = zero<TriangleUVD>(face_offset.back());
+    m_triangle_uv = zeros<TriangleUVD>(face_offset.back());
     m_triangle_face_normals = empty<MaskD>(face_offset.back());
     for ( int i = 0; i < m_num_meshes; ++i ) {
         const Mesh &mesh = *m_meshes[i];
@@ -474,41 +478,42 @@ void Scene::configure() {
         }
     }
 
-    // Generate global sec. edge arrays
-    if ( m_opts.sppse > 0 ) {
-        m_edge_cut      = empty<IntC>(cut_offset.back());
-        m_sec_edge_info = empty<SecondaryEdgeInfo>(edge_offset.back());
-        for ( int i = 0; i < m_num_meshes; ++i ) {
-            const Mesh &mesh = *m_meshes[i];
-            if ( mesh.m_enable_edges ) {
-                PSDR_ASSERT(mesh.m_sec_edge_info != nullptr);
-                const int m = static_cast<int>(slices(*mesh.m_sec_edge_info));
-                const IntD idx = arange<IntD>(m) + edge_offset[i];
-                scatter(m_sec_edge_info, *mesh.m_sec_edge_info, idx);
 
-                const int n = static_cast<int>(slices(mesh.m_cut_position));
-                const IntC idc = arange<IntC>(n) + cut_offset[i];
-                scatter(m_edge_cut, mesh.m_cut_position + edge_offset[i], idc);
-            }
-        }
-#if 0
-        FloatC angle = select(detach(m_sec_edge_info.is_boundary), Pi,
-                              safe_acos(dot(detach(m_sec_edge_info.n0), detach(m_sec_edge_info.n1))));
-        m_sec_edge_distrb->init(norm(detach(m_sec_edge_info.e1))*angle);
-#else
-        m_sec_edge_distrb->init(norm(detach(m_sec_edge_info.e1)));
-#endif
-        if ( m_opts.log_level > 0 ) {
-            std::stringstream oss;
-            oss << edge_offset.back() << " secondary edges initialized.";
-            log(oss.str().c_str());
-        }
-    } else {
+    // Generate global sec. edge arrays
+//     if ( m_opts.sppse > 0 ) {
+//         m_edge_cut      = empty<IntC>(cut_offset.back());
+//         m_sec_edge_info = empty<SecondaryEdgeInfo>(edge_offset.back());
+//         for ( int i = 0; i < m_num_meshes; ++i ) {
+//             const Mesh &mesh = *m_meshes[i];
+//             if ( mesh.m_enable_edges ) {
+//                 PSDR_ASSERT(mesh.m_sec_edge_info != nullptr);
+//                 const int m = static_cast<int>(slices(*mesh.m_sec_edge_info));
+//                 const IntD idx = arange<IntD>(m) + edge_offset[i];
+//                 scatter(m_sec_edge_info, *mesh.m_sec_edge_info, idx);
+
+//                 const int n = static_cast<int>(slices(mesh.m_cut_position));
+//                 const IntC idc = arange<IntC>(n) + cut_offset[i];
+//                 scatter(m_edge_cut, mesh.m_cut_position + edge_offset[i], idc);
+//             }
+//         }
+// #if 0
+//         FloatC angle = select(detach(m_sec_edge_info.is_boundary), Pi,
+//                               safe_acos(dot(detach(m_sec_edge_info.n0), detach(m_sec_edge_info.n1))));
+//         m_sec_edge_distrb->init(norm(detach(m_sec_edge_info.e1))*angle);
+// #else
+//         m_sec_edge_distrb->init(norm(detach(m_sec_edge_info.e1)));
+// #endif
+//         if ( m_opts.log_level > 0 ) {
+//             std::stringstream oss;
+//             oss << edge_offset.back() << " secondary edges initialized.";
+//             log(oss.str().c_str());
+//         }
+//     } else {
         m_sec_edge_info = empty<SecondaryEdgeInfo>();
-    }
+    // }
 
     // Initialize OptiX
-    cuda_eval();
+
     m_optix->configure(m_meshes);
 
     // Cleanup
@@ -623,8 +628,8 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active, Trian
                                tri_uv_info[2] - tri_uv_info[0],
                                uv);
 
-        its.dp_du = zero<Vector3f<ad>>(slices(sh_n));
-        its.dp_dv = zero<Vector3f<ad>>(slices(sh_n));
+        its.dp_du = zeros<Vector3f<ad>>(slices<Vector3f<ad>>(sh_n));
+        its.dp_dv = zeros<Vector3f<ad>>(slices<Vector3f<ad>>(sh_n));
         its.dp_du[valid_dp] = fmsub( duv1.y(), dp0, duv0.y() * dp1) * inv_det;
         its.dp_dv[valid_dp] = fnmadd(duv1.x(), dp0, duv0.x() * dp1) * inv_det;
         its.sh_frame = Frame<ad>(sh_n);
@@ -651,8 +656,8 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active, Trian
                                  tri_uv_info[2] - tri_uv_info[0],
                                  uv);
         // calculate dudp
-        its.dp_du = zero<Vector3f<ad>>(slices(sh_n));
-        its.dp_dv = zero<Vector3f<ad>>(slices(sh_n));
+        its.dp_du = zeros<Vector3f<ad>>(slices<Vector3f<ad>>(sh_n));
+        its.dp_dv = zeros<Vector3f<ad>>(slices<Vector3f<ad>>(sh_n));
         its.dp_du[valid_dp] = fmsub( duv1.y(), dp0, duv0.y() * dp1) * inv_det;
         its.dp_dv[valid_dp] = fnmadd(duv1.x(), dp0, duv0.x() * dp1) * inv_det;
         its.sh_frame = Frame<ad>(sh_n);
@@ -729,8 +734,8 @@ Intersection<ad> Scene::unit_ray_intersect(const Ray<ad> &ray, Mask<ad> active) 
                                tri_uv_info[2] - tri_uv_info[0],
                                uv);
 
-        its.dp_du = zero<Vector3f<ad>>(slices(sh_n));
-        its.dp_dv = zero<Vector3f<ad>>(slices(sh_n));
+        its.dp_du = zeros<Vector3f<ad>>(slices<Vector3f<ad>>(sh_n));
+        its.dp_dv = zeros<Vector3f<ad>>(slices<Vector3f<ad>>(sh_n));
         its.dp_du[valid_dp] = fmsub( duv1.y(), dp0, duv0.y() * dp1) * inv_det;
         its.dp_dv[valid_dp] = fnmadd(duv1.x(), dp0, duv0.x() * dp1) * inv_det;
         its.sh_frame = Frame<ad>(sh_n);
@@ -757,8 +762,8 @@ Intersection<ad> Scene::unit_ray_intersect(const Ray<ad> &ray, Mask<ad> active) 
                                  tri_uv_info[2] - tri_uv_info[0],
                                  uv);
         // calculate dudp
-        its.dp_du = zero<Vector3f<ad>>(slices(sh_n));
-        its.dp_dv = zero<Vector3f<ad>>(slices(sh_n));
+        its.dp_du = zeros<Vector3f<ad>>(slices<Vector3f<ad>>(sh_n));
+        its.dp_dv = zeros<Vector3f<ad>>(slices<Vector3f<ad>>(sh_n));
         its.dp_du[valid_dp] = fmsub( duv1.y(), dp0, duv0.y() * dp1) * inv_det;
         its.dp_dv[valid_dp] = fnmadd(duv1.x(), dp0, duv0.x() * dp1) * inv_det;
         its.sh_frame = Frame<ad>(sh_n);
@@ -843,104 +848,104 @@ PositionSample<ad> Scene::sample_emitter_position(const Vector3f<ad> &ref_p, con
 
 template <bool ad>
 Float<ad> Scene::emitter_position_pdf(const Vector3f<ad> &ref_p, const Intersection<ad> &its, Mask<ad> active) const {
-    return its.shape->emitter(active)->sample_position_pdf(ref_p, its, active);
+    return its.shape->m_emitter(active)->sample_position_pdf(ref_p, its, active);
 }
 
 BoundarySegSampleDirect Scene::sample_edge_ray(const Vector3fC &sample3, MaskC active) const {
     BoundarySegSampleDirect result;
-    FloatC sample1 = sample3.x();
-    auto [edge_idx, pdf0] = m_sec_edge_distrb->sample_reuse<false>(sample1);
+    // FloatC sample1 = sample3.x();
+    // auto [edge_idx, pdf0] = m_sec_edge_distrb->sample_reuse<false>(sample1);
 
-    SecondaryEdgeInfo info = gather<SecondaryEdgeInfo>(m_sec_edge_info, IntD(edge_idx), active);
-    result.p0 = fmadd(info.e1, sample1, info.p0);
-    result.edge = normalize(detach(info.e1));
-    result.edge2 = detach(info.p2) - detach(info.p0);
-    const Vector3fC &p0 = detach(result.p0);
-    pdf0 /= norm(detach(info.e1));
+    // SecondaryEdgeInfo info = gather<SecondaryEdgeInfo>(m_sec_edge_info, IntD(edge_idx), active);
+    // result.p0 = fmadd(info.e1, sample1, info.p0);
+    // result.edge = normalize(detach(info.e1));
+    // result.edge2 = detach(info.p2) - detach(info.p0);
+    // const Vector3fC &p0 = detach(result.p0);
+    // pdf0 /= norm(detach(info.e1));
 
-    const Vector3fC &n0 = detach(info.n0);
-    const Vector3fC &n1 = detach(info.n1);
+    // const Vector3fC &n0 = detach(info.n0);
+    // const Vector3fC &n1 = detach(info.n1);
 
-    const Vector3fC &e0 = detach(info.p0);
-    const Vector3fC &e1 = detach(info.e1);
+    // const Vector3fC &e0 = detach(info.p0);
+    // const Vector3fC &e1 = detach(info.e1);
 
-    // squareToUniformSphere
-    FloatC pdf1;
-    Vector3fC e = squareToEdgeRayDirection_NB(tail<2>(sample3), n0, n1, pdf1);
-    Vector3fC eb = squareToEdgeRayDirection_B(tail<2>(sample3), n0, e0, e1);
-    masked(e, detach(info.is_boundary)) = eb;
-    masked(pdf1, detach(info.is_boundary)) = FloatC(1.0f/(4.0f*M_PI));
+    // // squareToUniformSphere
+    // FloatC pdf1;
+    // Vector3fC e = squareToEdgeRayDirection_NB(tail<2>(sample3), n0, n1, pdf1);
+    // Vector3fC eb = squareToEdgeRayDirection_B(tail<2>(sample3), n0, e0, e1);
+    // masked(e, detach(info.is_boundary)) = eb;
+    // masked(pdf1, detach(info.is_boundary)) = FloatC(1.0f/(4.0f*M_PI));
 
-    pdf0 *= pdf1;
+    // pdf0 *= pdf1;
 
-    IntC sgn0 = sign<false>(dot(detach(info.n0), e), EdgeEpsilon),
-         sgn1 = sign<false>(dot(detach(info.n1), e), EdgeEpsilon);
-    result.is_valid = active && (
-        (detach(info.is_boundary) && neq(sgn0, 0)) || (~detach(info.is_boundary) && (sgn0*sgn1 < 0))
-    );
+    // IntC sgn0 = sign<false>(dot(detach(info.n0), e), EdgeEpsilon),
+    //      sgn1 = sign<false>(dot(detach(info.n1), e), EdgeEpsilon);
+    // result.is_valid = active && (
+    //     (detach(info.is_boundary) && neq(sgn0, 0)) || (~detach(info.is_boundary) && (sgn0*sgn1 < 0))
+    // );
 
-    result.p2 = e;
-    result.pdf = pdf0 & result.is_valid;
+    // result.p2 = e;
+    // result.pdf = pdf0 & result.is_valid;
     return result;
 }
 
 BoundarySegSampleDirect Scene::sample_emitter_ray(const Vector3fC &sample3, MaskC active) const {
     BoundarySegSampleDirect result;
-    FloatC sample1 = sample3.x();
-    auto [edge_idx, pdf0] = m_sec_edge_distrb->sample_reuse<false>(sample1);
+    // FloatC sample1 = sample3.x();
+    // auto [edge_idx, pdf0] = m_sec_edge_distrb->sample_reuse<false>(sample1);
 
-    SecondaryEdgeInfo info = gather<SecondaryEdgeInfo>(m_sec_edge_info, IntD(edge_idx), active);
-    result.p0 = fmadd(info.e1, sample1, info.p0);
-    result.edge = normalize(detach(info.e1));
-    result.edge2 = detach(info.p2) - detach(info.p0);
-    const Vector3fC &p0 = detach(result.p0);
-    pdf0 /= norm(detach(info.e1));
+    // SecondaryEdgeInfo info = gather<SecondaryEdgeInfo>(m_sec_edge_info, IntD(edge_idx), active);
+    // result.p0 = fmadd(info.e1, sample1, info.p0);
+    // result.edge = normalize(detach(info.e1));
+    // result.edge2 = detach(info.p2) - detach(info.p0);
+    // const Vector3fC &p0 = detach(result.p0);
+    // pdf0 /= norm(detach(info.e1));
 
-    FloatC pdf1;
-    Vector2fC tmp = tail<2>(sample3);
-    std::tie(result.p2, pdf1) = m_emitter_env->sample_direction(tmp);
-    pdf0 *= pdf1;
+    // FloatC pdf1;
+    // Vector2fC tmp = tail<2>(sample3);
+    // std::tie(result.p2, pdf1) = m_emitter_env->sample_direction(tmp);
+    // pdf0 *= pdf1;
 
-    IntC sgn0 = sign<false>(dot(detach(info.n0), result.p2), EdgeEpsilon),
-         sgn1 = sign<false>(dot(detach(info.n1), result.p2), EdgeEpsilon);
-    result.is_valid = active && (
-        (detach(info.is_boundary) && neq(sgn0, 0)) || (~detach(info.is_boundary) && (sgn0*sgn1 < 0))
-    );
+    // IntC sgn0 = sign<false>(dot(detach(info.n0), result.p2), EdgeEpsilon),
+    //      sgn1 = sign<false>(dot(detach(info.n1), result.p2), EdgeEpsilon);
+    // result.is_valid = active && (
+    //     (detach(info.is_boundary) && neq(sgn0, 0)) || (~detach(info.is_boundary) && (sgn0*sgn1 < 0))
+    // );
 
-    result.pdf = pdf0 & result.is_valid;
+    // result.pdf = pdf0 & result.is_valid;
     return result;
 }
 
 BoundarySegSampleDirect Scene::sample_boundary_segment_direct(const Vector3fC &sample3, MaskC active) const {
     BoundarySegSampleDirect result;
-    // Sample a point p0 on a face edge
-    FloatC sample1 = sample3.x();
-    auto [edge_idx, pdf0] = m_sec_edge_distrb->sample_reuse<false>(sample1);
+    // // Sample a point p0 on a face edge
+    // FloatC sample1 = sample3.x();
+    // auto [edge_idx, pdf0] = m_sec_edge_distrb->sample_reuse<false>(sample1);
 
-    SecondaryEdgeInfo info = gather<SecondaryEdgeInfo>(m_sec_edge_info, IntD(edge_idx), active);
-    result.p0 = fmadd(info.e1, sample1, info.p0); // p0 = info.p0 + info.e1*sample1;
-    result.edge = normalize(detach(info.e1));
-    result.edge2 = detach(info.p2) - detach(info.p0);
-    const Vector3fC &p0 = detach(result.p0);
-    pdf0 /= norm(detach(info.e1));
+    // SecondaryEdgeInfo info = gather<SecondaryEdgeInfo>(m_sec_edge_info, IntD(edge_idx), active);
+    // result.p0 = fmadd(info.e1, sample1, info.p0); // p0 = info.p0 + info.e1*sample1;
+    // result.edge = normalize(detach(info.e1));
+    // result.edge2 = detach(info.p2) - detach(info.p0);
+    // const Vector3fC &p0 = detach(result.p0);
+    // pdf0 /= norm(detach(info.e1));
 
-    // Sample a point ps2 on a emitter
-    PositionSampleC ps2 = sample_emitter_position<false>(p0, tail<2>(sample3), active);
-    result.p2 = ps2.p;
+    // // Sample a point ps2 on a emitter
+    // PositionSampleC ps2 = sample_emitter_position<false>(p0, tail<2>(sample3), active);
+    // result.p2 = ps2.p;
 
-    // Construct the edge "ray" and check if it is valid
-    Vector3fC e = result.p2 - p0;
-    const FloatC distSqr = squared_norm(e);
-    e /= safe_sqrt(distSqr);
-    const FloatC cosTheta = dot(ps2.n, -e);
+    // // Construct the edge "ray" and check if it is valid
+    // Vector3fC e = result.p2 - p0;
+    // const FloatC distSqr = squared_norm(e);
+    // e /= safe_sqrt(distSqr);
+    // const FloatC cosTheta = dot(ps2.n, -e);
 
-    IntC sgn0 = sign<false>(dot(detach(info.n0), e), EdgeEpsilon),
-         sgn1 = sign<false>(dot(detach(info.n1), e), EdgeEpsilon);
-    result.is_valid = active && (cosTheta > Epsilon) && (
-        (detach(info.is_boundary) && neq(sgn0, 0)) || (~detach(info.is_boundary) && (sgn0*sgn1 < 0))
-    );
+    // IntC sgn0 = sign<false>(dot(detach(info.n0), e), EdgeEpsilon),
+    //      sgn1 = sign<false>(dot(detach(info.n1), e), EdgeEpsilon);
+    // result.is_valid = active && (cosTheta > Epsilon) && (
+    //     (detach(info.is_boundary) && neq(sgn0, 0)) || (~detach(info.is_boundary) && (sgn0*sgn1 < 0))
+    // );
 
-    result.pdf = (pdf0*ps2.pdf*(distSqr/cosTheta)) & result.is_valid;
+    // result.pdf = (pdf0*ps2.pdf*(distSqr/cosTheta)) & result.is_valid;
     return result;
 }
 

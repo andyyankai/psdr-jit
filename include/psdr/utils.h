@@ -116,7 +116,7 @@ DRJIT_INLINE std::pair<Float<ad>, Int<ad>> argmax(const Vectorf<ndim, ad> &vecto
 
 
 template <bool ad>
-DRJIT_INLINE auto ray_intersect_box(const Ray<ad> &ray, const Vector3f<ad> &lower, const Vector3f<ad> &upper) {
+DRJIT_INLINE auto ray_intersect_box(Ray<ad> &ray, const Vector3f<ad> &lower, const Vector3f<ad> &upper) {
     /* First, ensure that the ray either has a nonzero slope on each axis,
        or that its origin on a zero-valued axis is within the box bounds */
     Mask<ad> active = all(neq(ray.d, zeros<Vector3f<ad>>()) || ((ray.o > lower) || (ray.o < upper)));
@@ -138,16 +138,18 @@ DRJIT_INLINE auto ray_intersect_box(const Ray<ad> &ray, const Vector3f<ad> &lowe
 
 
 template <bool ad>
-DRJIT_INLINE auto ray_intersect_scene_aabb(const Ray<ad> &ray, const Vector3f<ad> &lower, const Vector3f<ad> &upper) {
+DRJIT_INLINE auto ray_intersect_scene_aabb(Ray<ad> &ray, const Vector3f<ad> &lower, const Vector3f<ad> &upper) {
     // Compute intersection intervals for each axis
     Vector3f<ad> t1 = (lower - ray.o)/ray.d,
                  t2 = (upper - ray.o)/ray.d;
 
     // Ensure proper ordering
-    Vector3f<ad> t2p = drjit::max(t1, t2);
+    Vector3f<ad> t2p = drjit::maximum(t1, t2);
 
     // Intersect intervals
     auto [t, idx] = argmin<3, ad>(t2p);
+
+    int ray_size = ray.size();
     Vector3f<ad> n = zeros<Vector3f<ad>>((ray.size()));
     for ( int i = 0; i < 3; ++i ) {
         masked(n[i], eq(idx, i)) = -drjit::sign(ray.d[i]);
