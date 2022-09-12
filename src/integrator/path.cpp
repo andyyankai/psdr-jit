@@ -41,15 +41,10 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
     Spectrum<ad> throughput(1.0f);
     Spectrum<ad> eta(1.0f); // Tracks radiance scaling due to index of refraction changes
     Spectrum<ad> result = m_hide_emitters ? zeros<Spectrum<ad>>() : its.Le(active);
-    // std::cout << "result1" << result << std::endl;
-    // return result;
     Int<ad> idx = arange<Int<ad>>(slices<Spectrum<ad>>(result));
     drjit::eval(result); drjit::sync_thread();
 
-// std::cout << "result2" << result << std::endl;
     for (int depth=0; depth < m_max_depth; depth++) {
-        std::cout << "depth: " << depth << std::endl;
-        std::cout << its.p << std::endl;
         drjit::eval(its);
         BSDFArray<ad> bsdf_array = its.shape->bsdf();
         drjit::eval(bsdf_array);
@@ -90,13 +85,7 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
             } else {
                 Vector3f<ad> wo_local = its.sh_frame.to_local(wod);
                 drjit::eval(its, wo_local, active_direct);
-                // std::cout << "its" <<  its.wi << std::endl;
-                // std::cout << "wo_local" <<  wo_local<< std::endl;
-
                 bsdf_val2 = bsdf_array->evalC(its, wo_local, active_direct);
-
-                // std::cout << "bsdf_val2" <<  bsdf_array<< std::endl;
-
                 bsdf_val2 *= G_val*ps.J/ps.pdf;
                 pdf1 = bsdf_array->pdfC(its, wo_local, active_direct);
                 pdf1 *= G_val;
@@ -121,9 +110,6 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
             Spectrum<ad> bsdf_val;
             Float<ad> pdf0;
             curr_ray = Ray<ad>(its.p, its.sh_frame.to_world(bs.wo));
-            std::cout << "curr_ray" << std::endl;
-            std::cout << curr_ray.o << std::endl;
-            std::cout << curr_ray.d << std::endl;
             drjit::eval(its);
             Intersection<ad> its1 = scene.ray_intersect<ad, ad>(curr_ray, active);
             drjit::eval(its1);
@@ -155,15 +141,12 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
             eta        *= bs.eta;
             drjit::eval(its1);
             result[active] += its1.Le(active) * throughput * weight2;
-            std::cout << "resultin" << result << std::endl;
-            std::cout << "its1.p" << its1.p << std::endl;
             its = its1;
             drjit::eval(its);
         }
         drjit::eval(result);
 
     }
-    std::cout << "result" << result << std::endl;
     return result;
 }
 

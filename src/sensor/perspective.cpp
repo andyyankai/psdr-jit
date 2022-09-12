@@ -32,7 +32,6 @@ void PerspectiveCamera::configure() {
               v11 = transform_pos(m_sample_to_camera, Vector3fD(1.f, 1.f, 0.f)), //    top-right corner of the image at the near plane
               vc  = transform_pos(m_sample_to_camera, Vector3fD(.5f, .5f, 0.f)); //              center of the image at the near plane
     m_inv_area = rcp(norm(v00 - v10)*norm(v11 - v10))*squared_norm(vc);
-    //std::cout << m_inv_pixel_area << std::endl;
 
     // Construct list of primary edges
 
@@ -95,8 +94,6 @@ void PerspectiveCamera::configure() {
                     }
                 }
                 PSDR_ASSERT(slices(info) > 0);
-
-                // std::cout << info << std::endl;
                 offset.push_back(offset.back() + static_cast<int>(slices(info)));
             } else {
                 offset.push_back(offset.back());

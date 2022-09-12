@@ -32,7 +32,7 @@ def test_scene():
 	# exit()
 
 	img = integrator.renderC(sc, 0)
-	print(img)
+	# print(img)
 	img = img.numpy().reshape((256, 256, 3))
 	# print(img)
 	# print()

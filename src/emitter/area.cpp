@@ -9,9 +9,6 @@ namespace psdr
 
 void AreaLight::configure() {
     PSDR_ASSERT((m_mesh != nullptr) && m_mesh->m_ready);
-
-    std::cout << m_radiance << std::endl;
-
     m_sampling_weight = m_mesh->m_total_area*
         rgb2luminance<false>(detach(m_radiance))[0];
     m_ready = true;

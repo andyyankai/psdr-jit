@@ -41,7 +41,6 @@ Scene::~Scene() {
 
 void Scene::load_file(const char *file_name, bool auto_configure) {
     SceneLoader::load_from_file(file_name, *this);
-    std::cout << "load file success!" << std::endl;
     if ( auto_configure ) configure();
 }
 
@@ -56,7 +55,6 @@ void Scene::configure() {
     PSDR_ASSERT(m_num_sensors == static_cast<int>(m_sensors.size()));
     PSDR_ASSERT(m_num_meshes == static_cast<int>(m_meshes.size()));
 
-    std::cout << "begin config scene" << std::endl;
     using namespace std::chrono;
     auto start_time = high_resolution_clock::now();
 
@@ -77,7 +75,6 @@ void Scene::configure() {
             m_samplers[2].seed(arange<UInt64C>(sample_count)+seed);
     }
 
-    std::cout << "Scene: begin config mesh" << std::endl;
     // Preprocess meshes
     PSDR_ASSERT_MSG(!m_meshes.empty(), "Missing meshes!");
     std::vector<int> face_offset, edge_offset, cut_offset;
@@ -290,8 +287,6 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active) const
     Vector3f<ad> tri_info_n2; 
 
 
-    // TriangleInfo<ad>    tri_info;
-    // std::cout << idx[1] << std::endl;
     if constexpr ( ad ) {
         its.n = gather<Vector3f<ad>>(m_triangle_info.face_normal, idx[1], active);
         tri_uv_info = gather<TriangleUVD>(m_triangle_uv, idx[1], active);
@@ -442,15 +437,6 @@ Float<ad> Scene::emitter_position_pdf(const Vector3f<ad> &ref_p, const Intersect
     
 }
 
-
-// template <typename T>
-// static void print_to_string(const std::vector<T*>& arr, const char* name, std::stringstream& oss) {
-//     if ( !arr.empty() ) {
-//         oss << "  # " << name << "\n";
-//         for ( size_t i = 0; i < arr.size(); ++i )
-//             oss << "  " << arr[i]->to_string() << "\n";
-//     }
-// }
 // Explicit instantiations
 template IntersectionC Scene::ray_intersect<false, false>(const RayC&, MaskC) const;
 template IntersectionD Scene::ray_intersect<true , false>(const RayD&, MaskD) const;

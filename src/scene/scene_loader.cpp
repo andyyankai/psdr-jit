@@ -385,7 +385,7 @@ void SceneLoader::load_shape(const pugi::xml_node &node, Scene &scene, int shape
         // Load mesh
         const char *file_name = name_node.attribute("value").value();
         mesh = new Mesh();
-        mesh->load(file_name, true);
+        mesh->load(file_name, false);
     } else {
         PSDR_ASSERT_MSG(false, std::string("Unsupported shape: ") + shape_type);
     }

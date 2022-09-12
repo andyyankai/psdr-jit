@@ -39,14 +39,12 @@ void Scene_OptiX::configure(const std::vector<Mesh *> &meshes) {
     drjit::sync_thread(); drjit::eval();
     PSDR_ASSERT(!meshes.empty());
     size_t num_meshes = meshes.size();
-    std::cout << "num_meshes" << num_meshes << std::endl;
     
     if ( m_accel == nullptr ) {
         std::vector<int> face_offset(num_meshes + 1);
         face_offset[0] = 0;
         for ( size_t i = 0; i < num_meshes; ++i ) {
             face_offset[i + 1] = face_offset[i] + meshes[i]->m_num_faces;
-            std::cout << face_offset[i + 1] << std::endl;
         }
         
         m_accel = new PathTracerState();
@@ -77,13 +75,8 @@ void Scene_OptiX::configure(const std::vector<Mesh *> &meshes) {
         build_inputs[i].triangleArray.flags                 = triangle_input_flags;
         build_inputs[i].triangleArray.numSbtRecords         = 1;
     }
-    drjit::sync_thread(); drjit::eval();
 
     build_accel(*m_accel, build_inputs);
-
-    std::cout << "finish optix config" << std::endl;
-    // PSDR_ASSERT(0);
-    drjit::sync_thread(); drjit::eval();
 }
 
 

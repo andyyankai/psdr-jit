@@ -22,9 +22,6 @@ namespace psdr
 
 template <bool ad>
 static std::pair<TriangleInfo<ad>, Vector3f<ad>> process_mesh(const Vector3f<ad> &vertex_positions, const Vector3i<ad> &face_indices) {
-    // std::cout << "here" << std::endl;
-    // PSDR_ASSERT(0);
-
     const int num_vertices = static_cast<int>(slices<Vector3f<ad>>(vertex_positions));
 
     TriangleInfo<ad> triangles;
@@ -47,10 +44,6 @@ static std::pair<TriangleInfo<ad>, Vector3f<ad>> process_mesh(const Vector3f<ad>
         scatter_reduce(ReduceOp::Add, vertex_weights, face_areas, face_indices[i]);
     }
 
-    std::cout << "num_vertices" << num_vertices << std::endl;
-    std::cout << "vertex_normals1" << vertex_normals << std::endl;
-    std::cout << "vertex_weights" << vertex_weights << std::endl;
-    // PSDR_ASSERT(0);
     vertex_normals = normalize(vertex_normals/vertex_weights);
 
     triangles.n0 = gather<Vector3f<ad>>(vertex_normals, face_indices[0]);
@@ -60,9 +53,6 @@ static std::pair<TriangleInfo<ad>, Vector3f<ad>> process_mesh(const Vector3f<ad>
     // Normalize the face normals
     face_normals /= face_areas;
     face_areas *= 0.5f;
-
-    std::cout << "vertex_normals2" << vertex_normals << std::endl;
-    // PSDR_ASSERT(0);
 
     drjit::eval(triangles, vertex_normals);
 
@@ -152,9 +142,6 @@ void Mesh::load(const char *fname, bool verbose) {
                                drjit::load<IntD>(v[1].data(), m_num_faces),
                                drjit::load<IntD>(v[2].data(), m_num_faces));
 
-    // std::cout << m_face_indices << std::endl;
-
-    // PSDR_ASSERT(0);
 
     if ( m_has_uv ) {
         m_face_uv_indices = Vector3iD(drjit::load<IntD>(v[3].data(), m_num_faces),
@@ -235,7 +222,6 @@ void Mesh::load(const char *fname, bool verbose) {
 
 
 void Mesh::configure() {
-    std::cout << "config mesh" << std::endl;
     if ( m_bsdf != nullptr ) {
         PSDR_ASSERT(!m_bsdf->anisotropic() || !m_use_face_normals);
     }
@@ -248,9 +234,6 @@ void Mesh::configure() {
     // Calculating the world-space vertex positions
 
     m_vertex_positions = transform_pos(to_world, m_vertex_positions_raw);
-
-    std::cout << m_vertex_positions << std::endl;
-    // PSDR_ASSERT(0);
 
     m_triangle_info = new TriangleInfoD();
     TriangleInfoD &triangle_info = *m_triangle_info;
@@ -379,8 +362,6 @@ void Mesh::dump(const char *fname) const {
             std::tie(std::ignore, vertex_normals_) = process_mesh<false>(vertex_positions_, detach(m_face_indices));
             copy_cuda_array<float, 3>(vertex_normals_, vertex_normals);
         }
-
-        // std::cout << vertex_positions_ << std::endl;
     }
 
     FILE *fout = fopen(fname, "wt");
