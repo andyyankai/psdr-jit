@@ -42,12 +42,16 @@ void Bitmap<channels>::load_openexr(const char *file_name) {
 template <int channels>
 template <bool ad>
 typename Bitmap<channels>::template Value<ad> Bitmap<channels>::eval(Vector2f<ad> uv, bool flip_v) const {
+    
 
-
+        if constexpr ( ad )
+            return m_data;
+        else
+            return detach(m_data);
 
     const int width = m_resolution.x(), height = m_resolution.y();
 
-    if ( static_cast<int>(m_data.size()) != width*height )
+    if ( static_cast<int>(slices<ValueD>(m_data)) != width*height )
         throw Exception("Bitmap: invalid data size!");
 
     if ( width == 1 && height == 1 ) {

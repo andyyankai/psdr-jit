@@ -37,6 +37,8 @@
 
 #include <psdr/integrator/integrator.h>
 #include <psdr/integrator/field.h>
+#include <psdr/integrator/collocated.h>
+#include <psdr/integrator/path.h>
 
 
 namespace py = pybind11;
@@ -304,6 +306,15 @@ PYBIND11_MODULE(psdr_jit, m) {
 
     py::class_<FieldExtractionIntegrator, Integrator>(m, "FieldExtractionIntegrator")
         .def(py::init<char*>());
+
+
+    py::class_<CollocatedIntegrator, Integrator>(m, "CollocatedIntegrator")
+        .def_readwrite("m_intensity", &CollocatedIntegrator::m_intensity)
+        .def(py::init<const FloatD &>());
+
+    py::class_<PathTracer, Integrator>(m, "PathTracer")
+        .def(py::init<int>(), "max_depth"_a = 1)
+        .def_readwrite("hide_emitters", &PathTracer::m_hide_emitters);
 
 
 }

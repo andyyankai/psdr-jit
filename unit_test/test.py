@@ -21,11 +21,19 @@ def test_scene():
 
 	sc.configure()
 
-	integrator = psdr.FieldExtractionIntegrator("segmentation 1")
+	# integrator = psdr.FieldExtractionIntegrator("segmentation 1")
+
+
+	# integrator = psdr.CollocatedIntegrator(100000)
+
+	integrator = psdr.PathTracer(1)
+
+	# print(integrator.hide_emitters)
+	# exit()
 
 	img = integrator.renderC(sc, 0)
 	print(img)
-	img = img.numpy().reshape((64, 64, 3))
+	img = img.numpy().reshape((256, 256, 3))
 	# print(img)
 	# print()
 	output = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)

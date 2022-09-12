@@ -44,7 +44,7 @@ struct PositionSample_ : public SampleRecord_<Float_> {
     Vector3f<ad>    p, n;
     Float<ad>       J;
 
-    DRJIT_STRUCT(PositionSample_, Base, pdf, is_valid, p, n, J)
+    DRJIT_STRUCT(PositionSample_, pdf, is_valid, p, n, J)
 };
 
 

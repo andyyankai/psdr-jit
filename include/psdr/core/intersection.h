@@ -30,11 +30,16 @@ struct Intersection_ : public Interaction_<Float_> {
     }
 
     inline Mask<ad> is_emitter(Mask<ad> active) const {
-        return neq(shape->emitter(active), nullptr);
+        return neq(shape->emitter(), nullptr);
     }
 
     inline Spectrum<ad> Le(Mask<ad> active) const {
-        return shape->emitter(active)->eval(*this, active);
+        if constexpr (ad) {
+            return shape->emitter()->evalD(*this, active);
+        } else {
+            return shape->emitter()->evalC(*this, active);
+        }
+        
     }
 
     MeshArray<ad>       shape;

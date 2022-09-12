@@ -65,13 +65,12 @@ public:
         return IntC(m_mesh_id+1);
     };
 
-    
-    // inline const BSDF *bsdf_fun() const {
-    //     return m_bsdf.get();
-    // }
-
     const BSDF* bsdf() {
         return m_bsdf;
+    }
+
+    const Emitter* emitter() {
+        return m_emitter;
     }
 
     void dump(const char *fname) const;
@@ -152,6 +151,7 @@ DRJIT_VCALL_BEGIN(psdr::Mesh)
 
     // DRJIT_VCALL_GETTER(flags, uint32_t)
     DRJIT_VCALL_METHOD(bsdf)
+    DRJIT_VCALL_METHOD(emitter)
     DRJIT_VCALL_METHOD(get_obj_mask)
     DRJIT_VCALL_METHOD(get_obj_id)
     DRJIT_VCALL_METHOD(sample_position)

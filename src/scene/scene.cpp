@@ -402,6 +402,47 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active) const
     return its;
 }
 
+
+template <bool ad>
+PositionSample<ad> Scene::sample_emitter_position(const Vector3f<ad> &ref_p, const Vector2f<ad> &_sample2, Mask<ad> active) const {
+    PSDR_ASSERT_MSG(!m_emitters.empty(), "No Emitter!");
+
+    if ( m_emitters.size() == 1U ) {
+        return m_emitters[0]->sample_position(ref_p, _sample2, active);
+    } else {
+        PositionSample<ad> result;
+        Vector2f<ad> sample2 = _sample2;
+        auto [emitter_index, emitter_pdf] = m_emitters_distrb->sample_reuse<ad>(sample2.y());
+
+        EmitterArray<ad> emitter_arr;
+        if constexpr ( ad ) {
+            emitter_arr = gather<EmitterArrayD>(m_emitters_cuda, IntD(emitter_index), active);
+            result = emitter_arr->sample_positionD(ref_p, sample2, active);
+        } else {
+            emitter_arr = gather<EmitterArrayC>(detach(m_emitters_cuda), emitter_index, active);
+            result = emitter_arr->sample_positionC(ref_p, sample2, active);
+        }
+        result.pdf *= emitter_pdf;
+
+        return result;
+    }
+
+    
+    
+}
+
+
+template <bool ad>
+Float<ad> Scene::emitter_position_pdf(const Vector3f<ad> &ref_p, const Intersection<ad> &its, Mask<ad> active) const {
+    if constexpr (ad) {
+        return its.shape->emitter()->sample_position_pdfD(ref_p, its, active);
+    } else {
+        return its.shape->emitter()->sample_position_pdfC(ref_p, its, active);
+    }
+    
+}
+
+
 // template <typename T>
 // static void print_to_string(const std::vector<T*>& arr, const char* name, std::stringstream& oss) {
 //     if ( !arr.empty() ) {
@@ -415,5 +456,10 @@ template IntersectionC Scene::ray_intersect<false, false>(const RayC&, MaskC) co
 template IntersectionD Scene::ray_intersect<true , false>(const RayD&, MaskD) const;
 template IntersectionD Scene::ray_intersect<true , true >(const RayD&, MaskD) const;
 
+template PositionSampleC Scene::sample_emitter_position<false>(const Vector3fC&, const Vector2fC&, MaskC) const;
+template PositionSampleD Scene::sample_emitter_position<true >(const Vector3fD&, const Vector2fD&, MaskD) const;
+
+template FloatC Scene::emitter_position_pdf<false>(const Vector3fC&, const IntersectionC&, MaskC) const;
+template FloatD Scene::emitter_position_pdf<true >(const Vector3fD&, const IntersectionD&, MaskD) const;
 
 } // namespace psdr

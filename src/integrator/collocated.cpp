@@ -24,18 +24,29 @@ Spectrum<ad> CollocatedIntegrator::__Li(const Scene &scene, const Ray<ad> &ray, 
     Intersection<ad> its = scene.ray_intersect<ad>(ray, active);
     Spectrum<ad> result;
 
-    active &= its.is_valid();
-    if ( scene.m_bsdfs.size() == 1U || scene.m_meshes.size() == 1U ) {
-        const BSDF *bsdf = scene.m_meshes[0]->m_bsdf;
-        result = bsdf->eval(its, its.wi, active)/sqr(its.t);
-    } else {
-        BSDFArray<ad> bsdf_array = its.shape->bsdf(active);
-        result = bsdf_array->eval(its, its.wi, active)/sqr(its.t);
-    }
+
 
     if constexpr (ad) {
+        active &= its.is_valid();
+        if ( scene.m_bsdfs.size() == 1U || scene.m_meshes.size() == 1U ) {
+            const BSDF *bsdf = scene.m_meshes[0]->m_bsdf;
+            result = bsdf->evalD(its, its.wi, active)/sqr(its.t);
+        } else {
+            BSDFArray<ad> bsdf_array = its.shape->bsdf();
+            
+            result = bsdf_array->evalD(its, its.wi, active)/sqr(its.t);
+        }
         result *= m_intensity;
     } else {
+        active &= its.is_valid();
+        if ( scene.m_bsdfs.size() == 1U || scene.m_meshes.size() == 1U ) {
+            const BSDF *bsdf = scene.m_meshes[0]->m_bsdf;
+            result = bsdf->evalC(its, its.wi, active)/sqr(its.t);
+        } else {
+            BSDFArray<ad> bsdf_array = its.shape->bsdf();
+            
+            result = bsdf_array->evalC(its, its.wi, active)/sqr(its.t);
+        }
         result *= detach(m_intensity);
     }
 

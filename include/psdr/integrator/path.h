@@ -19,11 +19,6 @@ protected:
     template <bool ad>
     Spectrum<ad> __Li(const Scene &scene, Sampler &sampler, const Ray<ad> &ray, Mask<ad> active) const;
 
-    void render_secondary_edges(const Scene &scene, int sensor_id, SpectrumD &result) const override;
-
-    template <bool ad>
-    std::pair<IntC, Spectrum<ad>> eval_secondary_edge(const Scene &scene, const Sensor &sensor, const Vector3fC &sample3, int direct = 0) const;
-
     int m_max_depth;
 
 PSDR_CLASS_DECL_END(PathTracer)
