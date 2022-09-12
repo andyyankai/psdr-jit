@@ -135,6 +135,7 @@ Vector2i<ad> Scene_OptiX::ray_intersect(const Ray<ad> &ray, Mask<ad> &active) co
     CUDA_SYNC_CHECK();
 
     active &= (m_its.shape_id >= 0) && (m_its.triangle_id >= 0);
+    drjit::eval(m_its);
     return Vector2i<ad>(m_its.shape_id, m_its.triangle_id);
 }
 

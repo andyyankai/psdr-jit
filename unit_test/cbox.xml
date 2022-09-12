@@ -40,7 +40,7 @@
 	</bsdf>
 
 	<bsdf type="diffuse" id="light">
-		<rgb name="reflectance" value="0.5, 0.8, 0.8"/>
+		<rgb name="reflectance" value="0.0, 0.0, 0.0"/>
 	</bsdf>
 
 	<shape type="obj">

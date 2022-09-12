@@ -26,7 +26,7 @@ def test_scene():
 
 	# integrator = psdr.CollocatedIntegrator(100000)
 
-	integrator = psdr.PathTracer(1)
+	integrator = psdr.PathTracer(2)
 
 	# print(integrator.hide_emitters)
 	# exit()
