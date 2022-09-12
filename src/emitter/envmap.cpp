@@ -86,6 +86,7 @@ PositionSampleD EnvironmentMap::sample_position(const Vector3fD &ref_p, const Ve
 template <bool ad>
 PositionSample<ad> EnvironmentMap::__sample_position(const Vector3f<ad> &ref_p, const Vector2f<ad> &_sample2, Mask<ad> active) const {
     PSDR_ASSERT(m_ready);
+
     PositionSample<ad> result;
 
     RayC ray;
@@ -99,6 +100,7 @@ PositionSample<ad> EnvironmentMap::__sample_position(const Vector3f<ad> &ref_p, 
         sample2 = _sample2;
     }
     std::tie(ray.d, pdf) = sample_direction(sample2);
+
     auto [t, n, G] = ray_intersect_scene_aabb<false>(ray, m_lower, m_upper);
 
     result.is_valid = active;
@@ -106,6 +108,8 @@ PositionSample<ad> EnvironmentMap::__sample_position(const Vector3f<ad> &ref_p, 
     result.n = n;
     result.pdf = pdf*G;
     result.J = 1.f;
+
+
     return result;
 }
 

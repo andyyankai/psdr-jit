@@ -17,11 +17,13 @@ def test_scene():
 	print("INIT test scene")
 	sc = psdr.Scene()
 
-	sc.load_file("cbox.xml", False)
+	# sc.load_file("cbox.xml", False)
+
+	sc.load_file("bunny_env.xml", False)
 
 	sc.configure()
 
-	# integrator = psdr.FieldExtractionIntegrator("segmentation 1")
+	# integrator = psdr.FieldExtractionIntegrator("segmentation")
 
 
 	# integrator = psdr.CollocatedIntegrator(100000)

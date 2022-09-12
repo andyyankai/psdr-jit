@@ -14,7 +14,7 @@
 		<float name="fov" value="30"/>
 
 		<sampler type="ldsampler">
-			<integer name="sampleCount" value="16"/>
+			<integer name="sampleCount" value="64"/>
 		</sampler>
 
 		<film type="hdrfilm">

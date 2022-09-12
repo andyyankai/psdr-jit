@@ -92,7 +92,7 @@ DRJIT_INLINE auto ray_intersect_triangle(const Vector3f<ad> &p0, const Vector3f<
 template <int ndim, bool ad>
 DRJIT_INLINE auto argmin(const Vectorf<ndim, ad> &vector) {
     Float<ad> result = vector[0];
-    Int<ad> idx = zeros<Int<ad>>((vector.size()));
+    Int<ad> idx = zeros<Int<ad>>(slices<Vectorf<ndim, ad>>(vector));
     for ( int i = 1; i < ndim; ++i ) {
         Mask<ad> less = vector[i] < result;
         masked(result, less) = vector[i];
@@ -145,16 +145,16 @@ DRJIT_INLINE auto ray_intersect_scene_aabb(Ray<ad> &ray, const Vector3f<ad> &low
 
     // Ensure proper ordering
     Vector3f<ad> t2p = drjit::maximum(t1, t2);
-
     // Intersect intervals
     auto [t, idx] = argmin<3, ad>(t2p);
-
-    int ray_size = ray.size();
-    Vector3f<ad> n = zeros<Vector3f<ad>>((ray.size()));
+    int ray_size = ray.size();    
+    Vector3f<ad> n = zeros<Vector3f<ad>>(ray_size);
     for ( int i = 0; i < 3; ++i ) {
         masked(n[i], eq(idx, i)) = -drjit::sign(ray.d[i]);
     }
     Float<ad> G = dot(n, -ray.d)*rcp(sqr(t));
+
+
     return std::make_tuple(t, n, G);
 }
 

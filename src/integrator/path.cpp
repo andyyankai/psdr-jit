@@ -53,6 +53,7 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
             drjit::eval(its);
             PositionSample<ad> ps = scene.sample_emitter_position<ad>(its.p, sampler.next_2d<ad>(), active);
             Mask<ad> active_direct = active && ps.is_valid;
+            
 
             Vector3f<ad> wod = ps.p - its.p;
             Float<ad> dist_sqr = squared_norm(wod);
@@ -60,14 +61,41 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
             wod /= dist;
             
 
+            drjit::eval(its, wod);
             Ray<ad> ray1(its.p, wod);
+
+            //             std::cout << active_direct << std::endl;
+            // PSDR_ASSERT(0);
+
+            drjit::eval(ray1, active_direct);
+
+            std::cout << "ray1.o" << ray1.o <<  std::endl;
+
+            std::cout << "ray1.d" << ray1.d << std::endl;
+
+
+
             Intersection<ad> its1 = scene.ray_intersect<ad, ad>(ray1, active_direct);
             active_direct &= its1.is_valid();
+
+            // std::cout << active_direct << std::endl;
+            // PSDR_ASSERT(0);
+
+
             active_direct &= (its1.t > dist - ShadowEpsilon) && its1.is_emitter(active_direct);
+
+            // std::cout << active_direct << std::endl;
+            // PSDR_ASSERT(0);
 
             Float<ad> cos_val = dot(its1.n, -wod);
             Float<ad> G_val = abs(cos_val) / dist_sqr;
-            Spectrum<ad> emitter_val = its1.Le(active_direct);
+            // std::cout << its1.wi << std::endl;
+            drjit::eval(its1);
+            Spectrum<ad> emitter_val = its1.Le(active);
+            // std::cout << "emitter_val" << emitter_val << std::endl;
+
+
+            // result = emitter_val;
 
             drjit::eval(its);
             Spectrum<ad> bsdf_val2;
@@ -80,6 +108,7 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
                 drjit::eval(its, wo_local, active_direct);
                 bsdf_val2 = bsdf_array->evalD(its, wo_local, active_direct);
                 bsdf_val2 *= G_val*ps.J/ps.pdf;
+                drjit::eval(its);
                 pdf1 = bsdf_array->pdfD(its, wo_local, active_direct);
                 pdf1 *= detach(G_val);
             } else {
@@ -87,17 +116,25 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
                 drjit::eval(its, wo_local, active_direct);
                 bsdf_val2 = bsdf_array->evalC(its, wo_local, active_direct);
                 bsdf_val2 *= G_val*ps.J/ps.pdf;
+                drjit::eval(its);
                 pdf1 = bsdf_array->pdfC(its, wo_local, active_direct);
                 pdf1 *= G_val;
             }
+            drjit::eval(bsdf_val2, ps, pdf1);
 
             Float<ad> weight1 = mis_weight<ad>(ps.pdf, pdf1);
-            
-            result[active_direct] += throughput * emitter_val * bsdf_val2 * weight1;
+            std::cout << "li bsdf_val2" << bsdf_val2 << std::endl;
+            std::cout << "li emitter_val" << emitter_val << std::endl;
+            auto tmp_di = throughput * emitter_val * bsdf_val2 * weight1;
+            drjit::eval(tmp_di);
+            result[active_direct] += tmp_di;
 
         }
+        drjit::eval(bsdf_array);
         drjit::eval(result);
-        // // Indirect illumination
+        drjit::eval(active);
+        // std::cout << result << std::endl;
+        // Indirect illumination
         {
             drjit::eval(its);
             BSDFSample<ad> bs;
@@ -109,14 +146,36 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
             
             Spectrum<ad> bsdf_val;
             Float<ad> pdf0;
+            drjit::eval(its);
+            drjit::eval(bs);
             curr_ray = Ray<ad>(its.p, its.sh_frame.to_world(bs.wo));
             drjit::eval(its);
+
+            drjit::eval(curr_ray, active);
+
+
+            // std::cout <<active<<std::endl;
+            std::cout <<curr_ray.o<<std::endl;
+            std::cout <<curr_ray.d<<std::endl;
+            drjit::eval(curr_ray.o);
+
+            drjit::eval(curr_ray.d);
             Intersection<ad> its1 = scene.ray_intersect<ad, ad>(curr_ray, active);
             drjit::eval(its1);
+            // auto ttt = its1.Le(active);
+            // drjit::eval(ttt);
+            //             result[active] += ttt;
+                        // PSDR_ASSERT(0);
 
             active &= bs.is_valid;
+
+                std::cout << "active1" << active << std::endl;
+                std::cout << "its1.is_valid()" << its1.is_valid() << std::endl;
             active &= its1.is_valid();
 
+                            std::cout << "active2" << active << std::endl;
+
+            drjit::eval(bsdf_array);
             if constexpr ( ad ) {
                 Vector3fD wo = its1.p - its.p;
                 wo /= its1.t;
@@ -132,18 +191,46 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
                 FloatC cos_val = dot(its1.n, -curr_ray.d);
                 FloatC G_val = abs(cos_val)/sqr(its1.t);
                 pdf0 = bs.pdf*G_val;
-                bsdf_val = select(detach(its1.t) < Epsilon, 0.0f, bsdf_array->evalC(its, bs.wo, active) / bs.pdf);
+                // std::cout << "bs.wo" << bs.wo << std::endl;
+                // std::cout << "its.wi" << its.wi << std::endl;
+                // std::cout << "active" << active << std::endl;
+                auto temp_bsdfa = bsdf_array->evalC(its, bs.wo, active);
+                // std::cout << "temp_bsdfa" << temp_bsdfa << std::endl;
+                bsdf_val = select(detach(its1.t) < Epsilon, 0.0f, temp_bsdfa / bs.pdf);
+                
             }
             Float<ad> weight2 = mis_weight<ad>(pdf0, scene.emitter_position_pdf<ad>(its.p, its1, active)); // MIS weight
             // Float<ad> weight2 = 1.0f;
+            // std::cout << "bsdf_val" << bsdf_val << std::endl;
+            drjit::eval(bsdf_val);
+
+            std::cout << "bsdf_val" << bsdf_val << std::endl;
             throughput *= bsdf_val;
+            drjit::eval(throughput);
+
             // active &= Mask<ad>(throughput > Epsilon);
+            drjit::eval(bs);
             eta        *= bs.eta;
             drjit::eval(its1);
-            result[active] += its1.Le(active) * throughput * weight2;
+            drjit::eval(weight2);
+
+            std::cout << "throughput" << throughput << std::endl;
+            std::cout << "weight2" << weight2 << std::endl;
+            std::cout << "active" << active << std::endl;
+            auto tmp_b = its1.Le(active) * throughput * weight2;
+            // auto tmp_b = its1.Le(active) * throughput * weight2;
+
+            std::cout << "tmp_b" << tmp_b << std::endl;
+            drjit::eval(tmp_b);
+            // std::cout << tmp_b << std::endl;
+            result[active] += tmp_b;
+
+            std::cout << "result" << result << std::endl;
             its = its1;
             drjit::eval(its);
         }
+
+        // std::cout << result << std::endl;
         drjit::eval(result);
 
     }
