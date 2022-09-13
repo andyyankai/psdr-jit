@@ -11,7 +11,7 @@
         <float name="fov" value="25"/>
         <string name="fov_axis" value="x"/>
         <sampler type="independent">
-            <integer name="sample_count" value="32" />
+            <integer name="sample_count" value="128" />
         </sampler>
         <film type="hdrfilm">
             <integer name="width" value="256" />

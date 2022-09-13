@@ -4,10 +4,10 @@
 *.exe
 __pycache__
 build/
-ext/
 ext_win64/
 local/
 examples/
 dist/
+tmp/
 **/*.log
 unit_test/*.exr

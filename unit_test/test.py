@@ -1,7 +1,7 @@
 import cv2
 
 
-test_psdrjit = 1
+test_psdrjit = 0
 
 if test_psdrjit:
 	import psdr_jit as psdr
@@ -28,7 +28,7 @@ def test_scene():
 
 	# integrator = psdr.CollocatedIntegrator(100000)
 
-	integrator = psdr.PathTracer(2)
+	integrator = psdr.PathTracer(1)
 
 	# print(integrator.hide_emitters)
 	# exit()
