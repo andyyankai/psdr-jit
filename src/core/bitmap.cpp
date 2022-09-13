@@ -56,7 +56,7 @@ typename Bitmap<channels>::template Value<ad> Bitmap<channels>::eval(Vector2f<ad
         if ( width < 2 || height < 2 )
             throw Exception("Bitmap: invalid resolution!");
 
-        // Matrix3fD to_world = m_to_world_left * m_to_world_raw * m_to_world_right;
+        Matrix3fD to_world = m_to_world_left * m_to_world_raw * m_to_world_right;
 
         if ( flip_v ) {
             // flip the v coordinates to match common practices
@@ -64,12 +64,12 @@ typename Bitmap<channels>::template Value<ad> Bitmap<channels>::eval(Vector2f<ad
         }        
 
         // BUG
-        // if constexpr ( ad ) {
-        //     uv = transform2d_pos(to_world, uv);
-        // } else {
-        //     const Matrix3fC &to_worldC = detach(to_world);
-        //     uv = transform2d_pos(to_worldC, uv);
-        // }
+        if constexpr ( ad ) {
+            uv = transform2d_pos(to_world, uv);
+        } else {
+            const Matrix3fC &to_worldC = detach(to_world);
+            uv = transform2d_pos(to_worldC, uv);
+        }
         uv -= floor(uv);
 
 

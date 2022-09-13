@@ -107,7 +107,7 @@ static Array<Float, 3> transform_dir(const Matrix<Float, 4> &mat, const Array<Fl
 // 2d transform
 template <typename Float>
 static Array<Float, 2> transform2d_pos(const Matrix<Float, 3> &mat, const Array<Float, 2> &vec) {
-    Array<Float, 3> tmp = mat * concat(vec, 1.f);
+    Array<Float, 3> tmp = mat * Array<Float, 3>(vec[0], vec[1], 1.f);
     return head<2>(tmp)/tmp.z();
 }
 

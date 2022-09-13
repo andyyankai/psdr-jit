@@ -11,15 +11,26 @@ struct Ray {
     inline Ray() = default;
 
     inline Ray(const Vector3f<ad> &o, const Vector3f<ad> &d, const Float<ad> &tmax) : o(o), d(d), tmax(tmax) {
+        drjit::eval(o);
+        drjit::eval(d);
+        drjit::eval(tmax);
+
     }
 
     inline Ray(const Vector3f<ad> &o, const Vector3f<ad> &d) : o(o), d(d) {
         PSDR_ASSERT(o.size() == d.size());
         PSDR_ASSERT(slices<Vector3f<ad>>(o) == slices<Vector3f<ad>>(d));
+        drjit::eval(o);
+        drjit::eval(d);
+
         tmax = full<Float<ad>>(Infinity, slices<Vector3f<ad>>(d));
+        drjit::eval(tmax);
     }
 
-    template <bool ad1> inline Ray(const Ray<ad1> &ray) : o(ray.o), d(ray.d), tmax(ray.tmax) {}
+    template <bool ad1> inline Ray(const Ray<ad1> &ray) : o(ray.o), d(ray.d), tmax(ray.tmax) {
+
+
+}
 
     Vector3f<ad> o, d;
     Float<ad> tmax;
@@ -31,11 +42,17 @@ struct Ray {
     }
 
     inline Ray reversed() const { return Ray(o, -d, tmax); }
+
+    // DRJIT_STRUCT(Ray, o, d, tmax)
+
+
 };
 
 
 inline RayC detach(const RayD &ray) {
     return RayC(detach(ray.o), detach(ray.d), detach(ray.tmax));
 }
+
+
 
 } // namespace psdr
