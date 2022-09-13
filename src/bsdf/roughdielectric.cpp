@@ -24,19 +24,6 @@ BSDFSampleD RoughDielectric::sample(const IntersectionD& its, const Vector3fD& s
     return __sample<true>(its, sample, active);
 }
 
-BSDFSampleDualC RoughDielectric::sampleDual(const IntersectionC &its, const Vector3fC &sample, MaskC active) const {
-    PSDR_ASSERT(0);
-    BSDFSampleDualC bs;
-    return bs;
-}
-
-
-BSDFSampleDualD RoughDielectric::sampleDual(const IntersectionD &its, const Vector3fD &sample, MaskD active) const {
-    PSDR_ASSERT(0);
-    BSDFSampleDualD bs;
-    return bs;
-}
-
 FloatC RoughDielectric::pdf(const IntersectionC& its, const Vector3fC& wo, MaskC active) const {
     return __pdf<false>(its, wo, active);
 }
@@ -176,7 +163,7 @@ Float<ad> RoughDielectric::__pdf(const Intersection<ad>& its, const Vector3f<ad>
 
 template <bool ad>
 BSDFSample<ad> RoughDielectric::__sample(const Intersection<ad>& its, const Vector3f<ad>& sample, Mask<ad> active) const {
-    BSDFSample<ad> bs = zero<BSDFSample<ad>>();
+    BSDFSample<ad> bs = zeros<BSDFSample<ad>>();
     Float<ad> cos_theta_i = Frame<ad>::cos_theta(its.wi);
     Float<ad> alpha_u = m_alpha_u.eval<ad>(its.uv);
     Float<ad> alpha_v = m_alpha_v.eval<ad>(its.uv);

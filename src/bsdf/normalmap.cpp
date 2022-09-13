@@ -25,13 +25,13 @@ Vector3f<ad> wt(Vector3f<ad> wp) {
 
 template <bool ad>
 Float<ad> pdot(Vector3f<ad> a, Vector3f<ad> b) {
-    return max(Float<ad>(0.f), dot(a, b));
+    return maximum(Float<ad>(0.f), dot(a, b));
 }
 
 template <bool ad>
 Float<ad> G1(Vector3f<ad> wp, Vector3f<ad> w) {
-    return min(1.f,
-        max(0.f, Frame<ad>::cos_theta(w)) * max(0.f, Frame<ad>::cos_theta(wp))
+    return minimum(1.f,
+        maximum(0.f, Frame<ad>::cos_theta(w)) * maximum(0.f, Frame<ad>::cos_theta(wp))
         / (pdot<ad>(w, wp) + pdot<ad>(w, wt<ad>(wp)) * Frame<ad>::sin_theta(wp))
     );
 }
@@ -86,19 +86,6 @@ BSDFSampleC NormalMap::sample(const IntersectionC &its, const Vector3fC &sample,
 
 BSDFSampleD NormalMap::sample(const IntersectionD &its, const Vector3fD &sample, MaskD active) const {
     return __sample<true>(its, sample, active);
-}
-
-BSDFSampleDualC NormalMap::sampleDual(const IntersectionC &its, const Vector3fC &sample, MaskC active) const {
-    PSDR_ASSERT(0);
-    BSDFSampleDualC bs;
-    return bs;
-}
-
-
-BSDFSampleDualD NormalMap::sampleDual(const IntersectionD &its, const Vector3fD &sample, MaskD active) const {
-    PSDR_ASSERT(0);
-    BSDFSampleDualD bs;
-    return bs;
 }
 
 FloatC NormalMap::pdf(const IntersectionC &its, const Vector3fC &wo, MaskC active) const {

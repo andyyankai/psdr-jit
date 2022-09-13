@@ -8,6 +8,10 @@
 #include <psdr/core/transform.h>
 #include <psdr/core/sampler.h>
 #include <psdr/bsdf/diffuse.h>
+#include <psdr/bsdf/roughconductor.h>
+#include <psdr/bsdf/roughdielectric.h>
+#include <psdr/bsdf/microfacet.h>
+#include <psdr/bsdf/normalmap.h>
 #include <psdr/emitter/area.h>
 #include <psdr/emitter/envmap.h>
 #include <psdr/sensor/perspective.h>
@@ -337,7 +341,6 @@ void SceneLoader::load_emitter(const pugi::xml_node &node, Scene &scene) {
     }
 }
 
-
 void SceneLoader::load_bsdf(const pugi::xml_node &node, Scene &scene) {
     const char *bsdf_id = node.attribute("id").value();
     PSDR_ASSERT_MSG(bsdf_id && strcmp(bsdf_id, ""), "BSDF must have an id");
@@ -352,6 +355,113 @@ void SceneLoader::load_bsdf(const pugi::xml_node &node, Scene &scene) {
         Diffuse *b = new Diffuse();
         load_texture(refl_node, b->m_reflectance);
         b->m_reflectance.m_to_world_raw = to_world;
+        bsdf = b;
+    } else if ( strcmp(bsdf_type, "roughconductor") == 0 ){
+        // roughconductor BSDF
+        pugi::xml_node alpha = find_child_by_name(node, {"alpha"});
+        pugi::xml_node eta = find_child_by_name(node, {"eta"});
+        pugi::xml_node k = find_child_by_name(node, {"k"});
+
+        RoughConductor *b = new RoughConductor();
+        load_texture(alpha, b->m_alpha_u);
+        load_texture(alpha, b->m_alpha_v);
+        load_texture(eta, b->m_eta);
+        load_texture(k, b->m_k);
+        bsdf = b;
+    } else if ( strcmp(bsdf_type, "roughdielectric") == 0 ){
+        pugi::xml_node alpha = find_child_by_name(node, {"alpha"});
+        pugi::xml_node intIOR = find_child_by_name(node, {"intIOR"});
+        pugi::xml_node extIOR = find_child_by_name(node, {"extIOR"});
+        PSDR_ASSERT(intIOR.attribute("value").value());
+        PSDR_ASSERT(extIOR.attribute("value").value());
+
+        float intIOR_val = intIOR.attribute("value").as_float();
+        float extIOR_val = extIOR.attribute("value").as_float();
+
+        RoughDielectric *b = new RoughDielectric(intIOR_val, extIOR_val);
+        load_texture(alpha, b->m_alpha_u);
+        load_texture(alpha, b->m_alpha_v);
+
+        bsdf = b;
+
+    } else if (strcmp(bsdf_type, "microfacet") == 0 ) {
+        pugi::xml_node spec_refl_node = find_child_by_name(node, {"specular_reflectance", "specularReflectance"});
+        pugi::xml_node diff_refl_node = find_child_by_name(node, {"diffuse_reflectance", "diffuseReflectance"});
+        pugi::xml_node roughness_node = find_child_by_name(node, {"roughness"});
+
+        Microfacet *b = new Microfacet();
+        load_texture(spec_refl_node, b->m_specularReflectance);
+        load_texture(diff_refl_node, b->m_diffuseReflectance);
+        load_texture(roughness_node, b->m_roughness);
+        b->m_specularReflectance.m_to_world_raw = to_world;
+        b->m_diffuseReflectance.m_to_world_raw = to_world;
+        b->m_roughness.m_to_world_raw = to_world;
+
+        bsdf = b;
+    } else if (strcmp(bsdf_type, "normalmap") == 0 ) {
+        pugi::xml_node normalmap_node = find_child_by_name(node, {"normalmap"});
+        pugi::xml_node bsdf_node = node.child("bsdf");
+        std::cout << "WARN: develop normal map" << std::endl;
+        NormalMap *b = new NormalMap();
+        const char *nmap_bsdf_type = bsdf_node.attribute("type").value();
+        b->m_bsdf = nullptr;
+
+        if ( strcmp(nmap_bsdf_type, "diffuse") == 0 ) {
+            // Diffuse BSDF
+            pugi::xml_node nmap_refl_node = find_child_by_name(bsdf_node, {"reflectance"});
+            Diffuse *nmap_b = new Diffuse();
+            load_texture(nmap_refl_node, nmap_b->m_reflectance);
+            nmap_b->m_reflectance.m_to_world_raw = to_world;
+            b->m_bsdf = nmap_b;
+        } else if ( strcmp(nmap_bsdf_type, "roughconductor") == 0 ){
+            // roughconductor BSDF
+            pugi::xml_node alpha = find_child_by_name(bsdf_node, {"alpha"});
+            pugi::xml_node eta = find_child_by_name(bsdf_node, {"eta"});
+            pugi::xml_node k = find_child_by_name(bsdf_node, {"k"});
+
+            RoughConductor *nmap_b = new RoughConductor();
+            load_texture(alpha, nmap_b->m_alpha_u);
+            load_texture(alpha, nmap_b->m_alpha_v);
+            load_texture(eta, nmap_b->m_eta);
+            load_texture(k, nmap_b->m_k);
+            b->m_bsdf = nmap_b;
+        } else if ( strcmp(nmap_bsdf_type, "roughdielectric") == 0 ){
+            pugi::xml_node alpha = find_child_by_name(bsdf_node, {"alpha"});
+            pugi::xml_node intIOR = find_child_by_name(bsdf_node, {"intIOR"});
+            pugi::xml_node extIOR = find_child_by_name(bsdf_node, {"extIOR"});
+            PSDR_ASSERT(intIOR.attribute("value").value());
+            PSDR_ASSERT(extIOR.attribute("value").value());
+
+            float intIOR_val = intIOR.attribute("value").as_float();
+            float extIOR_val = extIOR.attribute("value").as_float();
+
+            RoughDielectric *nmap_b = new RoughDielectric(intIOR_val, extIOR_val);
+            load_texture(alpha, nmap_b->m_alpha_u);
+            load_texture(alpha, nmap_b->m_alpha_v);
+
+            b->m_bsdf = nmap_b;
+
+        } else if (strcmp(nmap_bsdf_type, "microfacet") == 0 ) {
+            pugi::xml_node spec_refl_node = find_child_by_name(bsdf_node, {"specular_reflectance", "specularReflectance"});
+            pugi::xml_node diff_refl_node = find_child_by_name(bsdf_node, {"diffuse_reflectance", "diffuseReflectance"});
+            pugi::xml_node roughness_node = find_child_by_name(bsdf_node, {"roughness"});
+
+            Microfacet *nmap_b = new Microfacet();
+            load_texture(spec_refl_node, nmap_b->m_specularReflectance);
+            load_texture(diff_refl_node, nmap_b->m_diffuseReflectance);
+            load_texture(roughness_node, nmap_b->m_roughness);
+
+            nmap_b->m_specularReflectance.m_to_world_raw = to_world;
+            nmap_b->m_diffuseReflectance.m_to_world_raw = to_world;
+            nmap_b->m_roughness.m_to_world_raw = to_world;
+
+            b->m_bsdf = nmap_b;
+        } else {
+            PSDR_ASSERT_MSG(false, std::string("Unsupported normal map nested BSDF: ") + nmap_bsdf_type);
+        }
+        load_texture(normalmap_node, b->m_nmap);
+        b->m_nmap.m_to_world_raw = to_world;
+        // b->m_nmap.m_data = normalize(b->m_nmap.m_data);
         bsdf = b;
     } else {
         PSDR_ASSERT_MSG(false, std::string("Unsupported BSDF: ") + bsdf_type);

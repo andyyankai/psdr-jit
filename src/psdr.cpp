@@ -21,7 +21,12 @@
 
 #include <psdr/bsdf/bsdf.h>
 #include <psdr/bsdf/diffuse.h>
+#include <psdr/bsdf/ggx.h>
+#include <psdr/bsdf/roughconductor.h>
+#include <psdr/bsdf/roughdielectric.h>
+#include <psdr/bsdf/microfacet.h>
 
+#include <psdr/bsdf/normalmap.h>
 
 #include <psdr/core/pmf.h>
 
@@ -240,14 +245,35 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readonly("J", &PositionSampleD::J);
 
 
-    py::class_<BSDF, Object>(m, "BSDF");
+    py::class_<BSDF, Object>(m, "BSDF")
+        .def("anisotropic", &BSDF::anisotropic);
+
+    py::class_<NormalMap, BSDF>(m, "NormalMapBSDF")
+        .def_readwrite("nested_bsdf", &NormalMap::m_bsdf)
+        .def_readwrite("normal_map", &NormalMap::m_nmap);
 
     py::class_<Diffuse, BSDF>(m, "DiffuseBSDF")
-        .def(py::init<>())
-        .def(py::init<const ScalarVector3f&>())
-        .def(py::init<const char*>())
-        .def(py::init<const Bitmap3fD&>())
+        //.def(py::init<>())
+        //.def(py::init<const ScalarVector3f&>())
+        //.def(py::init<const char*>())
+        //.def(py::init<const Bitmap3fD&>())
         .def_readwrite("reflectance", &Diffuse::m_reflectance);
+
+    py::class_<RoughConductor, BSDF>(m, "RoughConductorBSDF")
+        .def_readwrite("alpha_u", &RoughConductor::m_alpha_u)
+        .def_readwrite("alpha_v", &RoughConductor::m_alpha_v)
+        .def_readwrite("eta", &RoughConductor::m_eta)
+        .def_readwrite("k", &RoughConductor::m_k)
+        .def_readwrite("specular_reflectance", &RoughConductor::m_specular_reflectance);
+
+    py::class_<RoughDielectric, BSDF>(m, "RoughDielectricBSDF");
+    // Sensors
+
+    py::class_<Microfacet, BSDF>(m, "MicrofacetBSDF")
+        .def_readwrite("roughness", &Microfacet::m_roughness)
+        .def_readwrite("diffuseReflectance", &Microfacet::m_diffuseReflectance)
+        .def_readwrite("specularReflectance", &Microfacet::m_specularReflectance);
+
 
     // Shapes
 
