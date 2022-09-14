@@ -84,8 +84,15 @@ void drjit_memory() {
 }
 
 PYBIND11_MODULE(psdr_jit, m) {
+    py::module::import("drjit");
+    py::module::import("drjit.cuda");
+    py::module::import("drjit.cuda.ad");
+
     m.doc() = "Path-space differentiable renderer";
     m.attr("__name__") = "psdr_jit";
+
+
+
     m.def("drjit_test", &drjit_test);
 
     m.def("drjit_memory", &drjit_memory);
