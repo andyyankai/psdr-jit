@@ -20,8 +20,7 @@
 #include <psdr/scene/scene.h>
 #include <psdr/scene/scene_loader.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 template <int length>
 Array<float, length> parse_vector(const char *str, bool allow_empty = false) {
@@ -540,4 +539,4 @@ void SceneLoader::load_shape(const pugi::xml_node &node, Scene &scene, int shape
     scene.m_meshes.push_back(mesh);
 }
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

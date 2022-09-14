@@ -12,8 +12,7 @@
 
 
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 void EnvironmentMap::configure() {
     int width = m_radiance.m_resolution.x(), height = m_radiance.m_resolution.y();
@@ -172,4 +171,4 @@ std::string EnvironmentMap::to_string() const {
 template SpectrumC EnvironmentMap::eval_direction<false>(const Vector3fC&, MaskC) const;
 template SpectrumD EnvironmentMap::eval_direction<true >(const Vector3fD&, MaskD) const;
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

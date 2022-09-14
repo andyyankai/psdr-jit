@@ -3,8 +3,7 @@
 #include <psdr/core/bitmap.h>
 #include "bsdf.h"
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 struct GGXDistribution {
 public:
@@ -30,4 +29,4 @@ public:
     FloatD m_alpha_u, m_alpha_v;
 };
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

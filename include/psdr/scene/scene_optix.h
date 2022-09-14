@@ -4,8 +4,7 @@
 
 struct PathTracerState;
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 struct Intersection_OptiX {
     void reserve(int64_t size);
@@ -36,4 +35,4 @@ protected:
     mutable Intersection_OptiX      m_its;
 };
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

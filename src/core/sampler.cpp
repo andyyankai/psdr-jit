@@ -1,8 +1,7 @@
 #include <misc/Exception.h>
 #include <psdr/core/sampler.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 template <typename UInt32>
 uint64_array_t<UInt32> sample_tea_64(UInt32 v0, UInt32 v1, int rounds = 4) {
@@ -58,4 +57,4 @@ Float<ad> Sampler::next_1d() {
 template FloatC Sampler::next_1d<false>();
 template FloatD Sampler::next_1d<true>();
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

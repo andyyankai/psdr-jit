@@ -111,7 +111,7 @@ void optix_config(PathTracerState& state, const std::vector<int> &face_offset) {
     state.pipeline_compile_options.exceptionFlags        = OPTIX_EXCEPTION_FLAG_NONE;
     state.pipeline_compile_options.pipelineLaunchParamsVariableName = "params";
 
-    const std::string ptx = psdr::getPtxString( OPTIX_SAMPLE_NAME, (std::string(PSDR_CUDA_FILE) + ".cu").c_str() );
+    const std::string ptx = psdr_jit::getPtxString( OPTIX_SAMPLE_NAME, (std::string(PSDR_CUDA_FILE) + ".cu").c_str() );
 
     OPTIX_CHECK_LOG( optixModuleCreateFromPTX(
                 state.context,

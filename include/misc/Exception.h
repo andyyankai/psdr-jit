@@ -3,6 +3,7 @@
 #include <optix.h>
 #include <stdexcept>
 #include <sstream>
+#include <psdr/macros.h>
 
 //------------------------------------------------------------------------------
 //
@@ -19,7 +20,7 @@
             std::stringstream ss;                                              \
             ss << "Optix call '" << #call << "' failed: " __FILE__ ":"         \
                << __LINE__ << ")\n";                                           \
-            throw psdr::Exception( res, ss.str().c_str() );                    \
+            throw psdr_jit::Exception( res, ss.str().c_str() );                    \
         }                                                                      \
     } while( 0 )
 
@@ -35,7 +36,7 @@
                << __LINE__ << ")\nLog:\n" << log                               \
                << ( sizeof_log > sizeof( log ) ? "<TRUNCATED>" : "" )          \
                << "\n";                                                        \
-            throw psdr::Exception( res, ss.str().c_str() );                    \
+            throw psdr_jit::Exception( res, ss.str().c_str() );                    \
         }                                                                      \
     } while( 0 )
 
@@ -56,7 +57,7 @@
             ss << "CUDA call (" << #call << " ) failed with error: '"          \
                << cudaGetErrorString( error )                                  \
                << "' (" __FILE__ << ":" << __LINE__ << ")\n";                  \
-            throw psdr::Exception( ss.str().c_str() );                         \
+            throw psdr_jit::Exception( ss.str().c_str() );                         \
         }                                                                      \
     } while( 0 )
 
@@ -72,7 +73,7 @@
             ss << "CUDA error on synchronize with error '"                     \
                << cudaGetErrorString( error )                                  \
                << "' (" __FILE__ << ":" << __LINE__ << ")\n";                  \
-            throw psdr::Exception( ss.str().c_str() );                         \
+            throw psdr_jit::Exception( ss.str().c_str() );                         \
         }                                                                      \
     } while( 0 )
 
@@ -90,7 +91,7 @@
         {                                                                      \
             std::stringstream ss;                                              \
             ss << __FILE__ << " (" << __LINE__ << "): " << #cond;              \
-            throw psdr::Exception( ss.str().c_str() );                         \
+            throw psdr_jit::Exception( ss.str().c_str() );                         \
         }                                                                      \
     } while( 0 )
 
@@ -102,14 +103,13 @@
         {                                                                      \
             std::stringstream ss;                                              \
             ss << "\n  File \"" << __FILE__ << "\", line " << __LINE__;        \
-            throw psdr::Exception( ( std::string(msg) + ss.str() ).c_str() );  \
+            throw psdr_jit::Exception( ( std::string(msg) + ss.str() ).c_str() );  \
         }                                                                      \
     } while( 0 )
 
 
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 class Exception : public std::runtime_error
 {
@@ -131,4 +131,4 @@ class Exception : public std::runtime_error
      }
 };
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

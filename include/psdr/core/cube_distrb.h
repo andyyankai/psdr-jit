@@ -4,8 +4,7 @@
 #include "pmf.h"
 #include <psdr/core/bitmap.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 template <int ndim>
 struct HyperCubeDistribution {
@@ -48,4 +47,4 @@ struct CubeDistribution {
 };
 
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

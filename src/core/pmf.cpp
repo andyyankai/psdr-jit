@@ -1,8 +1,7 @@
 #include <misc/Exception.h>
 #include <psdr/core/pmf.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 void DiscreteDistribution::init(const FloatC &pmf) {
     m_size = static_cast<int>((pmf.size()));
@@ -55,4 +54,4 @@ std::pair<IntC, FloatC> DiscreteDistribution::sample_reuse(Float<ad> &samples) c
 template std::pair<IntC, FloatC> DiscreteDistribution::sample_reuse<false>(FloatC&) const;
 template std::pair<IntC, FloatC> DiscreteDistribution::sample_reuse<true >(FloatD&) const;
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

@@ -6,8 +6,7 @@
 #include <drjit/util.h>
 #include <drjit/array_constants.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 namespace warp
 {
@@ -100,4 +99,4 @@ inline Float<ad> square_to_uniform_triangle_pdf(const Vector2f<ad> &p) {
 
 } // namespace warp
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

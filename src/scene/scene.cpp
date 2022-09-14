@@ -14,8 +14,7 @@
 #include <psdr/scene/scene_loader.h>
 #include <psdr/scene/scene.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 Scene::Scene() {
     m_has_bound_mesh = false;
@@ -448,4 +447,4 @@ template PositionSampleD Scene::sample_emitter_position<true >(const Vector3fD&,
 template FloatC Scene::emitter_position_pdf<false>(const Vector3fC&, const IntersectionC&, MaskC) const;
 template FloatD Scene::emitter_position_pdf<true >(const Vector3fD&, const IntersectionD&, MaskD) const;
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

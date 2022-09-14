@@ -8,10 +8,10 @@
 #endif
 #include <misc/Exception.h>
 #include <psdr/optix/ptx.h>
+
 #include <iostream>
 
-namespace psdr
-{
+namespace psdr_jit {
 
 static bool fileExists( const char* path )
 {

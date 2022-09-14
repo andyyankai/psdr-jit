@@ -3,8 +3,7 @@
 #include <psdr/psdr.h>
 #include <misc/Exception.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 template <bool ad>
 struct Ray {
@@ -55,4 +54,4 @@ inline RayC detach(const RayD &ray) {
 
 
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

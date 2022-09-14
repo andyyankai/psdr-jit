@@ -8,8 +8,7 @@
 #include <array>
 #include <vector>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 PSDR_CLASS_DECL_BEGIN(Mesh, final, Object)
 public:
@@ -143,9 +142,9 @@ protected:
     PositionSample<ad> __sample_position(const Vector2f<ad>&, Mask<ad>) const;
 PSDR_CLASS_DECL_END(Mesh)
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)
 
-DRJIT_VCALL_BEGIN(psdr::Mesh)
+DRJIT_VCALL_BEGIN(psdr_jit::Mesh)
     // DRJIT_VCALL_GETTER(m_bsdf, const Emitter *)
     // DRJIT_VCALL_GETTER(m_emitter, const typename Class::Emitter *)
 
@@ -157,4 +156,4 @@ DRJIT_VCALL_BEGIN(psdr::Mesh)
     DRJIT_VCALL_METHOD(sample_position)
     DRJIT_VCALL_METHOD(sample_position_pdf)
     DRJIT_VCALL_METHOD(sample_position_pdfD)
-DRJIT_VCALL_END(psdr::Mesh)
+DRJIT_VCALL_END(psdr_jit::Mesh)

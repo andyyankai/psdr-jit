@@ -8,8 +8,7 @@
 
 
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 void Intersection_OptiX::reserve(int64_t size) {
     PSDR_ASSERT(size > 0);
@@ -137,4 +136,4 @@ Vector2i<ad> Scene_OptiX::ray_intersect(const Ray<ad> &ray, Mask<ad> &active) co
 template Vector2iC Scene_OptiX::ray_intersect(const RayC &ray, MaskC &active) const;
 template Vector2iD Scene_OptiX::ray_intersect(const RayD &ray, MaskD &active) const;
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

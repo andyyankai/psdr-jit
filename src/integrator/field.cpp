@@ -6,8 +6,7 @@
 #include <psdr/bsdf/bsdf.h>
 #include <psdr/shape/mesh.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 FieldExtractionIntegrator::FieldExtractionIntegrator(char *field) {
     std::string field_name = strtok(field, " ");
@@ -99,4 +98,4 @@ Spectrum<ad> FieldExtractionIntegrator::__Li(const Scene &scene, const Ray<ad> &
 
 
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

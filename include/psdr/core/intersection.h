@@ -2,8 +2,7 @@
 
 #include "frame.h"
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 template <typename Float_>
 struct Interaction_ {
@@ -57,4 +56,4 @@ struct Intersection_ : public Interaction_<Float_> {
     DRJIT_STRUCT(Intersection_, wi, p, t, shape, n, dp_du, dp_dv, sh_frame, uv, J)
 };
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

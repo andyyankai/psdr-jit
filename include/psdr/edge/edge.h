@@ -4,8 +4,7 @@
 #include <psdr/core/ray.h>
 #include <psdr/core/pmf.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 /********************************************
 * Primary edge info types
@@ -72,5 +71,5 @@ using SecondaryEdgeInfo = SecondaryEdgeInfo_<FloatD>;
 
 
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)
 

@@ -4,8 +4,7 @@
 #include <misc/Exception.h>
 
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 template <int channels>
 struct Bitmap {
@@ -59,4 +58,4 @@ struct Bitmap {
 using Bitmap1fD = Bitmap<1>;
 using Bitmap3fD = Bitmap<3>;
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

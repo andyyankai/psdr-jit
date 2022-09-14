@@ -2,8 +2,7 @@
 
 #include <psdr/psdr.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 
 struct BitmapLoader {
@@ -11,4 +10,4 @@ struct BitmapLoader {
 };
 
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

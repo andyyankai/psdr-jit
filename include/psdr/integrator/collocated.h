@@ -2,8 +2,7 @@
 
 #include "integrator.h"
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 PSDR_CLASS_DECL_BEGIN(CollocatedIntegrator, final, Integrator)
 public:
@@ -19,4 +18,4 @@ protected:
     Spectrum<ad> __Li(const Scene &scene, const Ray<ad> &ray, Mask<ad> active) const;
 PSDR_CLASS_DECL_END(CollocatedIntegrator)
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

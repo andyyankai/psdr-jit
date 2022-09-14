@@ -1,6 +1,7 @@
 #pragma once
 
 // Object Base Class
+NAMESPACE_BEGIN(psdr_jit)
 
 class Object {
 public:
@@ -21,3 +22,5 @@ public:
 
     std::string m_id = "";
 };
+
+}

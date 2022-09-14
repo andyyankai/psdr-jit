@@ -12,8 +12,7 @@
 #define OPTIX_SAMPLE_NAME_STRINGIFY(name) OPTIX_SAMPLE_NAME_STRINGIFY2(name)
 #define OPTIX_SAMPLE_NAME OPTIX_SAMPLE_NAME_STRINGIFY(OPTIX_SAMPLE_NAME_DEFINE)
 
-namespace psdr
-{
+namespace psdr_jit {
 
 PSDRAPI const char* getPtxString(const char* sample, const char* filename, const char** log = NULL );
 

@@ -3,8 +3,7 @@
 #include <misc/Exception.h>
 
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 	
 template <typename ArrayD>
 DRJIT_INLINE ArrayD compressD(const ArrayD &array, const MaskD &active) {
@@ -282,4 +281,4 @@ DRJIT_INLINE Float<ad> mis_weight2(const Float<ad> &pdf1, const Float<ad> &pdf2)
 }
 
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

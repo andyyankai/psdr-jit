@@ -3,8 +3,7 @@
 #include <psdr/core/bitmap.h>
 #include "bsdf.h"
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 PSDR_CLASS_DECL_BEGIN(RoughConductor, final, BSDF)
 public:
@@ -52,4 +51,4 @@ protected:
     Float<ad> __pdf(const Intersection<ad> &, const Vector3f<ad> &, Mask<ad>) const;
 PSDR_CLASS_DECL_END(RoughConductor)
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

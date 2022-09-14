@@ -4,8 +4,7 @@
 #include <psdr/psdr.h>
 #include <psdr/edge/edge.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 PSDR_CLASS_DECL_BEGIN(Scene, final, Object)
     friend class SceneLoader;
@@ -72,4 +71,4 @@ public:
 
 PSDR_CLASS_DECL_END(Scene)
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

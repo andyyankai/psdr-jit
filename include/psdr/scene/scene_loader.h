@@ -9,8 +9,7 @@ namespace pugi
 } // namespace pugi
 
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 class SceneLoader {
 public:
@@ -25,4 +24,4 @@ protected:
     static void load_shape(const pugi::xml_node &node, Scene &scene, int shape_id = -1);
 };
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

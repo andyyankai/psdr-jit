@@ -24,6 +24,8 @@
         }                                                   \
     };
 
+// #define NAMESPACE_BEGIN(name) namespace name {
+
 
 #define __PSDR_USING_MEMBERS_MACRO__(x) using Base::x;
 #define PSDR_USING_MEMBERS(...) DRJIT_MAP(__PSDR_USING_MEMBERS_MACRO__, __VA_ARGS__)
@@ -32,3 +34,15 @@
 #define PSDR_IMPORT_BASE(Name, ...)                         \
     using Base = Name;                                      \
     PSDR_USING_MEMBERS(__VA_ARGS__)
+
+// #define NAMESPACE_BEGIN(psdr_jit) namespace psdr_jit {
+
+// #define PSDR_NAMESPACE_END }
+
+
+#if !defined(NAMESPACE_BEGIN)
+#  define NAMESPACE_BEGIN(name) namespace name {
+#endif
+#if !defined(NAMESPACE_END)
+#  define NAMESPACE_END(name) }
+#endif

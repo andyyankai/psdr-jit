@@ -7,8 +7,7 @@
 #include <drjit/quaternion.h>
 
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 namespace transform
 {
@@ -111,4 +110,4 @@ static Array<Float, 2> transform2d_pos(const Matrix<Float, 3> &mat, const Array<
     return head<2>(tmp)/tmp.z();
 }
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

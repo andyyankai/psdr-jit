@@ -2,8 +2,7 @@
 #include <psdr/bsdf/roughdielectric.h>
 #include <psdr/bsdf/ggx.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 SpectrumC RoughDielectric::eval(const IntersectionC& its, const Vector3fC& wo, MaskC active) const {
     return __eval<false>(its, wo, active);
@@ -215,4 +214,4 @@ BSDFSample<ad> RoughDielectric::__sample(const Intersection<ad>& its, const Vect
     return detach(bs);
 }
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

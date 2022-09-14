@@ -4,8 +4,7 @@
 #include <psdr/shape/mesh.h>
 #include <psdr/emitter/area.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 void AreaLight::configure() {
     PSDR_ASSERT((m_mesh != nullptr) && m_mesh->m_ready);
@@ -83,4 +82,4 @@ std::string AreaLight::to_string() const {
     return oss.str();
 }
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

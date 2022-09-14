@@ -5,8 +5,7 @@
 #include <psdr/scene/scene.h>
 #include <psdr/sensor/perspective.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 void PerspectiveCamera::configure() {
     Sensor::configure();
@@ -229,4 +228,4 @@ PrimaryEdgeSample PerspectiveCamera::sample_primary_edge(const FloatC &_sample1)
     return result;
 }
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

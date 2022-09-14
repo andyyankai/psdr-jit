@@ -3,8 +3,7 @@
 #include <psdr/psdr.h>
 #include "pmf.h"
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 template <int xdim, int ydim, int zdim>
 struct Histogram3D
@@ -55,4 +54,4 @@ private:
 
 };
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

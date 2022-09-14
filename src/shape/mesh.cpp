@@ -17,8 +17,7 @@
 
 #include <drjit/loop.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 template <bool ad>
 static std::pair<TriangleInfo<ad>, Vector3f<ad>> process_mesh(const Vector3f<ad> &vertex_positions, const Vector3i<ad> &face_indices) {
@@ -425,4 +424,4 @@ std::string Mesh::to_string() const {
 }
 
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

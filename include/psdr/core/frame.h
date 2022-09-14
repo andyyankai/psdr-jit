@@ -3,8 +3,7 @@
 #include <psdr/psdr.h>
 #include <drjit/struct.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 
 template <typename Vector3f> std::pair<Vector3f, Vector3f> coordinate_system(const Vector3f &n) {
@@ -193,6 +192,6 @@ struct Frame_
 //    return FrameC(detach(frame.s), detach(frame.t), detach(frame.n));
 //}
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)
 
-// DRJIT_STRUCT_SUPPORT(psdr::Frame_, s, t, n)
+// DRJIT_STRUCT_SUPPORT(psdr_jit::Frame_, s, t, n)

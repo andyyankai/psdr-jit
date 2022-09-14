@@ -7,8 +7,7 @@
 #include <drjit/util.h>
 #include <drjit/array_constants.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 inline FloatC compute_cdf(const FloatC &pmf) {
     size_t size = pmf.size();
@@ -58,4 +57,4 @@ struct DiscreteDistribution {
     FloatC  m_pmf, m_pmf_normalized, m_cmf, m_cmf_normalized;
 };
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

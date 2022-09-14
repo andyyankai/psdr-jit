@@ -12,8 +12,7 @@
 
 #include <cuda/host/NEE.cuh>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 inline static FloatC Boundary_NEE(const Scene &scene, int active_sensor, const Vector3fC &sample3, bool m_edge_direct) {
     BoundarySegSampleDirect bss;
@@ -524,4 +523,4 @@ template FloatC AdaptiveQuadratureDistribution<3>::pdf_mis(const Scene &scene, i
 template Vector3fC AdaptiveQuadratureDistribution<3>::sample(const Vector3fC &rnd, FloatC &pdf);
 template void AdaptiveQuadratureDistribution<3>::setup(const Scene &scene, const std::vector<int> &sensor_id, const FloatC &cdfx, const FloatC &cdfy, const FloatC &cdfz, const AQ_Option &option);
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

@@ -5,8 +5,7 @@
 #include <psdr/core/cube_distrb.h>
 #include "emitter.h"
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 PSDR_CLASS_DECL_BEGIN(EnvironmentMap, final, Emitter)
 public:
@@ -57,4 +56,4 @@ public:
     Float<ad> __sample_position_pdf(const Vector3f<ad> &, const Intersection<ad> &, Mask<ad>) const;
 PSDR_CLASS_DECL_END(EnvironmentMap)
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

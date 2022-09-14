@@ -3,8 +3,7 @@
 #include <psdr/core/bitmap.h>
 #include <psdr/core/transform.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 template <int channels>
 Bitmap<channels>::Bitmap()
@@ -118,4 +117,4 @@ template FloatD Bitmap<1>::eval<true>(Vector2fD, bool) const;
 template Vector3fC Bitmap<3>::eval<false>(Vector2fC, bool) const;
 template Vector3fD Bitmap<3>::eval<true>(Vector2fD, bool) const;
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

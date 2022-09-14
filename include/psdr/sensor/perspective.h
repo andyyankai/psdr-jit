@@ -3,8 +3,7 @@
 #include <psdr/core/frame.h>
 #include "sensor.h"
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 PSDR_CLASS_DECL_BEGIN(PerspectiveCamera, final, Sensor)
 public:
@@ -32,4 +31,4 @@ public:
     FloatD      m_inv_area;
 PSDR_CLASS_DECL_END(PerspectiveCamera)
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

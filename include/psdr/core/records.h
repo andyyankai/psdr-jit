@@ -4,8 +4,7 @@
 #include "ray.h"
 #include "intersection.h"
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 template <typename Float_>
 struct DiscreteRecord_ {
@@ -72,4 +71,4 @@ struct BoundaryMISRecord_ {
     DRJIT_STRUCT(BoundaryMISRecord_, p0, dir, bss, idx, value, pdf, is_valid)
 };
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

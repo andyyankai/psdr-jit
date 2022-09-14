@@ -2,8 +2,7 @@
 #include <psdr/core/ray.h>
 #include <psdr/sensor/sensor.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 void Sensor::configure() {
     m_aspect = static_cast<float>(m_resolution.x())/m_resolution.y();
@@ -12,4 +11,4 @@ void Sensor::configure() {
                     "Sensor transformation should not involve scaling!");
 }
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

@@ -14,7 +14,7 @@ extern "C" __global__ void __raygen__psdr_rg()
         params.handle,
         make_float3(params.ray_o_x[tid], params.ray_o_y[tid], params.ray_o_z[tid]),
         make_float3(params.ray_d_x[tid], params.ray_d_y[tid], params.ray_d_z[tid]),
-        psdr::RayEpsilon,
+        psdr_jit::RayEpsilon,
         params.ray_tmax[tid],
         0.0f,
         OptixVisibilityMask( 1 ),

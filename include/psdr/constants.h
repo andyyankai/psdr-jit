@@ -1,9 +1,9 @@
 #pragma once
 
 #include <limits>
+#include <psdr/macros.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 constexpr float Epsilon         = 1e-5f;
 constexpr float RayEpsilon      = 1e-3f;
@@ -27,4 +27,4 @@ constexpr float InvSqrtTwoPi    = 0.39894228040143267794f;
 
 constexpr float Infinity = std::numeric_limits<float>::infinity();
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

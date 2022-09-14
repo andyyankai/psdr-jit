@@ -2,8 +2,7 @@
 #include <psdr/core/warp.h>
 #include <psdr/bsdf/ggx.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 template <bool ad>
 Float<ad> GGXDistribution::G(const Vector3f<ad>& wi, const Vector3f<ad>& wo, const Vector3f<ad>& m) const {
@@ -120,4 +119,4 @@ template std::pair<Vector3fD, FloatD> GGXDistribution::sample<true >(const Vecto
 template FloatC GGXDistribution::smith_g1<false>(const Vector3fC& v, const Vector3fC& m) const;
 template FloatD GGXDistribution::smith_g1<true >(const Vector3fD& v, const Vector3fD& m) const;
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

@@ -3,8 +3,7 @@
 #include <psdr/psdr.h>
 #include <psdr/core/records.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 PSDR_CLASS_DECL_BEGIN(Emitter,, Object)
 public:
@@ -52,9 +51,9 @@ public:
 
 PSDR_CLASS_DECL_END(Emitter)
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)
 
-DRJIT_VCALL_BEGIN(psdr::Emitter)
+DRJIT_VCALL_BEGIN(psdr_jit::Emitter)
     DRJIT_VCALL_METHOD(eval)
     DRJIT_VCALL_METHOD(evalC)
     DRJIT_VCALL_METHOD(evalD)
@@ -64,4 +63,4 @@ DRJIT_VCALL_BEGIN(psdr::Emitter)
     DRJIT_VCALL_METHOD(sample_position_pdf)
     DRJIT_VCALL_METHOD(sample_position_pdfC)
     DRJIT_VCALL_METHOD(sample_position_pdfD)
-DRJIT_VCALL_END(psdr::Emitter)
+DRJIT_VCALL_END(psdr_jit::Emitter)

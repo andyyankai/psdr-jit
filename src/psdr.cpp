@@ -46,12 +46,12 @@
 #include <psdr/integrator/path.h>
 
 
+
 namespace py = pybind11;
 using namespace py::literals;
-using namespace psdr;
+using namespace psdr_jit;
 
 using namespace drjit;
-
 
 void drjit_test() {
     jit_init((uint32_t)JitBackend::CUDA);
@@ -85,7 +85,7 @@ void drjit_memory() {
 
 PYBIND11_MODULE(psdr_jit, m) {
     m.doc() = "Path-space differentiable renderer";
-
+    m.attr("__name__") = "psdr_jit";
     m.def("drjit_test", &drjit_test);
 
     m.def("drjit_memory", &drjit_memory);

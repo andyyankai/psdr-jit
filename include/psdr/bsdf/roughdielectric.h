@@ -3,8 +3,7 @@
 #include "bsdf.h"
 #include <psdr/core/bitmap.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 PSDR_CLASS_DECL_BEGIN(RoughDielectric, final, BSDF)
 public:
@@ -56,4 +55,4 @@ protected:
     Float<ad> __pdf(const Intersection<ad> &, const Vector3f<ad> &, Mask<ad>) const;
 PSDR_CLASS_DECL_END(RoughDielectric)
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

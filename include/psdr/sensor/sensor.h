@@ -5,8 +5,7 @@
 #include <psdr/core/pmf.h>
 #include <psdr/core/records.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 template <typename Float_>
 struct SensorDirectSample_ : public SampleRecord_<Float_> {
@@ -65,9 +64,9 @@ public:
     DiscreteDistribution    m_edge_distrb;
 PSDR_CLASS_DECL_END(Sensor)
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)
 
-DRJIT_VCALL_BEGIN(psdr::Sensor)
+DRJIT_VCALL_BEGIN(psdr_jit::Sensor)
     DRJIT_VCALL_METHOD(sample_primary_ray)
     DRJIT_VCALL_METHOD(sample_primary_edge)
-DRJIT_VCALL_END(psdr::Sensor)
+DRJIT_VCALL_END(psdr_jit::Sensor)

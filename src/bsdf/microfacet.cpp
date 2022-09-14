@@ -4,8 +4,7 @@
 #include <psdr/bsdf/microfacet.h>
 #include <psdr/bsdf/ggx.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 Microfacet::Microfacet(const char *spec_refl_file, const char *diff_refl_file, const char *roughness_file) :
     m_specularReflectance(spec_refl_file), m_diffuseReflectance(diff_refl_file), m_roughness(roughness_file) {}
 
@@ -117,4 +116,4 @@ Float<ad> Microfacet::__pdf(const Intersection<ad> &its, const Vector3f<ad> &wo,
     return detach(result);
 }
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

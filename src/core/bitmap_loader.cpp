@@ -7,8 +7,7 @@
 #define TINYEXR_IMPLEMENTATION
 #include <psdr/core/tinyexr.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 std::pair<Vector4fC, ScalarVector2i> BitmapLoader::load_openexr_rgba(const char *file_name) {
     {
@@ -53,4 +52,4 @@ std::pair<Vector4fC, ScalarVector2i> BitmapLoader::load_openexr_rgba(const char 
     }
 }
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

@@ -3,8 +3,7 @@
 #include <string>
 #include <psdr/psdr.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 PSDR_CLASS_DECL_BEGIN(Integrator,, Object)
 public:
@@ -22,4 +21,4 @@ protected:
     Spectrum<ad> __render(const Scene &scene, int sensor_id) const;
 PSDR_CLASS_DECL_END(SamplingIntegrator)
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

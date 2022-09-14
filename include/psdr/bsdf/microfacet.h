@@ -3,8 +3,7 @@
 #include <psdr/core/bitmap.h>
 #include "bsdf.h"
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 PSDR_CLASS_DECL_BEGIN(Microfacet, final, BSDF)
 public:
@@ -47,4 +46,4 @@ protected:
 
 PSDR_CLASS_DECL_END(Microfacet)
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

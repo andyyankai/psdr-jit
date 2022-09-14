@@ -2,8 +2,7 @@
 #include <psdr/core/warp.h>
 #include <psdr/bsdf/diffuse.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 Diffuse::Diffuse(const char *refl_file) : m_reflectance(refl_file) {}
 
@@ -83,4 +82,4 @@ Float<ad> Diffuse::__pdf(const Intersection<ad> &its, const Vector3f<ad> &wo, Ma
     return value & active;
 }
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

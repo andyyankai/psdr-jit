@@ -4,8 +4,7 @@
 
 #include <psdr/bsdf/normalmap.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 NormalMap::NormalMap(const Bitmap3fD &n_map) : m_nmap(n_map) {}
 
@@ -159,4 +158,4 @@ BSDFSample<ad> NormalMap::__sample(const Intersection<ad> &its, const Vector3f<a
     return detach(bs);
 }
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

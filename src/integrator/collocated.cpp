@@ -6,8 +6,7 @@
 #include <psdr/scene/scene.h>
 #include <psdr/integrator/collocated.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 SpectrumC CollocatedIntegrator::Li(const Scene &scene, Sampler &sampler, const RayC &ray, MaskC active) const {
     return __Li<false>(scene, ray, active);
@@ -55,4 +54,4 @@ Spectrum<ad> CollocatedIntegrator::__Li(const Scene &scene, const Ray<ad> &ray, 
     return result;
 }
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

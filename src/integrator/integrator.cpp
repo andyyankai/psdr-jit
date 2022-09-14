@@ -7,8 +7,7 @@
 #include <psdr/sensor/sensor.h>
 #include <psdr/integrator/integrator.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 SpectrumC Integrator::renderC(const Scene &scene, int sensor_id, int npass) const {
     using namespace std::chrono;
@@ -92,4 +91,4 @@ Spectrum<ad> Integrator::__render(const Scene &scene, int sensor_id) const {
     return result;
 }
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

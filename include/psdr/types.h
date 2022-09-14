@@ -10,8 +10,7 @@
 
 using namespace drjit;
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 /********************************************
  * GPU array types
@@ -265,4 +264,4 @@ struct AQ_Option {
 
 
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

@@ -3,8 +3,7 @@
 #include <drjit/random.h>
 #include <psdr/psdr.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 struct Sampler {
     using PCG32 = drjit::PCG32<UIntC>;
@@ -40,4 +39,4 @@ struct Sampler {
     std::unique_ptr<PCG32> m_rng = nullptr;
 };
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

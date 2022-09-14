@@ -4,8 +4,7 @@
 
 // #define USE_2D_DIS
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 template <int ndim>
 void HyperCubeDistribution<ndim>::set_resolution(const Array<int, ndim> &reso) {
@@ -174,4 +173,4 @@ template void HyperCubeDistribution<3>::set_mass(const FloatC &pmf);
 template FloatC HyperCubeDistribution<3>::sample_reuse(Vector3fC &samples) const;
 template FloatC HyperCubeDistribution<3>::pdf(const Vector3fC&) const;
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

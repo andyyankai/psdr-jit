@@ -2,8 +2,7 @@
 
 #include "integrator.h"
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 PSDR_CLASS_DECL_BEGIN(PathTracer, final, Integrator)
 public:
@@ -23,4 +22,4 @@ protected:
 
 PSDR_CLASS_DECL_END(PathTracer)
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

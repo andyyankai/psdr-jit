@@ -1,7 +1,6 @@
 #pragma once
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
     // Core classes
 
     template <typename> struct Frame_;

@@ -3,8 +3,7 @@
 #include <psdr/psdr.h>
 #include "emitter.h"
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 PSDR_CLASS_DECL_BEGIN(AreaLight, final, Emitter)
 public:
@@ -34,4 +33,4 @@ protected:
     Float<ad> __sample_position_pdf(const Vector3f<ad>&, const Intersection<ad>&, Mask<ad>) const;
 PSDR_CLASS_DECL_END(AreaLight)
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)

@@ -11,8 +11,7 @@
 #include <psdr/sensor/perspective.h>
 #include <psdr/integrator/path.h>
 
-namespace psdr
-{
+NAMESPACE_BEGIN(psdr_jit)
 
 PathTracer::~PathTracer() {}
 
@@ -237,4 +236,4 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
     return result;
 }
 
-} // namespace psdr
+NAMESPACE_END(psdr_jit)
