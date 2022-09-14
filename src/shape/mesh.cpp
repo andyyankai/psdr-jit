@@ -238,6 +238,7 @@ void Mesh::configure() {
     TriangleInfoD &triangle_info = *m_triangle_info;
     std::tie(triangle_info, std::ignore) = process_mesh<true>(m_vertex_positions, m_face_indices);
 
+
     const FloatD &face_areas = triangle_info.face_area;
     m_total_area = sum(face_areas)[0];
     m_inv_total_area = 1.f/m_total_area;

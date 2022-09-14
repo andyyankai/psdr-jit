@@ -35,6 +35,8 @@ Scene::~Scene() {
     delete[]    m_samplers;
     delete      m_optix;
     delete      m_emitters_distrb;
+    // delete      m_sec_edge_distrb;
+
 }
 
 
@@ -235,7 +237,8 @@ void Scene::configure() {
     for ( int i = 0; i < m_num_meshes; ++i ) {
         Mesh *mesh = m_meshes[i];
 
-        if ( mesh->m_emitter == nullptr ) {
+        // if ( mesh->m_emitter == nullptr ) {
+            // std::cout << "clean emitter" << std::endl;
             PSDR_ASSERT(mesh->m_triangle_info != nullptr);
             delete mesh->m_triangle_info;
             mesh->m_triangle_info = nullptr;
@@ -244,7 +247,7 @@ void Scene::configure() {
                 delete mesh->m_triangle_uv;
                 mesh->m_triangle_uv = nullptr;
             }
-        }
+        // }
     }
 
     auto end_time = high_resolution_clock::now();
