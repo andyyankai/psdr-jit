@@ -16,15 +16,15 @@ endif()
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake" ${CMAKE_MODULE_PATH})
 
-if( WIN32 )
-    set(DRJIT_DIR ${CMAKE_SOURCE_DIR}/../drjit)
-    set(PYBIND11_ROOT ${CMAKE_SOURCE_DIR}/ext_win64/pybind11)
-    set(PYTHON_ROOT C:/ProgramData/Miniconda3)
-else()
-    if ( NOT PYTHON_INCLUDE_PATH )
-        message(FATAL_ERROR "PYTHON_INCLUDE_PATH not set!")
-    endif()
-endif()
+option(DRJIT_ENABLE_JIT "" ON)
+option(DRJIT_ENABLE_AUTODIFF "" ON)
+option(DRJIT_ENABLE_PYTHON "" ON)
+
+set(DRJIT_DIR ${CMAKE_SOURCE_DIR}/ext/drjit)
+set(PYBIND11_ROOT ${DRJIT_DIR}/ext/pybind11)
+
+# add_subdirectory(${DRJIT_DIR})
+add_subdirectory(${PYBIND11_ROOT})
 
 set(PSDR_CUDA_FILE psdr_jit)
 add_compile_definitions(PSDR_CUDA_FILE="${PSDR_CUDA_FILE}")
@@ -44,46 +44,28 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
-if( WIN32 )
-    set(OptiX_INSTALL_DIR "${CMAKE_SOURCE_DIR}/ext_win64/optix" CACHE PATH "Path to OptiX installed location.")
-else()
-    set(OptiX_INSTALL_DIR "${CMAKE_SOURCE_DIR}/ext/optix" CACHE PATH "Path to OptiX installed location.")
-endif()
 find_package(OptiX REQUIRED)
-
 
 set(CUDA_GENERATED_OUTPUT_DIR "${CMAKE_BINARY_DIR}/lib/ptx")
 
-if( WIN32 )
-    include_directories(
-        include/
-        ${OptiX_INCLUDE}
-        ${CMAKE_CURRENT_SOURCE_DIR}/cuda
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        ${CMAKE_BINARY_DIR}/include
-        ${CMAKE_CURRENT_BINARY_DIR}
-        ${CUDA_INCLUDE_DIRS}
-        ${PYTHON_ROOT}/include
-        ${DRJIT_DIR}/include
-        ${DRJIT_DIR}/ext/drjit-core/include
-        ${PYBIND11_ROOT}/include
-    )
-    link_directories(
-        ${DRJIT_DIR}/lib
-        ${PYTHON_ROOT}/libs
-    )
-else()
-    include_directories(
-        "include/"
-        "${OptiX_INCLUDE}"
-        "${CMAKE_CURRENT_SOURCE_DIR}/cuda"
-        ${CMAKE_CURRENT_SOURCE_DIR}
-        "${CMAKE_BINARY_DIR}/include"
-        ${CMAKE_CURRENT_BINARY_DIR}
-        ${CUDA_INCLUDE_DIRS}
-        ${PYTHON_INCLUDE_PATH}
-    )
-endif()
+include_directories(
+    include/
+    ${OptiX_INCLUDE}
+    ${DRJIT_DIR}/include
+    ${PYBIND11_ROOT}/include
+    ${PYTHON_INCLUDE_DIRS}
+    ${PYTHON_ROOT}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/cuda
+    ${CMAKE_CURRENT_SOURCE_DIR}
+    ${CMAKE_BINARY_DIR}/include
+    ${CMAKE_CURRENT_BINARY_DIR}
+    ${CUDA_INCLUDE_DIRS}
+)
+
+
+link_directories(
+    ${PYTHON_ROOT}/libs
+)
 
 function(build_ptx target_name_base target_name_var)
     set( target_name ${target_name_base} )
@@ -113,7 +95,7 @@ build_ptx( ptx target_name
     OPTIONS -rdc true
 )
 
-set(PYPSDR_LIBRARIES drjit-core drjit-autodiff)
+# set(PYPSDR_LIBRARIES drjit-core drjit-autodiff)
 
 set(PSDR_INCLUDE_DIR include/psdr)
 set(PSDR_SOURCE_DIR src)
@@ -225,20 +207,23 @@ set(CUDA_SOURCE_FILES
     ./cuda/kernel/NEE.cu
 )
 
-if( WIN32 )
-    add_subdirectory(${PYBIND11_ROOT})
-    cuda_add_library(cu_library STATIC ${CUDA_SOURCE_FILES})
-    cuda_add_cublas_to_target(cu_library)
-    pybind11_add_module(psdr_jit ${PSDR_SOURCE_FILES})
-    target_compile_options(psdr_jit PRIVATE /O2 /wd4251 /MP)
-    target_link_libraries(psdr_jit PRIVATE cu_library ${PYPSDR_LIBRARIES} ${CUDA_LIBRARIES})
-else()
+cuda_add_library(cu_library STATIC ${CUDA_SOURCE_FILES})
+cuda_add_cublas_to_target(cu_library)
 
-    cuda_add_library(cu_library STATIC ${CUDA_SOURCE_FILES})
-    cuda_add_cublas_to_target(cu_library)
+if( WIN32 )    
+    pybind11_add_module(psdr_jit  ${PSDR_SOURCE_FILES})
+    target_compile_options(psdr_jit PRIVATE /O2 /wd4251 /MP)
+else()
     cuda_add_library(psdr_jit MODULE ${PSDR_SOURCE_FILES})
     target_link_libraries(psdr_jit cu_library ${PYPSDR_LIBRARIES} ${CUDA_LIBRARIES})
 endif()
+
+
+add_subdirectory(${DRJIT_DIR})
+set(PYPSDR_LIBRARIES drjit-core drjit-autodiff nanothread)
+target_link_libraries(psdr_jit PRIVATE cu_library ${PYPSDR_LIBRARIES} ${CUDA_LIBRARIES})
+
+
 
 
 # target build
@@ -248,3 +233,43 @@ set_target_properties(psdr_jit PROPERTIES SKIP_BUILD_RPATH FALSE)
 set_target_properties(psdr_jit PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE)
 set_property(TARGET psdr_jit PROPERTY CXX_STANDARD 17)
 set_target_properties(psdr_jit PROPERTIES PREFIX "")
+
+
+set(PSDR_PACKAGE_DIR "${CMAKE_BINARY_DIR}/python/psdr_jit")
+install(TARGETS psdr_jit drjit-core drjit-autodiff nanothread
+        CONFIGURATIONS Release
+        RUNTIME DESTINATION ${PSDR_PACKAGE_DIR}
+        LIBRARY DESTINATION ${PSDR_PACKAGE_DIR}
+)
+
+add_custom_command(
+    OUTPUT ${PSDR_PACKAGE_DIR}/__init__.py
+    COMMAND ${CMAKE_COMMAND} -E copy
+    ${CMAKE_SOURCE_DIR}/resources/__init__.py
+    ${PSDR_PACKAGE_DIR}/__init__.py
+)
+
+add_custom_target(
+    psdr-python-init-psdr_jit
+    ALL DEPENDS ${PSDR_PACKAGE_DIR}/__init__.py
+)
+
+set(DRJIT_PACKAGE_DIR "${CMAKE_BINARY_DIR}/python/drjit")
+install(TARGETS drjit-python drjit-core drjit-autodiff nanothread
+        RUNTIME DESTINATION ${DRJIT_PACKAGE_DIR}
+        LIBRARY DESTINATION ${DRJIT_PACKAGE_DIR}
+)
+
+add_custom_command(
+    TARGET psdr_jit POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E copy_directory
+    ${DRJIT_DIR}/drjit
+    ${DRJIT_PACKAGE_DIR}/
+)
+
+
+add_custom_target(
+    psdr-python-init-drjit
+    ALL DEPENDS ${DRJIT_PACKAGE_DIR}/__init__.py
+)
+
