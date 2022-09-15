@@ -9,9 +9,17 @@ NAMESPACE_BEGIN(psdr_jit)
     using FrameC = Frame<false>;
     using FrameD = Frame<true>;
 
-    template <bool ad> struct Ray;
+    // template <bool ad> struct Ray;
+    // using RayC = Ray<false>;
+    // using RayD = Ray<true>;
+
+    template <typename> struct Ray_;
+    template <bool ad>
+    using Ray = Ray_<Float<ad>>;
     using RayC = Ray<false>;
     using RayD = Ray<true>;
+
+    
 
     template <typename> struct Interaction_;
 
@@ -158,4 +166,7 @@ NAMESPACE_BEGIN(psdr_jit)
     class Scene_OptiX;
     class Scene;
     class SceneLoader;
-}
+
+
+NAMESPACE_END(psdr_jit)
+

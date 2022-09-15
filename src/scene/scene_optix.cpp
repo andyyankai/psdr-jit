@@ -1,5 +1,7 @@
 #include <misc/Exception.h>
 #include <psdr/core/ray.h>
+#include <psdr/fwd.h>
+
 // #include <drjit-core/optix.h>
 
 #include <psdr/scene/optix.h>
@@ -86,7 +88,7 @@ bool Scene_OptiX::is_ready() const {
 
 template <bool ad>
 Vector2i<ad> Scene_OptiX::ray_intersect(const Ray<ad> &ray, Mask<ad> &active) const {
-    const int m = static_cast<int>(slices(ray.o));
+    const int m = static_cast<int>(slices<Vector3f<ad>>(ray.o));
     m_its.reserve(m);
 
 
@@ -133,7 +135,7 @@ Vector2i<ad> Scene_OptiX::ray_intersect(const Ray<ad> &ray, Mask<ad> &active) co
 
 
 // Explicit instantiations
-template Vector2iC Scene_OptiX::ray_intersect(const RayC &ray, MaskC &active) const;
-template Vector2iD Scene_OptiX::ray_intersect(const RayD &ray, MaskD &active) const;
+template Vector2iC Scene_OptiX::ray_intersect<false>(const RayC &ray, MaskC &active) const;
+template Vector2iD Scene_OptiX::ray_intersect<true>(const RayD &ray, MaskD &active) const;
 
 NAMESPACE_END(psdr_jit)

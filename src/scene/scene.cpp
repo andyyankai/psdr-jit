@@ -237,7 +237,7 @@ void Scene::configure() {
     for ( int i = 0; i < m_num_meshes; ++i ) {
         Mesh *mesh = m_meshes[i];
 
-        // if ( mesh->m_emitter == nullptr ) {
+        if ( mesh->m_emitter == nullptr ) {
             // std::cout << "clean emitter" << std::endl;
             PSDR_ASSERT(mesh->m_triangle_info != nullptr);
             delete mesh->m_triangle_info;
@@ -247,7 +247,7 @@ void Scene::configure() {
                 delete mesh->m_triangle_uv;
                 mesh->m_triangle_uv = nullptr;
             }
-        // }
+        }
     }
 
     auto end_time = high_resolution_clock::now();
@@ -395,7 +395,7 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active) const
 
     }
 
-
+    drjit::eval(its);
     return its;
 }
 

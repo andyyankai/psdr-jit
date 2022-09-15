@@ -146,7 +146,8 @@ DRJIT_INLINE auto ray_intersect_scene_aabb(Ray<ad> &ray, const Vector3f<ad> &low
     Vector3f<ad> t2p = drjit::maximum(t1, t2);
     // Intersect intervals
     auto [t, idx] = argmin<3, ad>(t2p);
-    int ray_size = ray.size();    
+    // int ray_size = ray.size();
+    size_t ray_size = slices<Vector3f<ad>>(ray.o); 
     Vector3f<ad> n = zeros<Vector3f<ad>>(ray_size);
     for ( int i = 0; i < 3; ++i ) {
         masked(n[i], eq(idx, i)) = -drjit::sign(ray.d[i]);

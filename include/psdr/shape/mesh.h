@@ -64,11 +64,11 @@ public:
         return IntC(m_mesh_id+1);
     };
 
-    const BSDF* bsdf() {
+    const BSDF* bsdf() const {
         return m_bsdf;
     }
 
-    const Emitter* emitter() {
+    const Emitter* emitter() const {
         return m_emitter;
     }
 

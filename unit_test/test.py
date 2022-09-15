@@ -17,25 +17,26 @@ def test_scene():
 	print("INIT test scene")
 	sc = psdr.Scene()
 
-	# sc.load_file("cbox.xml", False)
+	sc.load_file("cbox.xml", False)
 
-	sc.load_file("bunny_env.xml", False)
+	# sc.load_file("bunny_env.xml")
 
 	sc.configure()
+	# sc.configure()
 
-	# integrator = psdr.FieldExtractionIntegrator("segmentation")
+	# # integrator = psdr.FieldExtractionIntegrator("segmentation")
 
 
 	# integrator = psdr.CollocatedIntegrator(100000)
 
 	integrator = psdr.PathTracer(1)
 
-	# print(integrator.hide_emitters)
-	# exit()
+	# # print(integrator.hide_emitters)
+	# # exit()
 
 	img = integrator.renderC(sc, 0)
 	# print(img)
-	img = img.numpy().reshape((256, 256, 3))
+	img = img.numpy().reshape((128, 128, 3))
 	# print(img)
 	# print()
 	output = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
@@ -45,6 +46,20 @@ def test_scene():
 		cv2.imwrite("psdr_jit_debug.exr", output)
 	else:
 		cv2.imwrite("psdr_cuda_debug.exr", output)
+
+
+	img = integrator.renderC(sc, 0)
+	# print(img)
+	img = img.numpy().reshape((128, 128, 3))
+	# print(img)
+	# print()
+	output = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+
+
+	if test_psdrjit:
+		cv2.imwrite("psdr_jit_debug2.exr", output)
+	else:
+		cv2.imwrite("psdr_cuda_debug2.exr", output)
 
 
 	print("FIN test scene")

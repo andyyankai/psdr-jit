@@ -1,6 +1,7 @@
 #pragma once
 
 #include <psdr/psdr.h>
+#include <psdr/fwd.h>
 
 struct PathTracerState;
 
