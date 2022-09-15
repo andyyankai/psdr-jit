@@ -61,37 +61,7 @@ public:
                     
 PSDR_CLASS_DECL_END(BSDF)
 
-
-
-
-
-// PSDR_CLASS_DECL_BEGIN(BSDF,, Object)
-// public:
-//     virtual ~BSDF() override {}
-
-//     virtual SpectrumC eval(const IntersectionC &its, const Vector3fC &wo, MaskC active = true) const = 0;
-//     virtual SpectrumD eval(const IntersectionD &its, const Vector3fD &wo, MaskD active = true) const = 0;
-
-//     virtual BSDFSampleC sample(const IntersectionC &its, const Vector3fC &sample, MaskC active = true) const = 0;
-//     virtual BSDFSampleD sample(const IntersectionD &its, const Vector3fD &sample, MaskD active = true) const = 0;
-
-//     virtual FloatC pdf(const IntersectionC &its, const Vector3fC &wo, MaskC active) const = 0;
-//     virtual FloatD pdf(const IntersectionD &its, const Vector3fD &wo, MaskD active) const = 0;
-
-//     virtual bool anisotropic() const = 0;
-
-//     // DRJIT_VCALL_REGISTER(FloatD, BSDF);
-
-// PSDR_CLASS_DECL_END(BSDF)
-
 NAMESPACE_END(psdr_jit)
-
-// DRJIT_VCALL_TEMPLATE_BEGIN(psdr_jit::BSDF)
-//     DRJIT_VCALL_METHOD(eval)
-//     DRJIT_VCALL_METHOD(sample)
-//     DRJIT_VCALL_METHOD(pdf)
-//     DRJIT_VCALL_METHOD(anisotropic)
-// DRJIT_VCALL_TEMPLATE_END(psdr_jit::BSDF)
 
 DRJIT_VCALL_BEGIN(psdr_jit::BSDF)
     DRJIT_VCALL_METHOD(eval)

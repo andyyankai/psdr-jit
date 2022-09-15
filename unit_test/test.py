@@ -1,16 +1,6 @@
 import cv2
 
-
-test_psdrjit = 0
-
-if test_psdrjit:
-	import psdr_jit as psdr
-	import drjit
-	print("testing psdr-jit")
-else:
-	import psdr_cuda as psdr
-	import enoki
-	print("testing psdr-cuda")
+import sys
 
 
 def test_scene():
@@ -22,23 +12,16 @@ def test_scene():
 	# sc.load_file("bunny_env.xml")
 
 	sc.configure()
-	# sc.configure()
-
-	# # integrator = psdr.FieldExtractionIntegrator("segmentation")
-
-
-	# integrator = psdr.CollocatedIntegrator(100000)
-
 	integrator = psdr.PathTracer(1)
 
-	# # print(integrator.hide_emitters)
-	# # exit()
+	npass = 10
+	for n in range(npass):
+		if n==0:
+			img = integrator.renderC(sc, 0)
+		else:
+			img += integrator.renderC(sc, 0)
 
-	img = integrator.renderC(sc, 0)
-	# print(img)
-	img = img.numpy().reshape((128, 128, 3))
-	# print(img)
-	# print()
+	img = img.numpy().reshape((sc.opts.width, sc.opts.height, 3)) / npass
 	output = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
 
@@ -50,7 +33,7 @@ def test_scene():
 
 	img = integrator.renderC(sc, 0)
 	# print(img)
-	img = img.numpy().reshape((128, 128, 3))
+	img = img.numpy().reshape((sc.opts.width, sc.opts.height, 3))
 	# print(img)
 	# print()
 	output = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
@@ -71,11 +54,18 @@ def test_drjit_init():
 
 def test_sampler():
 	print("testing psdr_jit::Sampler")
+
 	sampler = psdr.Sampler()
-	sampler.seed([0,1,2,3])
+	sampler.seed([1,2,3])
 	print(sampler.next_1d())
-	sampler.seed(1)
 	print(sampler.next_1d())
+
+
+	# sampler = psdr.Sampler()
+	# sampler.seed([0,1,2,3])
+	# print(sampler.next_1d())
+	# sampler.seed(1)
+	# print(sampler.next_1d())
 
 def test_ray():
 	print("test ray")
@@ -110,16 +100,23 @@ def test_mesh():
 	print(mesh.to_world)
 	print("dump")
 	mesh.dump("out.obj")
-
-
-
 	print("after mesh")
 
-
-
-	# print(mesh)
-
 if __name__ == "__main__":
+	print("psdr_cuda test: python test.py 0")
+	print("psdr_jit test: python test.py 1")
+
+	test_psdrjit = int(sys.argv[1])
+	if test_psdrjit:
+		import psdr_jit as psdr
+		import drjit
+		print("testing psdr-jit")
+	else:
+		import psdr_cuda as psdr
+		import enoki
+		print("testing psdr-cuda")
+
+
 	# test_drjit_init()
 	# test_sampler()
 	# test_ray()
@@ -142,9 +139,8 @@ if __name__ == "__main__":
 # print("testing drjit autodiff")
 # psdr.drjit_test()
 
-# print("testing psdr_jit::Sampler")
+# # print("testing psdr_jit::Sampler")
 # sampler = psdr.Sampler()
-# sampler.seed([1,2,3])
+# # sampler.seed([1,2,3])
 # print(sampler.next_1d())
-# sampler.seed(1)
-# print(sampler.next_1d())
+# # print(sampler.next_1d())
