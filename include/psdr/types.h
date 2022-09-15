@@ -209,7 +209,7 @@ using UInt64C   = Type<uint64_t, false>;
 // Render options
 
 struct RenderOption {
-    RenderOption() : width(128), height(128), spp(1), sppe(1), log_level(1) {}
+    RenderOption() : width(128), height(128), spp(1), sppe(0), log_level(1) {}
     RenderOption(int w, int h, int s) : width(w), height(h), spp(s), sppe(s), sppse(s), log_level(1) {}
     RenderOption(int w, int h, int s1, int s2) : width(w), height(h), spp(s1), sppe(s2), sppse(s2), log_level(1) {}
     RenderOption(int w, int h, int s1, int s2, int s3) : width(w), height(h), spp(s1), sppe(s2), sppse(s3), log_level(1) {}

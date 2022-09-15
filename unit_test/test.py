@@ -7,14 +7,15 @@ def test_scene():
 	print("INIT test scene")
 	sc = psdr.Scene()
 
-	sc.load_file("cbox.xml", False)
+	# sc.load_file("cbox.xml")
 
-	# sc.load_file("bunny_env.xml")
+	sc.load_file("bunny_env.xml", False)
 
 	sc.configure()
 	integrator = psdr.PathTracer(1)
+	# integrator = psdr.CollocatedIntegrator(1000000)
 
-	npass = 10
+	npass = 1
 	for n in range(npass):
 		if n==0:
 			img = integrator.renderC(sc, 0)
@@ -24,27 +25,10 @@ def test_scene():
 	img = img.numpy().reshape((sc.opts.width, sc.opts.height, 3)) / npass
 	output = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 
-
 	if test_psdrjit:
 		cv2.imwrite("psdr_jit_debug.exr", output)
 	else:
 		cv2.imwrite("psdr_cuda_debug.exr", output)
-
-
-	img = integrator.renderC(sc, 0)
-	# print(img)
-	img = img.numpy().reshape((sc.opts.width, sc.opts.height, 3))
-	# print(img)
-	# print()
-	output = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-
-
-	if test_psdrjit:
-		cv2.imwrite("psdr_jit_debug2.exr", output)
-	else:
-		cv2.imwrite("psdr_cuda_debug2.exr", output)
-
-
 	print("FIN test scene")
 
 

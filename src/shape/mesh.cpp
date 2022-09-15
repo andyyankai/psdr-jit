@@ -234,10 +234,15 @@ void Mesh::configure() {
 
     m_vertex_positions = transform_pos(to_world, m_vertex_positions_raw);
 
+    delete m_triangle_info;
+    m_triangle_info = nullptr;
+
+    delete m_triangle_uv;
+    m_triangle_uv = nullptr;
+
     m_triangle_info = new TriangleInfoD();
     TriangleInfoD &triangle_info = *m_triangle_info;
     std::tie(triangle_info, std::ignore) = process_mesh<true>(m_vertex_positions, m_face_indices);
-
 
     const FloatD &face_areas = triangle_info.face_area;
     m_total_area = sum(face_areas)[0];

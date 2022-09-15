@@ -279,7 +279,8 @@ void SceneLoader::load_sensor(const pugi::xml_node &node, Scene &scene) {
 
         RenderOption &opts = scene.m_opts;
         std::tie(opts.width, opts.height) = load_film(film_node);
-        opts.spp = opts.sppe = opts.sppse = load_sampler(sampler_node);
+        opts.spp = load_sampler(sampler_node);
+        opts.sppe = opts.sppse = 0;
     } else {
         PSDR_ASSERT_MSG(!film_node, "Duplicate film node");
         PSDR_ASSERT_MSG(!sampler_node, "Duplicate sampler node");
