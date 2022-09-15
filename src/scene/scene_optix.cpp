@@ -9,6 +9,14 @@
 #include <psdr/shape/mesh.h>
 
 
+#include <drjit/autodiff.h>
+#include <drjit/idiv.h>
+#include <drjit/loop.h>
+#include <drjit/texture.h>
+#include <pybind11/stl.h>
+#include <pybind11/operators.h>
+
+
 
 NAMESPACE_BEGIN(psdr_jit)
 
@@ -91,7 +99,6 @@ Vector2i<ad> Scene_OptiX::ray_intersect(const Ray<ad> &ray, Mask<ad> &active) co
     const int m = static_cast<int>(slices<Vector3f<ad>>(ray.o));
     m_its.reserve(m);
 
-
     m_accel->params.ray_o_x         = ray.o.x().data();
     m_accel->params.ray_o_y         = ray.o.y().data();
     m_accel->params.ray_o_z         = ray.o.z().data();
@@ -114,6 +121,7 @@ Vector2i<ad> Scene_OptiX::ray_intersect(const Ray<ad> &ray, Mask<ad> &active) co
         )
     );
 
+    std::cout << ray.tmax[0] << "\b\b\b";
     OPTIX_CHECK(
         optixLaunch(
             m_accel->pipeline,
@@ -127,9 +135,7 @@ Vector2i<ad> Scene_OptiX::ray_intersect(const Ray<ad> &ray, Mask<ad> &active) co
         )
     );
     CUDA_SYNC_CHECK();
-
     active &= (m_its.shape_id >= 0) && (m_its.triangle_id >= 0);
-    drjit::eval(m_its);
     return Vector2i<ad>(m_its.shape_id, m_its.triangle_id);
 }
 

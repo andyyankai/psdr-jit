@@ -12,10 +12,10 @@ def test_scene():
 	sc.load_file("bunny_env.xml", False)
 
 	sc.configure()
-	integrator = psdr.PathTracer(1)
+	integrator = psdr.PathTracer(3)
 	# integrator = psdr.CollocatedIntegrator(1000000)
 
-	npass = 1
+	npass = 2
 	for n in range(npass):
 		if n==0:
 			img = integrator.renderC(sc, 0)
