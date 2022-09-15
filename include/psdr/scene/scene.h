@@ -19,6 +19,7 @@ public:
     void load_string(const char *scene_xml, bool auto_configure = true);
 
     void configure();
+    void configure2(std::vector<int> active_sensor);
 
     bool is_ready() const;
 
