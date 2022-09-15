@@ -16,15 +16,6 @@ uint64_array_t<UInt32> sample_tea_64(UInt32 v0, UInt32 v1, int rounds = 4) {
     return uint64_array_t<UInt32>(v0) + sl<32>(uint64_array_t<UInt32>(v1));
 }
 
-
-// std::shared_ptr<Sampler> Sampler::clone() {
-//     std::shared_ptr<Sampler> sampler = std::make_shared<Sampler>();
-//     sampler->m_sample_count = m_sample_count;
-//     sampler->m_base_seed = m_base_seed;
-//     return sampler;
-// }
-
-
 void Sampler::seed(UInt64C seed_value) {
     if ( !m_rng )
         m_rng = std::make_unique<PCG32>();
@@ -44,11 +35,7 @@ Float<ad> Sampler::next_1d() {
     if ( m_rng == nullptr )
         throw Exception("Sampler::seed() must be invoked before using this sampler!");
     else {
-        if constexpr (ad) {
-            return FloatD(m_rng->next_float32());
-        } else {
-            return m_rng->next_float32();
-        }
+        return m_rng->template next_float<Float<ad>>();
     }
 }
 
