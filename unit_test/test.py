@@ -2,14 +2,39 @@ import cv2
 
 import sys
 
+def test_diff():
+	print("INIT test diff")
+	sc = psdr.Scene()
+	sc.load_file("cbox.xml")
+	sc.configure()
+	integrator = psdr.PathTracer(1)	
+
+	P = FloatD(0.)
+	drjit.enable_grad(P)
+
+	sc.param_map["Mesh[0]"].set_transform(Matrix4fD([[1.,0.,0.,P],
+													 [0.,1.,0.,0.],
+													 [0.,0.,1.,0.],
+													 [0.,0.,0.,1.],]))
+	sc.configure()
+	img = integrator.renderD(sc, 0)
+
+	drjit.set_grad(P, 100.0)
+
+	drjit.forward_to(img)
+	diff_img = drjit.grad(img)
+	diff_img = diff_img.numpy().reshape((sc.opts.width, sc.opts.height, 3))
+	output = cv2.cvtColor(diff_img, cv2.COLOR_RGB2BGR)
+	cv2.imwrite("psdr_jit_diff_debug.exr", output)
+
 
 def test_scene():
 	print("INIT test scene")
 	sc = psdr.Scene()
 
-	# sc.load_file("cbox.xml")
+	sc.load_file("cbox.xml")
 
-	sc.load_file("bunny_env.xml", False)
+	# sc.load_file("bunny_env.xml", False)
 
 	sc.configure()
 	integrator = psdr.PathTracer(3)
@@ -94,6 +119,8 @@ if __name__ == "__main__":
 	if test_psdrjit:
 		import psdr_jit as psdr
 		import drjit
+		from drjit.cuda.ad import Float as FloatD, Matrix4f as Matrix4fD
+
 		print("testing psdr-jit")
 	else:
 		import psdr_cuda as psdr
@@ -107,8 +134,8 @@ if __name__ == "__main__":
 	# test_DiscreteDistribution()
 	# test_mesh()
 
-	test_scene()
-
+	# test_scene()
+	test_diff()
 	# psdr.drjit_memory()
 
 
