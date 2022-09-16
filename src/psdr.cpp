@@ -325,6 +325,7 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("load_file", &Scene::load_file, "file_name"_a, "auto_configure"_a = true)
         .def("load_string", &Scene::load_string, "scene_xml"_a, "auto_configure"_a = true)
         .def("configure", &Scene::configure)
+        .def("configure2", &Scene::configure2)
         .def_readwrite("opts", &Scene::m_opts, "Render options")
         .def_readwrite("seed", &Scene::seed, "Sample seed")
         .def_readonly("num_sensors", &Scene::m_num_sensors)
