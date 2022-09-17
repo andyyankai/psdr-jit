@@ -11,3 +11,4 @@ dist/
 tmp/
 **/*.log
 unit_test/*.exr
+unit_test/inv_test/

@@ -10,7 +10,7 @@ def test_diff():
 	sc.opts.sppe = 0
 	sc.opts.sppse = 0
 	sc.configure()
-	integrator = psdr.PathTracer(3)	
+	integrator = psdr.PathTracer(1)	
 
 	P = FloatD(0.)
 
