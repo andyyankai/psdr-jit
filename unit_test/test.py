@@ -6,8 +6,11 @@ def test_diff():
 	print("INIT test diff")
 	sc = psdr.Scene()
 	sc.load_file("cbox.xml")
+	sc.opts.spp = 32
+	sc.opts.sppe = 0
+	sc.opts.sppse = 0
 	sc.configure()
-	integrator = psdr.PathTracer(1)	
+	integrator = psdr.PathTracer(3)	
 
 	P = FloatD(0.)
 
