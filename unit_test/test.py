@@ -10,22 +10,32 @@ def test_diff():
 	integrator = psdr.PathTracer(1)	
 
 	P = FloatD(0.)
-	drjit.enable_grad(P)
 
-	sc.param_map["Mesh[0]"].set_transform(Matrix4fD([[1.,0.,0.,P],
+	if test_psdrjit:
+		drjit.enable_grad(P)
+	else:
+		enoki.set_requires_gradient(P)
+	
+	sc.param_map["Mesh[0]"].set_transform(Matrix4fD([[1.,0.,0.,P*100.],
 													 [0.,1.,0.,0.],
 													 [0.,0.,1.,0.],
 													 [0.,0.,0.,1.],]))
 	sc.configure()
 	img = integrator.renderD(sc, 0)
 
-	drjit.set_grad(P, 100.0)
-
-	drjit.forward_to(img)
-	diff_img = drjit.grad(img)
-	diff_img = diff_img.numpy().reshape((sc.opts.width, sc.opts.height, 3))
-	output = cv2.cvtColor(diff_img, cv2.COLOR_RGB2BGR)
-	cv2.imwrite("psdr_jit_diff_debug.exr", output)
+	if test_psdrjit:
+		drjit.set_grad(P, 1.0)
+		drjit.forward_to(img)
+		diff_img = drjit.grad(img)
+		diff_img = diff_img.numpy().reshape((sc.opts.width, sc.opts.height, 3))
+		output = cv2.cvtColor(diff_img, cv2.COLOR_RGB2BGR)
+		cv2.imwrite("psdr_jit_diff_debug.exr", output)
+	else:
+		enoki.forward(P, free_graph=True)
+		diff_img = enoki.gradient(img)
+		diff_img = diff_img.numpy().reshape((sc.opts.width, sc.opts.height, 3))
+		output = cv2.cvtColor(diff_img, cv2.COLOR_RGB2BGR)
+		cv2.imwrite("psdr_cuda_diff_debug.exr", output)
 
 
 def test_scene():
@@ -125,6 +135,8 @@ if __name__ == "__main__":
 	else:
 		import psdr_cuda as psdr
 		import enoki
+		from enoki.cuda_autodiff import Float32 as FloatD, Vector3f as Vector3fD, Matrix4f as Matrix4fD
+
 		print("testing psdr-cuda")
 
 
