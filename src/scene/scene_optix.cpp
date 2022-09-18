@@ -108,20 +108,14 @@ Vector2i<ad> Scene_OptiX::ray_intersect(const Ray<ad> &ray, Mask<ad> &active) co
     m_accel->params.ray_d_z         = ray.d.z().data();
 
     m_accel->params.ray_tmax        = ray.tmax.data();
+
     m_accel->params.tri_index       = m_its.triangle_id.data();
     m_accel->params.shape_index     = m_its.shape_id.data();
     m_accel->params.barycentric_u   = m_its.uv.x().data();
     m_accel->params.barycentric_v   = m_its.uv.y().data();
 
-    CUDA_CHECK(
-        cudaMemcpyAsync(
-            reinterpret_cast<void*>( m_accel->d_params ),
-            &m_accel->params, sizeof( Params ),
-            cudaMemcpyHostToDevice, m_accel->stream
-        )
-    );
+    jit_memcpy(JitBackend::CUDA, reinterpret_cast<void*>( m_accel->d_params ), &m_accel->params, sizeof(Params));
 
-    std::cout << ray.tmax[0] << "\b\b\b";
     OPTIX_CHECK(
         optixLaunch(
             m_accel->pipeline,

@@ -10,7 +10,7 @@ struct Params
     int          *shape_index;
     float        *barycentric_u, *barycentric_v;
 
-    OptixTraversableHandle handle;
+    unsigned long long handle;
 };
 
 struct RayGenData

@@ -99,3 +99,4 @@ Spectrum<ad> FieldExtractionIntegrator::__Li(const Scene &scene, const Ray<ad> &
 
 
 NAMESPACE_END(psdr_jit)
+

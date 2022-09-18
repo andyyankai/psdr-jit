@@ -175,7 +175,7 @@ set(PSDR_SOURCE_FILES
     ${PSDR_INCLUDE_DIR}/core/miniz.h
     ${PSDR_SOURCE_DIR}/core/miniz.cpp
 
-    ${PSDR_INCLUDE_DIR}/scene/optix.h
+    # ${PSDR_INCLUDE_DIR}/scene/optix.h
     ${PSDR_INCLUDE_DIR}/scene/scene_optix.h
     ${PSDR_SOURCE_DIR}/scene/scene_optix.cpp
 
