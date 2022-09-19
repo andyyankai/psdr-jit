@@ -16,6 +16,10 @@ NAMESPACE_BEGIN(psdr_jit)
  * GPU array types
  ********************************************/
 
+using UInt32 = CUDAArray<uint32_t>;
+using UInt64 = CUDAArray<uint64_t>;
+
+
 template <typename T, bool ad>
 using Type      = typename std::conditional<ad,
                                             DiffArray<CUDAArray<T>>,

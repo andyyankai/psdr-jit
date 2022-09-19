@@ -475,10 +475,11 @@ template <bool ad, bool path_space>
 Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active) const {
     static_assert(ad || !path_space);
     Intersection<ad> its;
+    std::cout << ray.o << std::endl;
+    std::cout << ray.d << std::endl;
 
     Vector2i<ad> idx = m_optix->ray_intersect<ad>(ray, active);
-
-
+    std::cout << idx << std::endl;
     TriangleUV<ad>      tri_uv_info;
     Mask<ad>            face_normal_mask;
 
@@ -491,7 +492,6 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active) const
     Vector3f<ad> tri_info_n0; 
     Vector3f<ad> tri_info_n1; 
     Vector3f<ad> tri_info_n2; 
-
 
     if constexpr ( ad ) {
         its.n = gather<Vector3f<ad>>(m_triangle_info.face_normal, idx[1], active);
@@ -506,8 +506,12 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active) const
         tri_info_n2 = gather<Vector3f<ad>>(m_triangle_info.n2, idx[1], active);
 
     } else {
+        std::cout << detach(m_triangle_info.face_normal) << std::endl;
+        // std::cout << idx[1] << std::endl;
+        // std::cout << active << std::endl;
+        // std::cout << "m_triangle_info.face_normal" << m_triangle_info.face_normal << std::endl;
         its.n = gather<Vector3f<ad>>(detach(m_triangle_info.face_normal), idx[1], active);
-
+        // std::cout << "its.n" << its.n << std::endl;
         tri_uv_info = gather<TriangleUVC>(detach(m_triangle_uv), idx[1], active);
         face_normal_mask = gather<MaskC>(detach(m_triangle_face_normals), idx[1], active);
 
@@ -520,6 +524,7 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active) const
 
 
     }
+
     its.J = 1.f;
 
     const Vector3f<ad> &vertex0 = tri_info_p0, &edge1 = tri_info_e1, &edge2 = tri_info_e2;
@@ -539,6 +544,7 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active) const
     if constexpr ( !ad || path_space ) {
         // Path-space formulation
         const Vector2fC &uv = m_optix->m_its.uv;
+        // Vector2fC uv(0.5f);
         Vector3f<ad> sh_n = normalize(bilinear<ad>(tri_info_n0,
                                                    tri_info_n1 - tri_info_n0,
                                                    tri_info_n2 - tri_info_n0,
@@ -598,6 +604,7 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active) const
         its.wi = its.sh_frame.to_local(-ray.d);
 
     }
+
 
     drjit::eval(its);
     return its;

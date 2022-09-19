@@ -45,6 +45,7 @@
 #include <psdr/integrator/collocated.h>
 #include <psdr/integrator/path.h>
 
+#include <psdr/jit_optix_test.h>
 
 
 namespace py = pybind11;
@@ -52,6 +53,11 @@ using namespace py::literals;
 using namespace psdr_jit;
 
 using namespace drjit;
+
+void optix_jit_test() {
+    jit_test aa;;
+    aa.trace_ray();
+}
 
 void drjit_test() {
     jit_init((uint32_t)JitBackend::CUDA);
@@ -91,7 +97,7 @@ PYBIND11_MODULE(psdr_jit, m) {
     m.doc() = "Path-space differentiable renderer";
     m.attr("__name__") = "psdr_jit";
 
-
+    m.def("optix_jit_test", &optix_jit_test);
 
     m.def("drjit_test", &drjit_test);
 

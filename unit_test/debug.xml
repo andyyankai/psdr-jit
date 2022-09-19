@@ -14,8 +14,8 @@
             <integer name="sample_count" value="1" />
         </sampler>
         <film type="hdrfilm">
-            <integer name="width" value="64" />
-            <integer name="height" value="64" />
+            <integer name="width" value="16" />
+            <integer name="height" value="16" />
             <string name="pixel_format" value="rgb" />
             <rfilter type="box"/>
         </film>
@@ -25,36 +25,27 @@
         <rgb name="reflectance" value="0.90, 0.20, 0.20"/>
     </bsdf>
 
-<!--     <bsdf type="diffuse" id="green">
-        <rgb name="reflectance" value="0.20, 0.90, 0.20"/>
-    </bsdf>
- -->
+<!-- 
     <emitter type="envmap">
         <string name="filename" value="./data/envmaps/ballroom_1k.exr"/>
-    </emitter>
+    </emitter> -->
 
 
-<!-- 
+
     <shape type="obj">
-        <string name="filename" value="./data/objects/cbox/cbox_smallbox.obj"/>
+        <string name="filename" value="./tri.obj"/>
         <boolean name="face_normals" value="true"/>
-        <ref id="box"/>
-    </shape> -->
+        <ref id="red"/>
+                <emitter type="area">
+            <rgb name="radiance" value="20.0, 20.0, 8.0"/>
+        </emitter>
+    </shape>
 
     <shape type="obj">
-        <string name="filename" value="./data/objects/bun.obj"/>
+        <string name="filename" value="./tri2.obj"/>
         <boolean name="face_normals" value="true"/>
         <ref id="red"/>
     </shape>
 
 
-    <!-- <shape type="obj" id="bunny">
-        <string name="filename" value="./data/objects/bunny/bunny.obj" />
-        <boolean name="face_normals" value="false" />
-        <transform name="toWorld">
-            <scale x="40" y="40" z="40"/>
-            <translate x="20" y="-50"/>
-        </transform>
-        <ref id="mat1" />
-    </shape> -->
 </scene>

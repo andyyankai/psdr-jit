@@ -10,7 +10,7 @@ def test_diff():
 	sc.opts.sppe = 0
 	sc.opts.sppse = 0
 	sc.configure()
-	integrator = psdr.PathTracer(1)	
+	integrator = psdr.PathTracer(3)	
 
 	P = FloatD(0.)
 
@@ -149,7 +149,7 @@ if __name__ == "__main__":
 	# test_DiscreteDistribution()
 	# test_mesh()
 
-	# test_scene()
+	test_scene()
 	test_diff()
 	# psdr.drjit_memory()
 

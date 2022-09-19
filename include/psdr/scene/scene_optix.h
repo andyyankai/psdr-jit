@@ -2,10 +2,13 @@
 
 #include <psdr/psdr.h>
 #include <psdr/fwd.h>
+#include <psdr/optix_stubs.h>
+
+
+NAMESPACE_BEGIN(psdr_jit)
 
 struct PathTracerState;
 
-NAMESPACE_BEGIN(psdr_jit)
 
 struct Intersection_OptiX {
     void reserve(int64_t size);
@@ -32,8 +35,12 @@ protected:
     template <bool ad>
     Vector2i<ad> ray_intersect(const Ray<ad> &ray, Mask<ad> &active) const;
 
-    PathTracerState                 *m_accel;
+    PathTracerState *m_accel = nullptr;
+
     mutable Intersection_OptiX      m_its;
+
+    
+
 };
 
 NAMESPACE_END(psdr_jit)
