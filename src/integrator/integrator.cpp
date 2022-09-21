@@ -79,7 +79,7 @@ Spectrum<ad> Integrator::__render(const Scene &scene, int sensor_id) const {
                                 /ScalarVector2f(opts.width, opts.height);
         Ray<ad> camera_ray = scene.m_sensors[sensor_id]->sample_primary_ray(samples);
         Spectrum<ad> value = Li(scene, scene.m_samplers[0], camera_ray);
-        // masked(value, ~enoki::isfinite<Spectrum<ad>>(value)) = 0.f;
+        masked(value, ~drjit::isfinite<Spectrum<ad>>(value)) = 0.f;
         for (int j=0; j<3; ++j) {
             scatter_reduce(ReduceOp::Add, result[j], value[j], idx);
         }

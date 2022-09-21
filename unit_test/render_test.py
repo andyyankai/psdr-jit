@@ -26,8 +26,8 @@ output_path = Path('inv_test')
 output_path.mkdir(parents=True, exist_ok=True)
 
 sc = psdr.Scene()
-sc.load_file("cbox.xml")
-# sc.load_file("bunny_env.xml")
+# sc.load_file("cbox.xml")
+sc.load_file("bunny_env.xml")
 # sc.load_file("debug.xml")
 
 # integrator = psdr.CollocatedIntegrator(100000)	
