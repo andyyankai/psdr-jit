@@ -51,18 +51,18 @@ sc.opts.sppse = 0
 sc.opts.log_level = 0
 
 for it in range(0, 1000):
-	# init_diffuse = Vector3fD(detach(init_diffuse))
-	# drjit.enable_grad(init_diffuse)
-	# sc.param_map['BSDF[0]'].reflectance.data = init_diffuse;
+	init_diffuse = Vector3fD(detach(init_diffuse))
+	drjit.enable_grad(init_diffuse)
+	sc.param_map['BSDF[0]'].reflectance.data = init_diffuse;
 	sc.configure()
-	img = integrator.renderC(sc, 0)
-	# loss = mean(mean(abs(img_target - img)))
-	# backward(loss)
-	# texture_g = grad(init_diffuse)
-	# if none(isnan(texture_g))[0]:
-	# 	init_diffuse = init_diffuse-texture_g
-	# print("iter", it, loss, init_diffuse)
-	print("iter", it)
+	img = integrator.renderD(sc, 0)
+	loss = mean(mean(abs(img_target - img)))
+	backward(loss)
+	texture_g = grad(init_diffuse)
+	if none(isnan(texture_g))[0]:
+		init_diffuse = init_diffuse-texture_g
+	print("iter", it, loss, init_diffuse)
+	# print("iter", it)
 
 
 # loop_spp = 2

@@ -31,8 +31,8 @@ sc.load_file("cbox.xml")
 # sc.load_file("debug.xml")
 
 # integrator = psdr.CollocatedIntegrator(100000)	
-# integrator = psdr.PathTracer(1)	
-integrator = psdr.FieldExtractionIntegrator("silhouette")
+integrator = psdr.PathTracer(1)	
+# integrator = psdr.FieldExtractionIntegrator("silhouette")
 sc.opts.spp = 32
 sc.opts.sppe = 0
 sc.opts.sppse = 0
@@ -58,12 +58,8 @@ for it in range(0, 1000):
 	# cv2.imwrite("optix_debug.exr", output)
 	if test_psdrjit:
 		drjit.eval(img)
-		drjit.kernel_history_clear()
-		drjit.flush_malloc_cache()
-		drjit.malloc_clear_statistics()
-		drjit.sync_thread()
 		# drjit.registry_clear()
-		drjit.set_flags(drjit.JitFlag.Default)
+		# drjit.set_flags(drjit.JitFlag.Default)
 	del img
 	# print(img)
 	print("iter", it)
