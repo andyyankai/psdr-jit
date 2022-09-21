@@ -35,7 +35,9 @@ Float<ad> Sampler::next_1d() {
     if ( m_rng == nullptr )
         throw Exception("Sampler::seed() must be invoked before using this sampler!");
     else {
-        return m_rng->template next_float<Float<ad>>();
+        Float<ad> rs = m_rng->template next_float<Float<ad>>();
+        schedule(m_rng->inc, m_rng->state);
+        return rs;
     }
 }
 

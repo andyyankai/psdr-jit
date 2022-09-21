@@ -6,7 +6,7 @@
 NAMESPACE_BEGIN(psdr_jit)
 
 struct Sampler {
-    using PCG32 = drjit::PCG32<UIntC>;
+    using PCG32 = drjit::PCG32<IntC>;
 
     // std::shared_ptr<Sampler> clone();
 

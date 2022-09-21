@@ -2,12 +2,15 @@ import sys
 
 def test_sampler():
 	print("testing psdr_jit::Sampler")
+	drjit.set_flag(drjit.JitFlag.LoopRecord, False)
+
 	sampler = psdr.Sampler()
 	sampler.seed([1,2,3])
 	for i in range(0, 1000):
 		val = sampler.next_1d();
 		if test_psdrjit:
 			drjit.eval(val)
+			print(val)
 		else:
 			print(val)
 		print("iter", i)
