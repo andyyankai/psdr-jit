@@ -182,32 +182,24 @@ set(CUDA_SOURCE_FILES
     ./cuda/kernel/NEE.cu
 )
 
-cuda_add_library(cu_library STATIC ${CUDA_SOURCE_FILES})
-cuda_add_cublas_to_target(cu_library)
 
-if( WIN32 )    
+if( WIN32 )
+    cuda_add_library(cu_library STATIC ${CUDA_SOURCE_FILES})
+    cuda_add_cublas_to_target(cu_library)
     pybind11_add_module(psdr_jit  ${PSDR_SOURCE_FILES})
     target_compile_options(psdr_jit PRIVATE /O2 /wd4251 /MP)
+    add_subdirectory(${DRJIT_DIR})
+    set(PYPSDR_LIBRARIES drjit-core drjit-autodiff nanothread)
+    target_link_libraries(psdr_jit PRIVATE cu_library ${PYPSDR_LIBRARIES} ${CUDA_LIBRARIES})
 else()
+    cuda_add_library(cu_library STATIC ${CUDA_SOURCE_FILES})
+    cuda_add_cublas_to_target(cu_library)
+    add_subdirectory(${DRJIT_DIR})
+    set(PYPSDR_LIBRARIES drjit-core drjit-autodiff nanothread)
     cuda_add_library(psdr_jit MODULE ${PSDR_SOURCE_FILES})
     target_link_libraries(psdr_jit cu_library ${PYPSDR_LIBRARIES} ${CUDA_LIBRARIES})
 endif()
 
-
-add_subdirectory(${DRJIT_DIR})
-set(PYPSDR_LIBRARIES drjit-core drjit-autodiff nanothread)
-target_link_libraries(psdr_jit PRIVATE cu_library ${PYPSDR_LIBRARIES} ${CUDA_LIBRARIES})
-
-
-
-
-# target build
-target_compile_definitions(psdr_jit PRIVATE PTX_OUTPUT_DIR="${CUDA_GENERATED_OUTPUT_DIR}")
-
-set_target_properties(psdr_jit PROPERTIES SKIP_BUILD_RPATH FALSE)
-set_target_properties(psdr_jit PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE)
-set_property(TARGET psdr_jit PROPERTY CXX_STANDARD 17)
-set_target_properties(psdr_jit PROPERTIES PREFIX "")
 
 
 set(PSDR_PACKAGE_DIR "${CMAKE_BINARY_DIR}/python/psdr_jit")
@@ -244,7 +236,15 @@ add_custom_command(
 
 
 add_custom_target(
+    TARGET psdr_jit POST_BUILD
     psdr-python-init-drjit
     ALL DEPENDS ${DRJIT_PACKAGE_DIR}/__init__.py
 )
 
+# target build
+target_compile_definitions(psdr_jit PRIVATE PTX_OUTPUT_DIR="${CUDA_GENERATED_OUTPUT_DIR}")
+
+set_target_properties(psdr_jit PROPERTIES SKIP_BUILD_RPATH FALSE)
+set_target_properties(psdr_jit PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE)
+set_property(TARGET psdr_jit PROPERTY CXX_STANDARD 17)
+set_target_properties(psdr_jit PROPERTIES PREFIX "")

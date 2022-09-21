@@ -3,6 +3,10 @@
 #include <limits>
 #include <psdr/macros.h>
 
+#ifndef M_PI
+    #define M_PI 3.14159265358979323846
+#endif
+
 NAMESPACE_BEGIN(psdr_jit)
 
 constexpr float Epsilon         = 1e-5f;

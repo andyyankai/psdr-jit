@@ -1,7 +1,7 @@
 #pragma once
 
 #include <misc/Exception.h>
-
+#include <psdr/psdr.h>
 
 NAMESPACE_BEGIN(psdr_jit)
 	

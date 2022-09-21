@@ -68,7 +68,7 @@ template <bool ad, bool TestDomain = false>
 inline Float<ad> square_to_cosine_hemisphere_pdf(const Vector3f<ad> &v) {
     if constexpr (TestDomain)
         return select(abs(squared_norm(v) - 1.f) > RayEpsilon ||
-                      v.z() < 0.f, zero<Float<ad>>(), InvPi * v.z());
+                      v.z() < 0.f, zeros<Float<ad>>(), InvPi * v.z());
     else
         return InvPi * v.z();
 }
@@ -86,9 +86,9 @@ template <bool ad, bool TestDomain = false>
 inline Float<ad> square_to_uniform_triangle_pdf(const Vector2f<ad> &p) {
     if constexpr (TestDomain) {
         return select(
-            p.x() < zero<Float<ad>>() || p.y() < zero<Float<ad>>()
+            p.x() < zeros<Float<ad>>() || p.y() < zeros<Float<ad>>()
                                   || (p.x() + p.y() > 1.f),
-            zero<Float<ad>>(),
+            zeros<Float<ad>>(),
             2.f
         );
     } else {
