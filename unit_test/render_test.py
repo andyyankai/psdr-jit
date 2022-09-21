@@ -18,20 +18,21 @@ else:
 import time
 from pathlib import Path
 
-drjit.set_flag(drjit.JitFlag.LoopRecord, False)
+if test_psdrjit:
+	drjit.set_flag(drjit.JitFlag.LoopRecord, False)
 
 
 output_path = Path('inv_test')
 output_path.mkdir(parents=True, exist_ok=True)
 
 sc = psdr.Scene()
-sc.load_file("cbox.xml")
-# sc.load_file("bunny_env.xml")
+# sc.load_file("cbox.xml")
+sc.load_file("bunny_env.xml")
 # sc.load_file("debug.xml")
 
 # integrator = psdr.CollocatedIntegrator(100000)	
-# integrator = psdr.PathTracer(1)	
-integrator = psdr.FieldExtractionIntegrator("silhouette")
+integrator = psdr.PathTracer(1)	
+# integrator = psdr.FieldExtractionIntegrator("silhouette")
 sc.opts.spp = 32
 sc.opts.sppe = 0
 sc.opts.sppse = 0
@@ -52,9 +53,9 @@ for it in range(0, 1000):
 	# if none(isnan(texture_g))[0]:
 	# 	init_diffuse = init_diffuse-texture_g
 	# print("iter", it, loss, init_diffuse)
-	# img = img.numpy().reshape((sc.opts.width, sc.opts.height, 3))
-	# output = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-	# cv2.imwrite("optix_debug.exr", output)
+	img = img.numpy().reshape((sc.opts.width, sc.opts.height, 3))
+	output = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+	cv2.imwrite("optix_debug.exr", output)
 	if test_psdrjit:
 		drjit.eval(img)
 		drjit.kernel_history_clear()
@@ -66,7 +67,7 @@ for it in range(0, 1000):
 	del img
 	# print(img)
 	print("iter", it)
-	# exit()
+	exit()
 
 t1 = time.process_time()
 

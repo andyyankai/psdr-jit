@@ -47,7 +47,7 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
         {
 
             PositionSample<ad> ps = scene.sample_emitter_position<ad>(its.p, sampler.next_2d<ad>(), active);
-            Mask<ad> active_direct = active && ps.is_valid;
+            Mask<ad> active_direct = active && ps.is_valid && !its.is_emitter(active);
             Vector3f<ad> wod = ps.p - its.p;
             Float<ad> dist_sqr = squared_norm(wod);
             Float<ad> dist = safe_sqrt(dist_sqr);
