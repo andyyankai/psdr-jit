@@ -2,10 +2,6 @@
 #include <psdr/core/ray.h>
 #include <psdr/fwd.h>
 
-// #include <drjit-core/optix.h>
-
-// #include <psdr/scene/optix.h>
-
 #include <psdr/scene/scene_optix.h>
 #include <psdr/shape/mesh.h>
 
@@ -38,6 +34,7 @@ const char *miss_and_closesthit_ptx = R"(
     mov.b32 %r2, 2;
     mov.b32 %r3, 3;
     mov.b32 %r4, -1;
+
 
     call _optix_set_payload, (%r0, %r4);
     call _optix_set_payload, (%r1, %r4);
@@ -72,8 +69,6 @@ const char *miss_and_closesthit_ptx = R"(
     call _optix_set_payload, (%u1, %uu1); // v
     ret;
 
-
-
 })";
 
 
@@ -94,25 +89,15 @@ struct PathTracerState {
     OptixPipelineCompileOptions    pipeline_compile_options = {};
     std::vector<HitGroupSbtRecord> hg_sbts;
     OptixShaderBindingTable sbt {};
-        OptixModuleCompileOptions module_compile_options { };
-OptixAccelEmitDesc build_property = {};
-        OptixProgramGroupOptions pgo { };
-        OptixProgramGroupDesc pgd[2] { };
-        OptixProgramGroup pg[2];
-OptixAccelBuildOptions accel_options {};
-OptixAccelBufferSizes gas_buffer_sizes;
-void *d_gas_temp;
-size_t  h_compacted_size = 0;
-
-    // CUdeviceptr                    d_gas_output_buffer      = 0;  // Triangle AS memory
-    // CUdeviceptr                    d_vertices               = 0;
-    // OptixModule                    ptx_module               = 0;
-    // OptixPipelineCompileOptions    pipeline_compile_options = {};
-    // OptixPipeline                  pipeline                 = 0;
-    // OptixProgramGroup              radiance_miss_group      = 0;
-    // OptixProgramGroup              radiance_hit_group       = 0;
-    // CUstream                       stream                   = 0;
-    // OptixShaderBindingTable        sbt                      = {};
+    OptixModuleCompileOptions module_compile_options { };
+    OptixAccelEmitDesc build_property = {};
+    OptixProgramGroupOptions pgo { };
+    OptixProgramGroupDesc pgd[2] { };
+    OptixProgramGroup pg[2];
+    OptixAccelBuildOptions accel_options {};
+    OptixAccelBufferSizes gas_buffer_sizes;
+    void *d_gas_temp;
+    size_t  h_compacted_size = 0;
 };
 
 void Intersection_OptiX::reserve(int64_t size) {
@@ -153,7 +138,7 @@ void Scene_OptiX::configure(const std::vector<Mesh *> &meshes) {
         face_offset[0] = 0;
         for ( size_t i = 0; i < num_meshes; ++i ) {
             face_offset[i + 1] = face_offset[i] + meshes[i]->m_num_faces;
-            std::cout << face_offset[i+1] << std::endl;
+            // std::cout << face_offset[i+1] << std::endl;
         }
     
 
@@ -331,160 +316,6 @@ void Scene_OptiX::configure(const std::vector<Mesh *> &meshes) {
         ));
 
     }
-
-
-
-    // // Do four times to verify caching, with mask in it. 3 + 4
-    // for (int i = 0; i < 2; ++i) {
-    //     // =====================================================
-    //     // Generate a camera ray
-    //     // =====================================================
-
-    //     int res = 16;
-    //     UInt32 index = dr::arange<UInt32>(res * res),
-    //            x     = index % res,
-    //            y     = index / res;
-
-    //     FloatC ox = FloatC(x) * (2.0f / res) - 2.0f,
-    //           oy = FloatC(y) * (2.0f / res) - 2.0f,
-    //           oz = -1.f;
-
-    //     FloatC dx = 0.f, dy = 0.f, dz = 1.f;
-
-    //     FloatC mint = 0.f, maxt = 100.f, time = 0.f;
-
-    //     UInt64 handle = dr::opaque<UInt64>(m_accel->gas_handle);
-    //     UInt32 ray_mask(255), ray_flags(0), sbt_offset(0), sbt_stride(1),
-    //         miss_sbt_index(0);
-
-    //     UInt32 payload_0(0);
-    //     UInt32 payload_1(0);
-    //     MaskC mask = true;
-
-    //     // =====================================================
-    //     // Launch a ray tracing call
-    //     // =====================================================
-
-    //     uint32_t trace_args[] {
-    //         handle.index(),
-    //         ox.index(), oy.index(), oz.index(),
-    //         dx.index(), dy.index(), dz.index(),
-    //         mint.index(), maxt.index(), time.index(),
-    //         ray_mask.index(), ray_flags.index(),
-    //         sbt_offset.index(), sbt_stride.index(),
-    //         miss_sbt_index.index(), payload_0.index(), payload_1.index()
-    //     };
-
-    //     jit_optix_ray_trace(sizeof(trace_args) / sizeof(uint32_t), trace_args,
-    //                         mask.index(), m_accel->pipeline_handle.index(), m_accel->sbt_handle.index());
-
-    //     payload_0 = UInt32::steal(trace_args[15]);
-    //     jit_var_eval(payload_0.index());
-
-    //     UInt32 payload_0_host =
-    //         UInt32::steal(jit_var_migrate(payload_0.index(), AllocType::Host));
-    //     jit_sync_thread();
-
-    //     for (int k = 0; k < res; ++k) {
-    //         for (int j = 0; j < res; ++j)
-    //             printf("%i ", payload_0_host.data()[k*res + j]);
-    //         printf("\n");
-    //     }
-    //     printf("\n");
-
-
-    //     payload_1 = UInt32::steal(trace_args[16]);
-    //     jit_var_eval(payload_1.index());
-
-    //     UInt32 payload_1_host =
-    //         UInt32::steal(jit_var_migrate(payload_1.index(), AllocType::Host));
-    //     jit_sync_thread();
-
-    //     for (int k = 0; k < res; ++k) {
-    //         for (int j = 0; j < res; ++j)
-    //             printf("%i ", payload_1_host.data()[k*res + j]);
-    //         printf("\n");
-    //     }
-    //     printf("\n");
-
-    // }
-
-    // for (int i = 0; i < 2; ++i) {
-    //     // =====================================================
-    //     // Generate a camera ray
-    //     // =====================================================
-
-    //     int res = 16;
-    //     UInt32 index = dr::arange<UInt32>(res * res),
-    //            x     = index % res,
-    //            y     = index / res;
-
-    //     FloatC ox = FloatC(x) * (2.0f / res) - 1.0f,
-    //           oy = FloatC(y) * (2.0f / res) - 1.0f,
-    //           oz = -1.f;
-
-    //     FloatC dx = 0.f, dy = 0.f, dz = 1.f;
-
-    //     FloatC mint = 0.f, maxt = 100.f, time = 0.f;
-
-    //     UInt64 handle = dr::opaque<UInt64>(m_accel->gas_handle);
-    //     UInt32 ray_mask(255), ray_flags(0), sbt_offset(0), sbt_stride(1),
-    //         miss_sbt_index(0);
-
-    //     UInt32 payload_0(0);
-    //     UInt32 payload_1(0);
-    //     MaskC mask = true;
-
-    //     // =====================================================
-    //     // Launch a ray tracing call
-    //     // =====================================================
-
-    //     uint32_t trace_args[] {
-    //         handle.index(),
-    //         ox.index(), oy.index(), oz.index(),
-    //         dx.index(), dy.index(), dz.index(),
-    //         mint.index(), maxt.index(), time.index(),
-    //         ray_mask.index(), ray_flags.index(),
-    //         sbt_offset.index(), sbt_stride.index(),
-    //         miss_sbt_index.index(), payload_0.index(), payload_1.index()
-    //     };
-
-    //     jit_optix_ray_trace(sizeof(trace_args) / sizeof(uint32_t), trace_args,
-    //                         mask.index(), m_accel->pipeline_handle.index(), m_accel->sbt_handle.index());
-
-    //     payload_0 = UInt32::steal(trace_args[15]);
-    //     jit_var_eval(payload_0.index());
-
-    //     UInt32 payload_0_host =
-    //         UInt32::steal(jit_var_migrate(payload_0.index(), AllocType::Host));
-    //     jit_sync_thread();
-
-    //     for (int k = 0; k < res; ++k) {
-    //         for (int j = 0; j < res; ++j)
-    //             printf("%i ", payload_0_host.data()[k*res + j]);
-    //         printf("\n");
-    //     }
-    //     printf("\n");
-
-
-    //     payload_1 = UInt32::steal(trace_args[16]);
-    //     jit_var_eval(payload_1.index());
-
-    //     UInt32 payload_1_host =
-    //         UInt32::steal(jit_var_migrate(payload_1.index(), AllocType::Host));
-    //     jit_sync_thread();
-
-    //     for (int k = 0; k < res; ++k) {
-    //         for (int j = 0; j < res; ++j)
-    //             printf("%i ", payload_1_host.data()[k*res + j]);
-    //         printf("\n");
-    //     }
-    //     printf("\n");
-
-    // }
-
-
-
 }
 
 
@@ -494,378 +325,67 @@ bool Scene_OptiX::is_ready() const {
 
 
 template <bool ad>
-Vector2i<ad> Scene_OptiX::ray_intersect(const Ray<ad> &ray, Mask<ad> &active) const {
-
-
-    // for (int i = 0; i < 2; ++i) {
-    //     // =====================================================
-    //     // Generate a camera ray
-    //     // =====================================================
-
-    //     int res = 16;
-    //     UInt32 index = dr::arange<UInt32>(res * res),
-    //            x     = index % res,
-    //            y     = index / res;
-
-    //     FloatC ox,oy,oz,dx,dy,dz;
-    //         if constexpr(ad) {
-    //                ox = detach(ray.o.x()),
-    //                oy = detach(ray.o.y()),
-    //                oz = detach(ray.o.z());
-
-    //                dx = detach(ray.d.x()),
-    //                dy = detach(ray.d.y()),
-    //                dz = detach(ray.d.z());
-    //         } else {
-    //                ox = ray.o.x(),
-    //                oy = ray.o.y(),
-    //                oz = ray.o.z();
-
-    //                dx = ray.d.x(),
-    //                dy = ray.d.y(),
-    //                dz = ray.d.z();
-
-    //         }
-
-
-    //     FloatC mint = 0.f, maxt = 100.f, time = 0.f;
-
-    //     UInt64 handle = dr::opaque<UInt64>(m_accel->gas_handle);
-    //     UInt32 ray_mask(255), ray_flags(0), sbt_offset(0), sbt_stride(1),
-    //         miss_sbt_index(0);
-
-    //     UInt32 payload_0(0);
-    //     UInt32 payload_1(0);
-    //     MaskC mask = true;
-
-    //     // =====================================================
-    //     // Launch a ray tracing call
-    //     // =====================================================
-
-    //     uint32_t trace_args[] {
-    //         handle.index(),
-    //         ox.index(), oy.index(), oz.index(),
-    //         dx.index(), dy.index(), dz.index(),
-    //         mint.index(), maxt.index(), time.index(),
-    //         ray_mask.index(), ray_flags.index(),
-    //         sbt_offset.index(), sbt_stride.index(),
-    //         miss_sbt_index.index(), payload_0.index(), payload_1.index()
-    //     };
-
-    //     jit_optix_ray_trace(sizeof(trace_args) / sizeof(uint32_t), trace_args,
-    //                         mask.index(), m_accel->pipeline_handle.index(), m_accel->sbt_handle.index());
-
-    //     payload_0 = UInt32::steal(trace_args[15]);
-    //     jit_var_eval(payload_0.index());
-
-    //     UInt32 payload_0_host =
-    //         UInt32::steal(jit_var_migrate(payload_0.index(), AllocType::Host));
-    //     jit_sync_thread();
-
-    //     for (int k = 0; k < res; ++k) {
-    //         for (int j = 0; j < res; ++j)
-    //             printf("%i ", payload_0_host.data()[k*res + j]);
-    //         printf("\n");
-    //     }
-    //     printf("\n");
-
-
-    //     payload_1 = UInt32::steal(trace_args[16]);
-    //     jit_var_eval(payload_1.index());
-
-    //     UInt32 payload_1_host =
-    //         UInt32::steal(jit_var_migrate(payload_1.index(), AllocType::Host));
-    //     jit_sync_thread();
-
-    //     for (int k = 0; k < res; ++k) {
-    //         for (int j = 0; j < res; ++j)
-    //             printf("%i ", payload_1_host.data()[k*res + j]);
-    //         printf("\n");
-    //     }
-    //     printf("\n");
-
-    // }
-
-
-    // // Do four times to verify caching, with mask in it. 3 + 4
-    // for (int i = 0; i < 2; ++i) {
-    //     // =====================================================
-    //     // Generate a camera ray
-    //     // =====================================================
-
-    //     int res = 16;
-    //     UInt32 index = dr::arange<UInt32>(res * res),
-    //            x     = index % res,
-    //            y     = index / res;
-
-    //     FloatC ox = FloatC(x) * (2.0f / res) - 2.0f,
-    //           oy = FloatC(y) * (2.0f / res) - 2.0f,
-    //           oz = -1.f;
-
-    //     FloatC dx = 0.f, dy = 0.f, dz = 1.f;
-
-    //     FloatC mint = 0.f, maxt = 100.f, time = 0.f;
-
-    //     UInt64 handle = dr::opaque<UInt64>(m_accel->gas_handle);
-    //     UInt32 ray_mask(255), ray_flags(0), sbt_offset(0), sbt_stride(1),
-    //         miss_sbt_index(0);
-
-    //     UInt32 payload_0(0);
-    //     UInt32 payload_1(0);
-    //     MaskC mask = true;
-
-    //     // =====================================================
-    //     // Launch a ray tracing call
-    //     // =====================================================
-
-    //     uint32_t trace_args[] {
-    //         handle.index(),
-    //         ox.index(), oy.index(), oz.index(),
-    //         dx.index(), dy.index(), dz.index(),
-    //         mint.index(), maxt.index(), time.index(),
-    //         ray_mask.index(), ray_flags.index(),
-    //         sbt_offset.index(), sbt_stride.index(),
-    //         miss_sbt_index.index(), payload_0.index(), payload_1.index()
-    //     };
-
-    //     jit_optix_ray_trace(sizeof(trace_args) / sizeof(uint32_t), trace_args,
-    //                         mask.index(), m_accel->pipeline_handle.index(), m_accel->sbt_handle.index());
-
-    //     payload_0 = UInt32::steal(trace_args[15]);
-    //     jit_var_eval(payload_0.index());
-
-    //     UInt32 payload_0_host =
-    //         UInt32::steal(jit_var_migrate(payload_0.index(), AllocType::Host));
-    //     jit_sync_thread();
-
-    //     for (int k = 0; k < res; ++k) {
-    //         for (int j = 0; j < res; ++j)
-    //             printf("%i ", payload_0_host.data()[k*res + j]);
-    //         printf("\n");
-    //     }
-    //     printf("\n");
-
-
-    //     payload_1 = UInt32::steal(trace_args[16]);
-    //     jit_var_eval(payload_1.index());
-
-    //     UInt32 payload_1_host =
-    //         UInt32::steal(jit_var_migrate(payload_1.index(), AllocType::Host));
-    //     jit_sync_thread();
-
-    //     for (int k = 0; k < res; ++k) {
-    //         for (int j = 0; j < res; ++j)
-    //             printf("%i ", payload_1_host.data()[k*res + j]);
-    //         printf("\n");
-    //     }
-    //     printf("\n");
-
-    // }
-
-    // for (int i = 0; i < 2; ++i) {
-    //     // =====================================================
-    //     // Generate a camera ray
-    //     // =====================================================
-
-    //     int res = 1;
-    //     UInt32 index = dr::arange<UInt32>(res * res),
-    //            x     = index % res,
-    //            y     = index / res;
-
-    //     //        FloatC ox = 555.975f, 
-    //     //       oy =544.569f, 
-    //     //       oz = 239.191f;
-    //     Ray<ad> _ray(ray);
-
-    //     // FloatC dx = -0.964385f,
-    //     //       dy = -0.0142156f,
-    //     //       dz = 0.264121f;
-    //            std::cout << detach(_ray.o.x())[0] << std::endl;
-    //                drjit::sync_thread();
-
-    //         FloatC ox,oy,oz,dx,dy,dz;
-    //         if constexpr(ad) {
-    //                ox = detach(ray.o.x())[0],
-    //                oy = detach(ray.o.y())[0],
-    //                oz = detach(ray.o.z())[0];
-
-    //                dx = detach(ray.d.x())[0],
-    //                dy = detach(ray.d.y())[0],
-    //                dz = detach(ray.d.z())[0];
-    //         } else {
-    //                ox = _ray.o.x()[0],
-    //                oy = _ray.o.y()[0],
-    //                oz = _ray.o.z()[0];
-
-    //                dx = ray.d.x()[0],
-    //                dy = ray.d.y()[0],
-    //                dz = ray.d.z()[0];
-
-    //         }
-
-    //     FloatC mint = 0.f, maxt = 1000000.f, time = 0.f;
-
-    //     UInt64 handle = dr::opaque<UInt64>(m_accel->gas_handle);
-    //     UInt32 ray_mask(255), ray_flags(0), sbt_offset(0), sbt_stride(1),
-    //         miss_sbt_index(0);
-
-    //     UInt32 payload_0(0);
-    //     UInt32 payload_1(0);
-    //     MaskC mask = true;
-
-    //     // =====================================================
-    //     // Launch a ray tracing call
-    //     // =====================================================
-
-    //     uint32_t trace_args[] {
-    //         handle.index(),
-    //         ox.index(), oy.index(), oz.index(),
-    //         dx.index(), dy.index(), dz.index(),
-    //         mint.index(), maxt.index(), time.index(),
-    //         ray_mask.index(), ray_flags.index(),
-    //         sbt_offset.index(), sbt_stride.index(),
-    //         miss_sbt_index.index(), payload_0.index(), payload_1.index()
-    //     };
-
-    //     jit_optix_ray_trace(sizeof(trace_args) / sizeof(uint32_t), trace_args,
-    //                         mask.index(), m_accel->pipeline_handle.index(), m_accel->sbt_handle.index());
-
-    //     payload_0 = UInt32::steal(trace_args[15]);
-    //     jit_var_eval(payload_0.index());
-
-    //     UInt32 payload_0_host =
-    //         UInt32::steal(jit_var_migrate(payload_0.index(), AllocType::Host));
-    //     jit_sync_thread();
-
-    //     for (int k = 0; k < res; ++k) {
-    //         for (int j = 0; j < res; ++j)
-    //             printf("%i ", payload_0_host.data()[k*res + j]);
-    //         printf("\n");
-    //     }
-    //     printf("\n");
-
-
-    //     payload_1 = UInt32::steal(trace_args[16]);
-    //     jit_var_eval(payload_1.index());
-
-    //     UInt32 payload_1_host =
-    //         UInt32::steal(jit_var_migrate(payload_1.index(), AllocType::Host));
-    //     jit_sync_thread();
-
-    //     for (int k = 0; k < res; ++k) {
-    //         for (int j = 0; j < res; ++j)
-    //             printf("%i ", payload_1_host.data()[k*res + j]);
-    //         printf("\n");
-    //     }
-    //     printf("\n");
-
-    // }
-
-// PSDR_ASSERT(0);
-    // std::cout << "before" << std::endl;
+Intersection_OptiX Scene_OptiX::ray_intersect(const Ray<ad> &ray, Mask<ad> &active) const {
     drjit::sync_thread();
-    jit_sync_thread();
-    // std::cout << "ffff" << std::endl;
     const int m = static_cast<int>(slices<Vector3f<ad>>(ray.o));
+
+    Intersection_OptiX m_its;
     m_its.reserve(m);
-    std::cout << ray.tmax << std::endl;
-        // for(int i=0; i<2; ++i) {
-            FloatC ox,oy,oz,dx,dy,dz;
-            if constexpr(ad) {
-                   ox = detach(ray.o.x()),
-                   oy = detach(ray.o.y()),
-                   oz = detach(ray.o.z());
+    FloatC ox,oy,oz,dx,dy,dz;
+    if constexpr(ad) {
+           ox = detach(ray.o.x()),
+           oy = detach(ray.o.y()),
+           oz = detach(ray.o.z());
 
-                   dx = detach(ray.d.x()),
-                   dy = detach(ray.d.y()),
-                   dz = detach(ray.d.z());
-            } else {
-                   ox = ray.o.x(),
-                   oy = ray.o.y(),
-                   oz = ray.o.z();
+           dx = detach(ray.d.x()),
+           dy = detach(ray.d.y()),
+           dz = detach(ray.d.z());
+    } else {
+           ox = ray.o.x(),
+           oy = ray.o.y(), //268.342, 540.3, 278.433 
+           oz = ray.o.z();
 
-                   dx = ray.d.x(),
-                   dy = ray.d.y(),
-                   dz = ray.d.z();
+           dx = ray.d.x(),
+           dy = ray.d.y(),
+           dz = ray.d.z();
 
-            }
-            // std::cout << "beforebefore2" << std::endl;
+    }
+    FloatC mint = RayEpsilon, maxt = 100000000.f, time = 0.f;
+    UInt32 ray_mask(255), ray_flags(0), sbt_offset(0), sbt_stride(1),
+        miss_sbt_index(0);
+    UInt32 payload_0(0);
+    UInt32 payload_1(0);
+    UInt32 payload_u(0);
+    UInt32 payload_v(0);
+    // MaskC mask = true;
 
-            FloatC mint = 0.f, maxt = 100000000.f, time = 0.f;
-            UInt32 ray_mask(255), ray_flags(0), sbt_offset(0), sbt_stride(1),
-                miss_sbt_index(0);
-            UInt32 payload_0(0);
-            UInt32 payload_1(0);
-            UInt32 payload_u(0);
-            UInt32 payload_v(0);
-            MaskC mask = true;
+    m_accel->handle = dr::opaque<UInt64>(m_accel->gas_handle);
 
-            m_accel->handle = dr::opaque<UInt64>(m_accel->gas_handle);
-                        std::cout << "ray.o"  << ray.o << std::endl;
+    uint32_t trace_args[] {
+        m_accel->handle.index(),
+        ox.index(), oy.index(), oz.index(),
+        dx.index(), dy.index(), dz.index(),
+        mint.index(), maxt.index(), time.index(),
+        ray_mask.index(), ray_flags.index(),
+        sbt_offset.index(), sbt_stride.index(),
+        miss_sbt_index.index(), payload_0.index(), payload_1.index(), payload_u.index(), payload_v.index()
+    };
 
-            std::cout << "ray.d"  << ray.d << std::endl;
-            uint32_t trace_args[] {
-                m_accel->handle.index(),
-                ox.index(), oy.index(), oz.index(),
-                dx.index(), dy.index(), dz.index(),
-                mint.index(), maxt.index(), time.index(),
-                ray_mask.index(), ray_flags.index(),
-                sbt_offset.index(), sbt_stride.index(),
-                miss_sbt_index.index(), payload_0.index(), payload_1.index(), payload_u.index(), payload_v.index()
-            };
-
-            // std::cout << payload_0<< std::endl;
-
-            jit_optix_ray_trace(sizeof(trace_args) / sizeof(uint32_t), trace_args,
-                                mask.index(), m_accel->pipeline_handle.index(), m_accel->sbt_handle.index());
-            // // std::cout << "after" << std::endl;
-            // trace_args;
-            // payload_0 = UInt32::steal(trace_args[15]);
-                    // std::cout << payload_0<< std::endl;
-
-            // payload_1 = UInt32::steal(trace_args[16]);
-            using Single = drjit::float32_array_t<FloatC>;
-            Single result_u = drjit::reinterpret_array<Single, UInt32>(UInt32::steal(trace_args[17]));
-            Single result_v = drjit::reinterpret_array<Single, UInt32>(UInt32::steal(trace_args[18]));
-
-
-
-        payload_0 = UInt32::steal(trace_args[15]);
-        jit_var_eval(payload_0.index());
-
-        UInt32 payload_0_host =
-            UInt32::steal(jit_var_migrate(payload_0.index(), AllocType::Host));
-        jit_sync_thread();
-
-
-        payload_1 = UInt32::steal(trace_args[16]);
-        jit_var_eval(payload_1.index());
-
-        UInt32 payload_1_host =
-            UInt32::steal(jit_var_migrate(payload_1.index(), AllocType::Host));
-        jit_sync_thread();
-
-
-
-            m_its.shape_id = payload_1;
-            m_its.triangle_id = payload_0;
-            m_its.uv = Vector2fC(result_u, result_v);
-            Vector2i<ad> test(m_its.shape_id, m_its.triangle_id);
-
-
-        // }
-        // drjit::eval(payload_0, payload_1, result_u, result_v);
-        // std::cout << "success" << std::endl;
-    // std::cout <<test<< std::endl;
-    // drjit::sync_thread();
+    jit_optix_ray_trace(sizeof(trace_args) / sizeof(uint32_t), trace_args,
+                        active.index(), m_accel->pipeline_handle.index(), m_accel->sbt_handle.index());
+    using Single = drjit::float32_array_t<FloatC>;
+    m_its.shape_id = UInt32::steal(trace_args[15]);
+    m_its.triangle_id = UInt32::steal(trace_args[16]);
+    m_its.uv[0] = drjit::reinterpret_array<Single, UInt32>(UInt32::steal(trace_args[17]));
+    m_its.uv[1] = drjit::reinterpret_array<Single, UInt32>(UInt32::steal(trace_args[18]));
     active &= (m_its.shape_id >= 0) && (m_its.triangle_id >= 0);
-    return Vector2i<ad>(m_its.shape_id, m_its.triangle_id);
+    return m_its;
 
 }
 
 
 // Explicit instantiations
-template Vector2iC Scene_OptiX::ray_intersect<false>(const RayC &ray, MaskC &active) const;
-template Vector2iD Scene_OptiX::ray_intersect<true>(const RayD &ray, MaskD &active) const;
+template Intersection_OptiX Scene_OptiX::ray_intersect<false>(const RayC &ray, MaskC &active) const;
+template Intersection_OptiX Scene_OptiX::ray_intersect<true>(const RayD &ray, MaskD &active) const;
 
 NAMESPACE_END(psdr_jit)

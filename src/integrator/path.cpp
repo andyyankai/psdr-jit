@@ -59,10 +59,6 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
             Float<ad> cos_val = dot(its1.n, -wod);
             Float<ad> G_val = abs(cos_val) / dist_sqr;
             Spectrum<ad> emitter_val = its1.Le(active);
-
-            return emitter_val;
-
-
             Spectrum<ad> bsdf_val2;
             Float<ad> pdf1;
 
@@ -83,7 +79,6 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
             auto tmp_di = throughput * emitter_val * bsdf_val2 * weight1;
             result[active_direct] += tmp_di;
             
-            
         }
 
         // Indirect illumination
@@ -98,32 +93,32 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
             Spectrum<ad> bsdf_val;
             Float<ad> pdf0;
             curr_ray = Ray<ad>(its.p, its.sh_frame.to_world(bs.wo));
-            Intersection<ad> its2 = scene.ray_intersect<ad, ad>(curr_ray, active);
+            Intersection<ad> its1 = scene.ray_intersect<ad, ad>(curr_ray, active);
             active &= bs.is_valid;
-            active &= its2.is_valid();
+            active &= its1.is_valid();
             if constexpr ( ad ) {
-                Vector3fD wo = its2.p - its.p;
-                wo /= its2.t;
-                FloatD cos_val = dot(its2.n, -wo);
-                FloatD G_val = abs(cos_val)/sqr(its2.t);
-                FloatD J = select(~its2.is_valid(), 1.0f, its2.J);
-                G_val = select(~its2.is_valid(), 1.0f, G_val);
+                Vector3fD wo = its1.p - its.p;
+                wo /= its1.t;
+                FloatD cos_val = dot(its1.n, -wo);
+                FloatD G_val = abs(cos_val)/sqr(its1.t);
+                FloatD J = select(~its1.is_valid(), 1.0f, its1.J);
+                G_val = select(~its1.is_valid(), 1.0f, G_val);
                 pdf0 = bs.pdf*detach(G_val);
-                bsdf_val = select(detach(its2.t) < Epsilon, 0.0f, bsdf_array->evalD(its, its.sh_frame.to_local(wo), active) * G_val * J / pdf0);
+                bsdf_val = select(detach(its1.t) < Epsilon, 0.0f, bsdf_array->evalD(its, its.sh_frame.to_local(wo), active) * G_val * J / pdf0);
             } else {
-                FloatC cos_val = dot(its2.n, -curr_ray.d);
-                FloatC G_val = abs(cos_val)/sqr(its2.t);
+                FloatC cos_val = dot(its1.n, -curr_ray.d);
+                FloatC G_val = abs(cos_val)/sqr(its1.t);
                 pdf0 = bs.pdf*G_val;
                 auto temp_bsdfa = bsdf_array->evalC(its, bs.wo, active);
-                bsdf_val = select(detach(its2.t) < Epsilon, 0.0f, temp_bsdfa / bs.pdf);
+                bsdf_val = select(detach(its1.t) < Epsilon, 0.0f, temp_bsdfa / bs.pdf);
                 
             }
-            Float<ad> weight2 = mis_weight<ad>(pdf0, scene.emitter_position_pdf<ad>(its.p, its2, active)); // MIS weight
+            Float<ad> weight2 = mis_weight<ad>(pdf0, scene.emitter_position_pdf<ad>(its.p, its1, active)); // MIS weight
             throughput *= bsdf_val;
             eta        *= bs.eta;
-            auto tmp_b = its2.Le(active) * throughput * weight2;
+            auto tmp_b = its1.Le(active) * throughput * weight2;
             result[active] += tmp_b;
-            // its = its1;
+            its = its1;
         }
     }
     return result;

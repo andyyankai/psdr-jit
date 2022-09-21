@@ -45,8 +45,10 @@ SpectrumD FieldExtractionIntegrator::Li(const Scene &scene, Sampler &sampler, co
 
 template <bool ad>
 Spectrum<ad> FieldExtractionIntegrator::__Li(const Scene &scene, const Ray<ad> &ray, Mask<ad> active) const {
-    Intersection<ad> its = scene.ray_intersect<ad>(ray);
     Vector3f<ad> result;
+    Intersection<ad> its = scene.ray_intersect<ad>(ray);
+    // result = full<Spectrum<ad>>(1.f);
+    // return result;
 
 
     BSDFArray<ad> bsdf_array = its.shape->bsdf();

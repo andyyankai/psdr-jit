@@ -14,8 +14,8 @@
             <integer name="sample_count" value="1" />
         </sampler>
         <film type="hdrfilm">
-            <integer name="width" value="16" />
-            <integer name="height" value="16" />
+            <integer name="width" value="4" />
+            <integer name="height" value="4" />
             <string name="pixel_format" value="rgb" />
             <rfilter type="box"/>
         </film>

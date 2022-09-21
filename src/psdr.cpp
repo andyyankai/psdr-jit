@@ -94,6 +94,10 @@ PYBIND11_MODULE(psdr_jit, m) {
     py::module::import("drjit.cuda");
     py::module::import("drjit.cuda.ad");
 
+    jit_set_flag(JitFlag::LoopRecord, false);
+    // jit_set_flag(JitFlag::VCallRecord, false);
+
+
     m.doc() = "Path-space differentiable renderer";
     m.attr("__name__") = "psdr_jit";
 

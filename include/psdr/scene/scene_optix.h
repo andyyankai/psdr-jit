@@ -33,11 +33,11 @@ protected:
     bool is_ready() const;
 
     template <bool ad>
-    Vector2i<ad> ray_intersect(const Ray<ad> &ray, Mask<ad> &active) const;
+    Intersection_OptiX ray_intersect(const Ray<ad> &ray, Mask<ad> &active) const;
 
     PathTracerState *m_accel = nullptr;
 
-    mutable Intersection_OptiX      m_its;
+    // mutable Intersection_OptiX      m_its;
 
     
 
