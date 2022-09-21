@@ -16,7 +16,6 @@ sc.load_file("bunny_env.xml")
 sc.opts.spp = 128
 sc.opts.sppe = 0
 sc.opts.sppse = 0
-sc.opts.sppse = 0
 sc.opts.log_level = 0
 
 new_diffuse = Vector3fD([0.8, 0.2, 0.9])
