@@ -144,14 +144,9 @@ std::string PerspectiveCamera::to_string() const {
 
 
 RayC PerspectiveCamera::sample_primary_ray(const Vector2fC &samples) const {
-
     Vector3fC d = normalize(transform_pos<FloatC>(detach(m_sample_to_camera), concat(samples, Vectorf<1, false>(0.f))));
     Matrix4fD m_to_world = m_to_world_left * m_to_world_raw * m_to_world_right;
     Matrix4fC to_world = detach(m_to_world);
-    // RayC rs;
-    // Vector3fC aa = transform_pos<FloatC>(to_world, zeros<Vector3fC>(slices(samples)));
-    // Vector3fC bb = transform_dir<FloatC>(to_world, d);
-    // RayC rs = RayC(aa, bb);
     return RayC(
         transform_pos<FloatC>(to_world, zeros<Vector3fC>(slices(samples))),
         transform_dir<FloatC>(to_world, d)

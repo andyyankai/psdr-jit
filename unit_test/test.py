@@ -76,18 +76,12 @@ def test_drjit_init():
 
 def test_sampler():
 	print("testing psdr_jit::Sampler")
-
 	sampler = psdr.Sampler()
 	sampler.seed([1,2,3])
-	print(sampler.next_1d())
-	print(sampler.next_1d())
-
-
-	# sampler = psdr.Sampler()
-	# sampler.seed([0,1,2,3])
-	# print(sampler.next_1d())
-	# sampler.seed(1)
-	# print(sampler.next_1d())
+	for i in range(0, 1000):
+		val = sampler.next_1d();
+		drjit.eval(val)
+		print("iter", i)
 
 def test_ray():
 	print("test ray")
@@ -144,13 +138,13 @@ if __name__ == "__main__":
 
 
 	# test_drjit_init()
-	# test_sampler()
+	test_sampler()
 	# test_ray()
 	# test_DiscreteDistribution()
 	# test_mesh()
 
-	test_scene()
-	test_diff()
+	# test_scene()
+	# test_diff()
 	# psdr.drjit_memory()
 
 
