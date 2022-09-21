@@ -67,34 +67,6 @@ link_directories(
     ${PYTHON_ROOT}/libs
 )
 
-function(build_ptx target_name_base target_name_var)
-    set( target_name ${target_name_base} )
-    set( ${target_name_var} ${target_name} PARENT_SCOPE )
-
-    source_group("PTX Files"  REGULAR_EXPRESSION ".+\\.ptx$")
-    source_group("CUDA Files" REGULAR_EXPRESSION ".+\\.cu$")
-
-    CUDA_GET_SOURCES_AND_OPTIONS(source_files cmake_options options ${ARGN})
-    CUDA_WRAP_SRCS( ${target_name} PTX generated_files ${source_files} ${cmake_options} OPTIONS ${options} )
-
-    add_executable(${target_name}
-        ${source_files}
-        ${generated_files}
-        ${cmake_options}
-    )
-
-    set_target_properties( ${target_name} PROPERTIES
-        COMPILE_DEFINITIONS OPTIX_SAMPLE_NAME_DEFINE=${target_name}
-    )
-endfunction()
-
-build_ptx( ptx target_name
-    ./cuda/${PSDR_CUDA_FILE}.cu
-    ./cuda/${PSDR_CUDA_FILE}.cpp
-    ./cuda/${PSDR_CUDA_FILE}.h
-    OPTIONS -rdc true
-)
-
 # set(PYPSDR_LIBRARIES drjit-core drjit-autodiff)
 
 set(PSDR_INCLUDE_DIR include/psdr)

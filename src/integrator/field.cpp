@@ -47,9 +47,6 @@ template <bool ad>
 Spectrum<ad> FieldExtractionIntegrator::__Li(const Scene &scene, const Ray<ad> &ray, Mask<ad> active) const {
     Vector3f<ad> result;
     Intersection<ad> its = scene.ray_intersect<ad>(ray);
-    // result = full<Spectrum<ad>>(1.f);
-    // return result;
-
 
     BSDFArray<ad> bsdf_array = its.shape->bsdf();
     if ( scene.m_emitter_env != nullptr ) {
@@ -70,11 +67,9 @@ Spectrum<ad> FieldExtractionIntegrator::__Li(const Scene &scene, const Ray<ad> &
         if constexpr ( !ad ) { 
             IntC rresult = (its.shape)->get_obj_id();
             result = Vector3f<ad>(rresult,rresult,rresult);
-            // result = rresult;
         } else {
             IntC rresult = detach(its.shape)->get_obj_id();
             result = Vector3f<ad>(rresult,rresult,rresult);
-            // result = rresult;
         }
     } else if ( m_field == "silhouette" ) {
         result = full<Spectrum<ad>>(1.f);

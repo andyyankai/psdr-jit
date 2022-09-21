@@ -374,10 +374,13 @@ Intersection_OptiX Scene_OptiX::ray_intersect(const Ray<ad> &ray, Mask<ad> &acti
     jit_optix_ray_trace(sizeof(trace_args) / sizeof(uint32_t), trace_args,
                         active.index(), m_accel->pipeline_handle.index(), m_accel->sbt_handle.index());
     using Single = drjit::float32_array_t<FloatC>;
-    m_its.shape_id = UInt32::steal(trace_args[15]);
+    m_its.shape_id = UInt32::steal(trace_args[15]); // slow
     m_its.triangle_id = UInt32::steal(trace_args[16]);
     m_its.uv[0] = drjit::reinterpret_array<Single, UInt32>(UInt32::steal(trace_args[17]));
     m_its.uv[1] = drjit::reinterpret_array<Single, UInt32>(UInt32::steal(trace_args[18]));
+    // m_its.uv = Vector2fC(0.5f); // very fast
+    // m_its.shape_id = IntC(0);
+    // m_its.triangle_id = IntC(0);
     active &= (m_its.shape_id >= 0) && (m_its.triangle_id >= 0);
     return m_its;
 
