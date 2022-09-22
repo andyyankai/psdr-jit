@@ -21,6 +21,15 @@
 			<integer name="width" value="128"/>
 			<integer name="height" value="128"/>
 		</film>
+
+	</sensor>
+
+	<sensor type="perspective">
+		<transform name="toWorld">
+			<lookAt origin="208, 273, -800" target="208, 273, -799" up="0, 1, 0"/>
+		</transform>
+		<float name="fov" value="20"/>
+
 	</sensor>
 
 	<bsdf type="diffuse" id="box">

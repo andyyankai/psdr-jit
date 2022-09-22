@@ -5,9 +5,9 @@ def test_sampler():
 	drjit.set_flag(drjit.JitFlag.LoopRecord, False)
 
 	sampler = psdr.Sampler()
-	sampler.seed([1,2,3])
+	sampler.seed([1,4,3])
 	for i in range(0, 1000):
-		val = sampler.next_1d();
+		val = sampler.next_2d();
 		if test_psdrjit:
 			drjit.eval(val)
 			print(val)

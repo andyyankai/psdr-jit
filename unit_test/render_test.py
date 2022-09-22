@@ -31,8 +31,8 @@ sc.load_file("cbox.xml")
 # sc.load_file("debug.xml")
 
 # integrator = psdr.CollocatedIntegrator(100000)	
-integrator = psdr.PathTracer(1)	
-# integrator = psdr.FieldExtractionIntegrator("silhouette")
+# integrator = psdr.PathTracer(1)	
+integrator = psdr.FieldExtractionIntegrator("silhouette")
 sc.opts.spp = 32
 sc.opts.sppe = 0
 sc.opts.sppse = 0
@@ -46,7 +46,8 @@ for it in range(0, 1000):
 	# drjit.enable_grad(init_diffuse)
 	# sc.param_map['BSDF[0]'].reflectance.data = init_diffuse;
 	sc.configure()
-	img = integrator.renderC(sc, 0)
+	img = integrator.renderC(sc, 1)
+	img1 = integrator.renderC(sc, 1)
 	# loss = mean(mean(abs(img_target - img)))
 	# backward(loss)
 	# texture_g = grad(init_diffuse)
@@ -58,9 +59,10 @@ for it in range(0, 1000):
 	# cv2.imwrite("optix_debug.exr", output)
 	if test_psdrjit:
 		drjit.eval(img)
+		drjit.eval(img1)
 		# drjit.registry_clear()
 		# drjit.set_flags(drjit.JitFlag.Default)
-	del img
+	# del img
 	# print(img)
 	print("iter", it)
 	# exit()
