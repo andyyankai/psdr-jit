@@ -1,0 +1,49 @@
+<?xml version='1.0'?>
+
+<scene version="0.5.0">
+	<integrator type="direct">
+		<integer name="bsdf_samples" value="1"/>
+		<integer name="emitter_samples" value="1"/>
+	</integrator>
+
+	<sensor type="perspective">
+		<float name="focusDistance" value="132.411"/>
+		<float name="fov" value="25"/>
+		<string name="fovAxis" value="x"/>
+		<string name="fov_axis" value="x"/>
+		<transform name="toWorld">
+
+			<lookat target="279.843, 342.896, -902.25" origin="279.858, 343.448, -903.084" up="-0.00993918, 0.833699, 0.55213"/>
+		</transform>
+
+		<sampler type="independent">
+			<integer name="sample_count" value="1"/>
+		</sampler>
+
+		<film type="hdrfilm">
+			<integer name="height" value="256"/>
+			<string name="pixel_format" value="rgb"/>
+			<integer name="width" value="256"/>
+			<rfilter type="box"/>
+		</film>
+	</sensor>
+
+	<bsdf type="diffuse" id="red">
+		<rgb name="reflectance" value="0.90, 0.20, 0.20"/>
+	</bsdf>
+
+	<emitter type="envmap">
+		<string name="filename" value="../envmaps/ballroom_1k.exr"/>
+	</emitter>
+
+	<shape type="obj">
+		<string name="filename" value="./data/square.obj"/>
+		<transform name="toWorld">
+			<scale x="20" z="20"/>
+			<translate x="278" y="272" z="-799"/>
+		</transform>
+		<boolean name="face_normals" value="true"/>
+
+		<ref id="red"/>
+	</shape>
+</scene>
