@@ -16,14 +16,7 @@ SpectrumC Integrator::renderC(const Scene &scene, int sensor_id, int npass) cons
     const RenderOption &opts = scene.m_opts;
     const int num_pixels = opts.width*opts.height;
     IntC idx = arange<IntC>(num_pixels);
-    SpectrumC result = zeros<SpectrumC>(num_pixels);
-    for (int i=0; i<npass; ++i) {
-        SpectrumC value = __render<false>(scene, sensor_id) / static_cast<float>(npass);
-        // masked(value, ~enoki::isfinite<SpectrumC>(value)) = 0.f;
-        for (int j=0; j<3; ++j) {
-            scatter_reduce(ReduceOp::Add, result[j], value[j], idx);
-        }
-    }
+    SpectrumC result = __render<false>(scene, sensor_id);
     
     auto end_time = high_resolution_clock::now();
     if ( scene.m_opts.log_level ) {
