@@ -7,7 +7,6 @@ import cv2, sys
 from pathlib import Path
 import torch
 import numpy as np
-from ivt.io import write_exr, read_exr
 
 test_psdrjit = int(sys.argv[1])
 rnd_cameras = True
@@ -107,9 +106,9 @@ sc.opts.log_level = 0
 
 # load target image
 tar_images = []
-target_images_path = Path(r'C:\Users\flyco\Desktop\Material_opt-main\real_target_images\butterfly_flower_2')
+target_images_path = Path(r'.\data\butterfly_flower\tar_images')
 for target_image_path in sorted(target_images_path.glob('*.exr'), key=lambda x : int(x.stem)):
-    img = torch.from_numpy(read_exr(target_image_path))
+    img = torch.from_numpy(cv2.imread(str(target_image_path), -1))
     tar_images.append(img.to('cuda').to(torch.float32))
 
 # optimization
@@ -126,9 +125,10 @@ render_vis = Renderer()         # for visualization
 sc.opts.spp = 128
 # Optional (write init image)
 img_init = render_vis(integrator, sc, vis_sensor_id, [D_data, S_data])
+img_init = torch.from_numpy(cv2.cvtColor(img_init.detach().to('cpu').numpy(), cv2.COLOR_RGB2BGR))
 img_target = torch.cat([tar_images[id] for id in vis_sensor_id], dim = 1)
-img_vis = torch.cat([img_target, img_init], dim = 0)
-write_exr(str(output_path / f"inv_init.exr"), img_vis)
+img_vis = torch.cat([img_target.to('cpu'), img_init], dim = 0)
+cv2.imwrite(str(output_path) + "/inv_init.exr", img_vis.numpy())
 
 # Optimization
 num_epochs = 500
@@ -155,4 +155,5 @@ for epoch in range(1, num_epochs + 1):
         iter += 1
         t1 = time.process_time()
         print(f"[Epoch {epoch}/{num_epochs}] iter: {iter} | loss: {loss.item()} | time: {t1 - t0}")
-
+        image_vis = torch.cat([image.detach(), img_target], dim = 1)
+        cv2.imwrite(str(output_path) + "/ep%d_it%d.exr" % (epoch, iter), img_vis.to('cpu').numpy())
