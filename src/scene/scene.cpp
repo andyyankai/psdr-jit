@@ -109,7 +109,7 @@ void Scene::configure() {
     for ( Sensor *sensor : m_sensors ) {
         sensor->m_resolution = ScalarVector2i(m_opts.width, m_opts.height);
         sensor->m_scene = this;
-        sensor->configure();
+        sensor->configure(true);
         if ( m_opts.sppe > 0 ) num_edges.push_back(sensor->m_edge_distrb.m_size);
 
         for ( int i = 0; i < 3; ++i ) {
@@ -316,7 +316,7 @@ void Scene::configure2(std::vector<int> active_sensor) {
     for (int sensor_id : active_sensor) {
         m_sensors[sensor_id]->m_resolution = ScalarVector2i(m_opts.width, m_opts.height);
         m_sensors[sensor_id]->m_scene = this;
-        m_sensors[sensor_id]->configure();
+        m_sensors[sensor_id]->configure(false);
         if ( m_opts.sppe > 0 ) num_edges.push_back(m_sensors[sensor_id]->m_edge_distrb.m_size);
 
         for ( int i = 0; i < 3; ++i ) {

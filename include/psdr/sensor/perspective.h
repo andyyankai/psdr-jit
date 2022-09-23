@@ -9,7 +9,7 @@ PSDR_CLASS_DECL_BEGIN(PerspectiveCamera, final, Sensor)
 public:
     PerspectiveCamera(float fov_x, float near, float far) : m_fov_x(fov_x), m_near_clip(near), m_far_clip(far) {}
 
-    void configure() override;
+    void configure(bool cache) override;
 
     RayC sample_primary_ray(const Vector2fC &samples) const override;
     RayD sample_primary_ray(const Vector2fD &samples) const override;

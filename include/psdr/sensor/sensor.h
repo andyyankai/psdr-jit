@@ -22,7 +22,7 @@ PSDR_CLASS_DECL_BEGIN(Sensor,, Object)
 public:
     virtual ~Sensor() override {}
 
-    virtual void configure();
+    virtual void configure(bool cache);
 
     virtual RayC sample_primary_ray(const Vector2fC &samples) const = 0;
     virtual RayD sample_primary_ray(const Vector2fD &samples) const = 0;

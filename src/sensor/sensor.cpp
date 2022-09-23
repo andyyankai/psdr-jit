@@ -4,8 +4,8 @@
 
 NAMESPACE_BEGIN(psdr_jit)
 
-void Sensor::configure() {
-    drjit::make_opaque(m_to_world_left, m_to_world_raw, m_to_world_right);
+void Sensor::configure(bool cache=true) {
+    if (cache) drjit::make_opaque(m_to_world_left, m_to_world_raw, m_to_world_right);
 
     m_aspect = static_cast<float>(m_resolution.x())/m_resolution.y();
     Matrix4fD m_to_world = m_to_world_left * m_to_world_raw * m_to_world_right;

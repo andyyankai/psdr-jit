@@ -7,8 +7,8 @@
 
 NAMESPACE_BEGIN(psdr_jit)
 
-void PerspectiveCamera::configure() {
-    Sensor::configure();
+void PerspectiveCamera::configure(bool cache=true) {
+    Sensor::configure(cache);
 
     ScalarMatrix4f camera_to_sample =
         transform::scale(ScalarVector3f(-0.5f, -0.5f * m_aspect, 1.f)) *
@@ -27,7 +27,8 @@ void PerspectiveCamera::configure() {
     m_camera_pos = transform_pos(m_to_world, zeros<Vector3fD>());
     m_camera_dir = transform_dir(m_to_world, Vector3fD(0.f, 0.f, 1.f));
 
-    drjit::make_opaque(m_camera_to_sample, m_sample_to_camera, m_world_to_sample, m_sample_to_world, m_camera_pos, m_camera_dir);
+    
+    if (cache) drjit::make_opaque(m_camera_to_sample, m_sample_to_camera, m_world_to_sample, m_sample_to_world, m_camera_pos, m_camera_dir);
 
     Vector3fD v00 = transform_pos(m_sample_to_camera, Vector3fD(0.f, 0.f, 0.f)), //  bottom-left corner of the image at the near plane
               v10 = transform_pos(m_sample_to_camera, Vector3fD(1.f, 0.f, 0.f)), // bottom-right corner of the image at the near plane
