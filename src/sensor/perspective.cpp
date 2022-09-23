@@ -184,6 +184,7 @@ SensorDirectSampleC PerspectiveCamera::sample_direct(const Vector3fC &p) const {
 
 
 PrimaryEdgeSample PerspectiveCamera::sample_primary_edge(const FloatC &_sample1) const {
+    PSDR_ASSERT_MSG(0, "Boundary term diabled!");
     // FloatC sample1 = _sample1;
 
     PrimaryEdgeSample result;
