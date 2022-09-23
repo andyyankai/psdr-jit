@@ -15,6 +15,7 @@ void PerspectiveCamera::configure() {
         transform::translate(ScalarVector3f(-1.f, -1.f / m_aspect, 0.f)) *
         transform::perspective(m_fov_x, m_near_clip, m_far_clip);
 
+
     m_camera_to_sample = Matrix4fD(camera_to_sample);
     m_sample_to_camera = Matrix4fD(inverse(camera_to_sample));
 
@@ -25,6 +26,8 @@ void PerspectiveCamera::configure() {
 
     m_camera_pos = transform_pos(m_to_world, zeros<Vector3fD>());
     m_camera_dir = transform_dir(m_to_world, Vector3fD(0.f, 0.f, 1.f));
+
+    drjit::make_opaque(m_camera_to_sample, m_sample_to_camera, m_world_to_sample, m_sample_to_world, m_camera_pos, m_camera_dir);
 
     Vector3fD v00 = transform_pos(m_sample_to_camera, Vector3fD(0.f, 0.f, 0.f)), //  bottom-left corner of the image at the near plane
               v10 = transform_pos(m_sample_to_camera, Vector3fD(1.f, 0.f, 0.f)), // bottom-right corner of the image at the near plane
