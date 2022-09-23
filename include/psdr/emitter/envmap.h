@@ -42,9 +42,9 @@ public:
                             m_to_world, m_from_world;
 
     Vector3fC               m_lower, m_upper;
-    // HyperCubeDistribution2f m_cell_distrb;
+    HyperCubeDistribution2f m_cell_distrb;
 
-    CubeDistribution        m_cube_distrb;
+    // CubeDistribution        m_cube_distrb;
 
 
     template <bool ad>

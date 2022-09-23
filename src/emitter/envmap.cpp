@@ -21,16 +21,16 @@ void EnvironmentMap::configure() {
 
     width = (width - 1) << 1; height = (height - 1) << 1;
 
-    // m_cell_distrb.set_resolution(ScalarVector2i(width, height));
+    m_cell_distrb.set_resolution(ScalarVector2i(width, height));
 
-    m_cube_distrb.set_resolution(ScalarVector2i(width, height));
+    // m_cube_distrb.set_resolution(ScalarVector2i(width, height));
 
-    // Vector2fC uv = (m_cell_distrb.m_cells + Vector2fC(.5f, .5f))*m_cell_distrb.m_unit;
-    // SpectrumC val = m_radiance.eval<false>(uv, false);
-    // FloatC theta = ((arange<IntC>(width*height) % (height)) + .5f)*(Pi/static_cast<float>(height));  
-    // m_cell_distrb.set_mass(rgb2luminance<false>(val)*sin(theta));
+    Vector2fC uv = (m_cell_distrb.m_cells + Vector2fC(.5f, .5f))*m_cell_distrb.m_unit;
+    SpectrumC val = m_radiance.eval<false>(uv, false);
+    FloatC theta = ((arange<IntC>(width*height) % (height)) + .5f)*(Pi/static_cast<float>(height));  
+    m_cell_distrb.set_mass(rgb2luminance<false>(val)*sin(theta));
 
-    m_cube_distrb.set_mass(m_radiance);
+    // m_cube_distrb.set_mass(m_radiance);
 
 
 
@@ -114,8 +114,8 @@ PositionSample<ad> EnvironmentMap::__sample_position(const Vector3f<ad> &ref_p, 
 
 std::pair<Vector3fC, FloatC> EnvironmentMap::sample_direction(Vector2fC &uv) const {
     PSDR_ASSERT(m_ready);
-    // FloatC pdf = m_cell_distrb.sample_reuse(uv);
-    FloatC pdf = m_cube_distrb.sample_reuse(uv);
+    FloatC pdf = m_cell_distrb.sample_reuse(uv);
+    // FloatC pdf = m_cube_distrb.sample_reuse(uv);
     FloatC theta = uv.y()*Pi, phi = uv.x()*TwoPi;
     Vector3fC d = sphdir<false>(theta, phi);
     d = Vector3fC(d.y(), d.z(), -d.x());
@@ -156,8 +156,8 @@ Float<ad> EnvironmentMap::__sample_position_pdf(const Vector3f<ad> &ref_p, const
     FloatC factor = G*safe_rsqrt(maximum(sqr(d.x()) + sqr(d.z()), sqr(Epsilon)))*(.5f/sqr(Pi));
     Vector2fC uv(atan2(d.x(), -d.z())*InvTwoPi, safe_acos(d.y())*InvPi);
     uv -= floor(uv);
-    // return m_cell_distrb.pdf(uv)*factor;
-    return m_cube_distrb.pdf(uv)*factor;
+    return m_cell_distrb.pdf(uv)*factor;
+    // return m_cube_distrb.pdf(uv)*factor;
 }
 
 
