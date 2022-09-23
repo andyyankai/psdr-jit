@@ -79,9 +79,9 @@ static Matrix<Float, 4> look_at(const Array<Float, 3> &origin, const Array<Float
         concat(new_up, z),
         concat(dir, z),
         Array<Float, 4>(
-             dot(left, origin),
-             dot(new_up, origin),
-             dot(dir, origin),
+             origin[0],
+             origin[1],
+             origin[2],
              1.f
         )
     );
