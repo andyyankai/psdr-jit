@@ -33,7 +33,6 @@ SpectrumD PathTracer::Li(const Scene &scene, Sampler &sampler, const RayD &ray, 
 
 template <bool ad>
 Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad> &_ray, Mask<ad> active) const {
-
     Ray<ad> curr_ray(_ray);
 
     Intersection<ad> its = scene.ray_intersect<ad>(curr_ray, active);
@@ -43,11 +42,10 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
     Spectrum<ad> eta(1.0f); // Tracks radiance scaling due to index of refraction changes
     Spectrum<ad> result = m_hide_emitters ? zeros<Spectrum<ad>>() : its.Le(active);
 
-    drjit::Loop<Mask<ad>> loop("Path Tracer", its, result, throughput, eta, curr_ray, sampler, active);
-    loop.set_max_iterations(m_max_depth);
-    while (loop(active)) {
+    for (int depth=0; depth < m_max_depth; depth++) {
         BSDFArray<ad> bsdf_array = its.shape->bsdf();
         {
+
             PositionSample<ad> ps = scene.sample_emitter_position<ad>(its.p, sampler.next_2d<ad>(), active);
             Mask<ad> active_direct = active && ps.is_valid && !its.is_emitter(active);
             Vector3f<ad> wod = ps.p - its.p;
