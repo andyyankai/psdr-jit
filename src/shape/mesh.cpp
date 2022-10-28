@@ -151,7 +151,6 @@ void Mesh::load(const char *fname, bool verbose) {
     // Constructing edge list
 
     int m_num_edges = 0;
-    std::cout << "build edge: " << m_enable_edges << std::endl;
     if ( m_enable_edges ) {
         std::vector<int> buffers[5];
         buffers[0].reserve(3*m_num_faces);
