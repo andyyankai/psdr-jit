@@ -188,7 +188,6 @@ SensorDirectSampleC PerspectiveCamera::sample_direct(const Vector3fC &p) const {
 
 
 PrimaryEdgeSample PerspectiveCamera::sample_primary_edge(const FloatC &_sample1) const {
-    // PSDR_ASSERT_MSG(0, "Boundary term diabled!");
     FloatC sample1 = _sample1;
 
     PrimaryEdgeSample result;
@@ -196,18 +195,7 @@ PrimaryEdgeSample PerspectiveCamera::sample_primary_edge(const FloatC &_sample1)
 
     IntC edge_idx;
     std::tie(edge_idx, result.pdf) = m_edge_distrb.sample_reuse<false>(sample1);
-
-    // PrimaryEdgeInfo edge_info = gather<PrimaryEdgeInfo>(m_edge_info, IntD(edge_idx));
-
-    // FloatD edge_length = gather<FloatD>(m_edge_info.edge_length, IntD(edge_idx));
     result.pdf /= detach(gather<FloatD>(m_edge_info.edge_length, IntD(edge_idx)));
-
-
-    // result.pdf /= detach(gather<Vector2fC>(m_edge_info.edge_length, IntD(edge_idx)));
-
-
-
-    // Vector2fC edge_normal = detach(edge_info.edge_normal);
     Vector2fC edge_normal = detach(gather<Vector2fD>(m_edge_info.edge_normal, IntD(edge_idx)));
     Vector2fD p0 = gather<Vector2fD>(m_edge_info.p0, IntD(edge_idx)), p1 = gather<Vector2fD>(m_edge_info.p1, IntD(edge_idx));
     Vector2fD p_    = fmadd(p0, 1.0f - sample1, p1*sample1);
