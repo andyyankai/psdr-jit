@@ -188,46 +188,41 @@ SensorDirectSampleC PerspectiveCamera::sample_direct(const Vector3fC &p) const {
 
 
 PrimaryEdgeSample PerspectiveCamera::sample_primary_edge(const FloatC &_sample1) const {
-    PSDR_ASSERT_MSG(0, "Boundary term diabled!");
-    // FloatC sample1 = _sample1;
+    // PSDR_ASSERT_MSG(0, "Boundary term diabled!");
+    FloatC sample1 = _sample1;
 
     PrimaryEdgeSample result;
-//     const int m = static_cast<int>(slices<FloatC>(sample1));
+    const int m = static_cast<int>(slices(sample1));
 
-//     IntC edge_idx;
-//     std::tie(edge_idx, result.pdf) = m_edge_distrb.sample_reuse<false>(sample1);
+    IntC edge_idx;
+    std::tie(edge_idx, result.pdf) = m_edge_distrb.sample_reuse<false>(sample1);
 
-//     PrimaryEdgeInfo edge_info = gather<PrimaryEdgeInfo>(m_edge_info, IntD(edge_idx));
-//     result.pdf /= detach(edge_info.edge_length);
+    // PrimaryEdgeInfo edge_info = gather<PrimaryEdgeInfo>(m_edge_info, IntD(edge_idx));
 
-//     Vector2fC edge_normal = detach(edge_info.edge_normal);
-// #ifdef PSDR_PRIMARY_EDGE_VIS_CHECK
-//     const Vector3fD &p0 = edge_info.p0, &p1 = edge_info.p1;
-//     Vector3fD p_3   = fmadd(p0, 1.0f - sample1, p1*sample1);
-//     Vector2fD p_    = Vector2fD(p_3.x(), p_3.y());
-// #else
-//     const Vector2fD &p0 = edge_info.p0, &p1 = edge_info.p1;
-//     Vector2fD p_    = fmadd(p0, 1.0f - sample1, p1*sample1);
-// #endif
-//     Vector2fC p     = detach(p_);
-//     result.x_dot_n  = dot(p_, edge_normal);
+    // FloatD edge_length = gather<FloatD>(m_edge_info.edge_length, IntD(edge_idx));
+    result.pdf /= detach(gather<FloatD>(m_edge_info.edge_length, IntD(edge_idx)));
 
-//     Vector2iC ip    = floor2int<Vector2iC, Vector2fC>(p*m_resolution);
-//     MaskC valid     = ip.x() >= 0 && ip.x() < m_resolution.x() &&
-//                       ip.y() >= 0 && ip.y() < m_resolution.y();
 
-//     result.idx      = full<IntC>(-1, m);
-//     masked(result.idx, valid) = ip.y()*m_resolution.x() + ip.x();
+    // result.pdf /= detach(gather<Vector2fC>(m_edge_info.edge_length, IntD(edge_idx)));
 
-//     result.ray_p    = sample_primary_ray(p + EdgeEpsilon*edge_normal);
-//     result.ray_n    = sample_primary_ray(p - EdgeEpsilon*edge_normal);
 
-// #ifdef PSDR_PRIMARY_EDGE_VIS_CHECK
-//     RayC &ray_c     = result.ray_c;
-//     ray_c           = sample_primary_ray(p);
-//     Vector3fD q     = transform_pos(m_sample_to_world, p_3);
-//     ray_c.tmax      = norm(detach(q) - detach(m_camera_pos)) - 100.f*ShadowEpsilon;    // Being conservative here to avoid numerical issues
-// #endif
+
+    // Vector2fC edge_normal = detach(edge_info.edge_normal);
+    Vector2fC edge_normal = detach(gather<Vector2fD>(m_edge_info.edge_normal, IntD(edge_idx)));
+    Vector2fD p0 = gather<Vector2fD>(m_edge_info.p0, IntD(edge_idx)), p1 = gather<Vector2fD>(m_edge_info.p1, IntD(edge_idx));
+    Vector2fD p_    = fmadd(p0, 1.0f - sample1, p1*sample1);
+    Vector2fC p     = detach(p_);
+    result.x_dot_n  = dot(p_, edge_normal);
+
+    Vector2iC ip    = floor2int<Vector2iC, Vector2fC>(p*m_resolution);
+    MaskC valid     = ip.x() >= 0 && ip.x() < m_resolution.x() &&
+                      ip.y() >= 0 && ip.y() < m_resolution.y();
+
+    result.idx      = full<IntC>(-1, m);
+    masked(result.idx, valid) = ip.y()*m_resolution.x() + ip.x();
+
+    result.ray_p    = sample_primary_ray(p + EdgeEpsilon*edge_normal);
+    result.ray_n    = sample_primary_ray(p - EdgeEpsilon*edge_normal);
 
     return result;
 }

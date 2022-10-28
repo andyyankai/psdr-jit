@@ -36,6 +36,11 @@ SpectrumD Integrator::renderD(const Scene &scene, int sensor_id) const {
     // Interior integral
     SpectrumD result = __render<true>(scene, sensor_id);
 
+    // Boundary integral
+    if ( likely(scene.m_opts.sppe > 0) ) {
+        render_primary_edges(scene, sensor_id, result);
+    }
+
     auto end_time = high_resolution_clock::now();
     if ( scene.m_opts.log_level ) {
         std::stringstream oss;
@@ -82,6 +87,28 @@ Spectrum<ad> Integrator::__render(const Scene &scene, int sensor_id) const {
     }
     
     return result;
+}
+
+
+void Integrator::render_primary_edges(const Scene &scene, int sensor_id, SpectrumD &result) const {
+    const RenderOption &opts = scene.m_opts;
+    const Sensor *sensor = scene.m_sensors[sensor_id];
+    if ( sensor->m_enable_edges ) {
+        PrimaryEdgeSample edge_samples = sensor->sample_primary_edge(scene.m_samplers[1].next_1d<false>());
+        MaskC valid = (edge_samples.idx >= 0);
+        SpectrumC delta_L = Li(scene, scene.m_samplers[1], edge_samples.ray_n, valid) - 
+                            Li(scene, scene.m_samplers[1], edge_samples.ray_p, valid);
+        SpectrumD value = edge_samples.x_dot_n*SpectrumD(delta_L/edge_samples.pdf);
+        masked(value, ~drjit::isfinite<SpectrumD>(value)) = 0.f;
+        if ( likely(opts.sppe > 1) ) {
+            value /= static_cast<float>(opts.sppe);
+        }
+        value -= detach(value);
+
+        for (int j=0; j<3; ++j) {
+            scatter_reduce(ReduceOp::Add, result[j], value[j], IntD(edge_samples.idx), valid);
+        }
+    }
 }
 
 NAMESPACE_END(psdr_jit)

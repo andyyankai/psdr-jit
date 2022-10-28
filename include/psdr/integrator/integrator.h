@@ -17,6 +17,9 @@ protected:
     virtual SpectrumD Li(const Scene &scene, Sampler &sampler, const RayD &ray, MaskD active = true) const = 0;
 
 
+    virtual void render_primary_edges(const Scene &scene, int sensor_id, SpectrumD &result) const;
+
+
     template <bool ad>
     Spectrum<ad> __render(const Scene &scene, int sensor_id) const;
 PSDR_CLASS_DECL_END(SamplingIntegrator)

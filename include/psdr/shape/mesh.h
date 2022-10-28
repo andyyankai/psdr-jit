@@ -84,7 +84,7 @@ public:
     bool                m_use_face_normals = false,
                         m_has_uv = false;
 
-    bool                m_enable_edges = false; // we disable boundary term for now
+    bool                m_enable_edges = true;
 
     EdgeSortOption      m_edge_sort;
 
