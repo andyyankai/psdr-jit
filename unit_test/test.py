@@ -7,8 +7,8 @@ def test_diff():
 	sc = psdr.Scene()
 	sc.load_file("cbox.xml")
 	sc.opts.spp = 32
-	sc.opts.sppe = 0
-	sc.opts.sppse = 0
+	sc.opts.sppe = 32
+	sc.opts.sppse = 32
 	sc.configure()
 	integrator = psdr.PathTracer(3)	
 
@@ -138,13 +138,13 @@ if __name__ == "__main__":
 
 
 	# test_drjit_init()
-	test_sampler()
+	# test_sampler()
 	# test_ray()
 	# test_DiscreteDistribution()
 	# test_mesh()
 
 	# test_scene()
-	# test_diff()
+	test_diff()
 	# psdr.drjit_memory()
 
 
