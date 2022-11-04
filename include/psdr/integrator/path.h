@@ -18,6 +18,8 @@ protected:
     template <bool ad>
     Spectrum<ad> __Li(const Scene &scene, Sampler &sampler, const Ray<ad> &ray, Mask<ad> active) const;
 
+    void render_secondary_edges(const Scene &scene, int sensor_id, SpectrumD &result) const override;
+
     int m_max_depth;
 
 PSDR_CLASS_DECL_END(PathTracer)

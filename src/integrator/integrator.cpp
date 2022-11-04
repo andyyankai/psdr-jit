@@ -41,9 +41,9 @@ SpectrumD Integrator::renderD(const Scene &scene, int sensor_id) const {
         render_primary_edges(scene, sensor_id, result);
     }
 
-    // if ( likely(scene.m_opts.sppse > 0) ) {
-    //     render_secondary_edges(scene, sensor_id, result);
-    // }
+    if ( likely(scene.m_opts.sppse > 0) ) {
+        render_secondary_edges(scene, sensor_id, result);
+    }
     
     auto end_time = high_resolution_clock::now();
     if ( scene.m_opts.log_level ) {

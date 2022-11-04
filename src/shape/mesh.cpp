@@ -258,11 +258,25 @@ void Mesh::configure() {
     m_face_distrb->init(detach(face_areas));
 
 
-    if ( m_sec_edge_info != nullptr ) {
-        delete m_sec_edge_info;
-        m_sec_edge_info = nullptr;
-    }
+    if ( m_enable_edges ) {
+        if ( m_sec_edge_info == nullptr ) m_sec_edge_info = new SecondaryEdgeInfo();
 
+        SecondaryEdgeInfo secEdgeInfo;
+        secEdgeInfo.is_boundary = (m_edge_indices[3] < 0);
+        secEdgeInfo.p0 = gather<Vector3fD>(m_vertex_positions, m_edge_indices[0]);
+        secEdgeInfo.e1 = gather<Vector3fD>(m_vertex_positions, m_edge_indices[1]) - secEdgeInfo.p0;
+        secEdgeInfo.n0 = gather<Vector3fD>(m_triangle_info->face_normal, m_edge_indices[2]);
+        secEdgeInfo.n1 = gather<Vector3fD>(m_triangle_info->face_normal, m_edge_indices[3], ~secEdgeInfo.is_boundary);
+        secEdgeInfo.p2 = gather<Vector3fD>(m_vertex_positions, m_edge_indices[4]);
+
+        MaskD keep = (dot(secEdgeInfo.n0, secEdgeInfo.n1) < 1.f - EdgeEpsilon);
+        *m_sec_edge_info = compressD<SecondaryEdgeInfo>(secEdgeInfo, keep);
+    } else {
+        if ( m_sec_edge_info != nullptr ) {
+            delete m_sec_edge_info;
+            m_sec_edge_info = nullptr;
+        }
+    }
 
     m_ready = true;
 

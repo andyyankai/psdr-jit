@@ -19,6 +19,7 @@ protected:
 
     virtual void render_primary_edges(const Scene &scene, int sensor_id, SpectrumD &result) const;
 
+    virtual void render_secondary_edges(const Scene &scene, int sensor_id, SpectrumD &result) const {}
 
     template <bool ad>
     Spectrum<ad> __render(const Scene &scene, int sensor_id) const;

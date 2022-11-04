@@ -24,7 +24,7 @@ public:
     bool is_ready() const;
 
     template <bool ad, bool path_space = false>
-    Intersection<ad> ray_intersect(const Ray<ad> &ray, Mask<ad> active = true) const;
+    Intersection<ad> ray_intersect(const Ray<ad> &ray, Mask<ad> active = true, TriangleInfoD *out_info = nullptr) const;
 
     template <bool ad>
     PositionSample<ad> sample_emitter_position(const Vector3f<ad> &ref_p, const Vector2f<ad> &sample, Mask<ad> active = true) const;
@@ -32,6 +32,7 @@ public:
     template <bool ad>
     Float<ad> emitter_position_pdf(const Vector3f<ad> &ref_p, const Intersection<ad> &its, Mask<ad> active = true) const;
 
+    BoundarySegSampleDirect sample_boundary_segment_direct(const Vector3fC &sample3, MaskC active = true) const;
 
     int seed = 0;
 

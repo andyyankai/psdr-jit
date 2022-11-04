@@ -23,6 +23,7 @@ Scene::Scene() {
     m_optix = new Scene_OptiX();
     m_emitter_env = nullptr;
     m_emitters_distrb = new DiscreteDistribution();
+    m_sec_edge_distrb = new DiscreteDistribution();
 }
 
 
@@ -35,7 +36,7 @@ Scene::~Scene() {
     delete[]    m_samplers;
     delete      m_optix;
     delete      m_emitters_distrb;
-    // delete      m_sec_edge_distrb;
+    delete      m_sec_edge_distrb;
 
 }
 
@@ -78,29 +79,33 @@ void Scene::configure() {
 
     // Preprocess meshes
     PSDR_ASSERT_MSG(!m_meshes.empty(), "Missing meshes!");
-    std::vector<int> face_offset, edge_offset, cut_offset;
+    std::vector<int> face_offset, edge_offset;
     face_offset.reserve(m_num_meshes + 1);
     face_offset.push_back(0);
     edge_offset.reserve(m_num_meshes + 1);
     edge_offset.push_back(0);
 
-    cut_offset.reserve(m_num_meshes + 1);
-    cut_offset.push_back(0);
 
     m_lower = full<Vector3fC>(std::numeric_limits<float>::max());
     m_upper = full<Vector3fC>(std::numeric_limits<float>::min());
     for ( Mesh *mesh : m_meshes ) {
         mesh->configure();
         face_offset.push_back(face_offset.back() + mesh->m_num_faces);
-        edge_offset.push_back(edge_offset.back());
-        cut_offset.push_back(cut_offset.back());
+        if ( m_opts.sppse > 0 && mesh->m_enable_edges ) {
+            // std::cout << (mesh->m_sec_edge_info)->size() << std::endl;
+            edge_offset.push_back(edge_offset.back() + static_cast<int>((mesh->m_sec_edge_info)->size()));
+        } else {
+            edge_offset.push_back(edge_offset.back());
+        }
         for ( int i = 0; i < 3; ++i ) {
             m_lower[i] = minimum(m_lower[i], min(detach(mesh->m_vertex_positions[i])));
             m_upper[i] = maximum(m_upper[i], max(detach(mesh->m_vertex_positions[i])));
         }
     }
 
+
     
+
 
     // Preprocess sensors
     PSDR_ASSERT_MSG(!m_sensors.empty(), "Missing sensor!");
@@ -229,6 +234,35 @@ void Scene::configure() {
         }
     }
 
+
+
+    // Generate global sec. edge arrays
+    if ( m_opts.sppse > 0 ) {
+        m_sec_edge_info = empty<SecondaryEdgeInfo>(edge_offset.back());
+        for ( int i = 0; i < m_num_meshes; ++i ) {
+            const Mesh &mesh = *m_meshes[i];
+            if ( mesh.m_enable_edges ) {
+                PSDR_ASSERT(mesh.m_sec_edge_info != nullptr);
+                const int m = static_cast<int>((mesh.m_sec_edge_info->size()));
+                const IntD idx = arange<IntD>(m) + edge_offset[i];
+                scatter(m_sec_edge_info, *mesh.m_sec_edge_info, idx);
+            }
+        }
+        drjit::eval(m_sec_edge_info);
+        FloatC edge_pmf = norm(detach(m_sec_edge_info.e1));
+        drjit::eval(edge_pmf);
+
+        // std::cout << edge_pmf << std::endl;
+        m_sec_edge_distrb->init(edge_pmf);
+        if ( m_opts.log_level > 0 ) {
+            std::stringstream oss;
+            oss << edge_offset.back() << " secondary edges initialized.";
+            log(oss.str().c_str());
+        }
+    } else {
+        m_sec_edge_info = empty<SecondaryEdgeInfo>();
+    }
+
     // Initialize OptiX
 
     m_optix->configure(m_meshes);
@@ -285,22 +319,23 @@ void Scene::configure2(std::vector<int> active_sensor) {
 
     // Preprocess meshes
     PSDR_ASSERT_MSG(!m_meshes.empty(), "Missing meshes!");
-    std::vector<int> face_offset, edge_offset, cut_offset;
+    std::vector<int> face_offset, edge_offset;
     face_offset.reserve(m_num_meshes + 1);
     face_offset.push_back(0);
     edge_offset.reserve(m_num_meshes + 1);
     edge_offset.push_back(0);
-
-    cut_offset.reserve(m_num_meshes + 1);
-    cut_offset.push_back(0);
 
     m_lower = full<Vector3fC>(std::numeric_limits<float>::max());
     m_upper = full<Vector3fC>(std::numeric_limits<float>::min());
     for ( Mesh *mesh : m_meshes ) {
         mesh->configure();
         face_offset.push_back(face_offset.back() + mesh->m_num_faces);
-        edge_offset.push_back(edge_offset.back());
-        cut_offset.push_back(cut_offset.back());
+        if ( m_opts.sppse > 0 && mesh->m_enable_edges ) {
+            std::cout << (mesh->m_sec_edge_info)->size() << std::endl;
+            edge_offset.push_back(edge_offset.back() + static_cast<int>((mesh->m_sec_edge_info)->size()));
+        } else {
+            edge_offset.push_back(edge_offset.back());
+        }
         for ( int i = 0; i < 3; ++i ) {
             m_lower[i] = minimum(m_lower[i], min(detach(mesh->m_vertex_positions[i])));
             m_upper[i] = maximum(m_upper[i], max(detach(mesh->m_vertex_positions[i])));
@@ -472,7 +507,7 @@ bool Scene::is_ready() const {
 
 
 template <bool ad, bool path_space>
-Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active) const {
+Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active, TriangleInfoD *out_info) const {
     static_assert(ad || !path_space);
     Intersection<ad> its;
 
@@ -493,6 +528,10 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active) const
     Vector3f<ad> tri_info_n0; 
     Vector3f<ad> tri_info_n1; 
     Vector3f<ad> tri_info_n2; 
+    Vector3f<ad> tri_info_face_normal; 
+    Float<ad> tri_info_face_area; 
+
+
 
     if constexpr ( ad ) {
         its.n = gather<Vector3f<ad>>(m_triangle_info.face_normal, idx[1], active);
@@ -506,6 +545,31 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active) const
         tri_info_n1 = gather<Vector3f<ad>>(m_triangle_info.n1, idx[1], active);
         tri_info_n2 = gather<Vector3f<ad>>(m_triangle_info.n2, idx[1], active);
 
+        tri_info_face_normal = gather<Vector3f<ad>>(m_triangle_info.face_normal, idx[1], active);
+        tri_info_face_area = gather<Float<ad>>(m_triangle_info.face_area, idx[1], active);
+
+
+
+
+        TriangleInfo<ad>    tri_info = empty<TriangleInfo<ad>>(slices<Vector3f<ad>>(tri_info_p0));
+        tri_info.p0 = tri_info_p0;
+        tri_info.e1 = tri_info_e1;
+        tri_info.e2 = tri_info_e2;
+        tri_info.n0 = tri_info_n0;
+        tri_info.n1 = tri_info_n1;
+        tri_info.n2 = tri_info_n2;
+        tri_info.face_normal = tri_info_face_normal;
+        tri_info.face_area = tri_info_face_area;
+
+
+        if ( out_info != nullptr ) *out_info = tri_info;
+
+        if constexpr ( path_space ) {
+            its.J = tri_info.face_area/detach(tri_info.face_area);
+        } else {
+            its.J = 1.f;
+        }
+
     } else {
         its.n = gather<Vector3f<ad>>(detach(m_triangle_info.face_normal), idx[1], active);
         tri_uv_info = gather<TriangleUVC>(detach(m_triangle_uv), idx[1], active);
@@ -517,11 +581,28 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active) const
         tri_info_n0 = gather<Vector3f<ad>>(detach(m_triangle_info.n0), idx[1], active);
         tri_info_n1 = gather<Vector3f<ad>>(detach(m_triangle_info.n1), idx[1], active);
         tri_info_n2 = gather<Vector3f<ad>>(detach(m_triangle_info.n2), idx[1], active);
+        tri_info_face_normal = gather<Vector3f<ad>>(detach(m_triangle_info.face_normal), idx[1], active);
+        tri_info_face_area = gather<Float<ad>>(detach(m_triangle_info.face_area), idx[1], active);
 
+        TriangleInfoD   tri_info = empty<TriangleInfoD>(slices<Vector3fC>(tri_info_p0));
+        tri_info.p0 = gather<Vector3fD>((m_triangle_info.p0), idx[1], active);;
+        tri_info.e1 = gather<Vector3fD>((m_triangle_info.e1), idx[1], active);
+        tri_info.e2 = gather<Vector3fD>((m_triangle_info.e2), idx[1], active);
+        tri_info.n0 = gather<Vector3fD>((m_triangle_info.n0), idx[1], active);
+        tri_info.n1 = gather<Vector3fD>((m_triangle_info.n1), idx[1], active);
+        tri_info.n2 = gather<Vector3fD>((m_triangle_info.n2), idx[1], active);
+        tri_info.face_normal = gather<Vector3fD>(m_triangle_info.face_normal, idx[1], active);
+        tri_info.face_area = gather<FloatD>(m_triangle_info.face_area, IntD(idx[1]), active);
+
+
+        if ( out_info != nullptr ) {
+            *out_info = tri_info;
+        }
+
+        its.J = 1.f;
 
     }
 
-    its.J = 1.f;
     
     const Vector3f<ad> &vertex0 = tri_info_p0, &edge1 = tri_info_e1, &edge2 = tri_info_e2;
 
@@ -645,10 +726,54 @@ Float<ad> Scene::emitter_position_pdf(const Vector3f<ad> &ref_p, const Intersect
     
 }
 
+
+BoundarySegSampleDirect Scene::sample_boundary_segment_direct(const Vector3fC &sample3, MaskC active) const {
+    BoundarySegSampleDirect result;
+    // Sample a point p0 on a face edge
+    FloatC sample1 = sample3.x();
+    auto [edge_idx, pdf0] = m_sec_edge_distrb->sample_reuse<false>(sample1);
+
+    // SecondaryEdgeInfo info = gather<SecondaryEdgeInfo>(m_sec_edge_info, IntD(edge_idx), active);
+
+    Vector3fD info_e1 = gather<Vector3fD>(m_sec_edge_info.e1, IntD(edge_idx), active);
+    Vector3fD info_p0 = gather<Vector3fD>(m_sec_edge_info.p0, IntD(edge_idx), active);
+    Vector3fD info_p2 = gather<Vector3fD>(m_sec_edge_info.p2, IntD(edge_idx), active);
+    Vector3fD info_n0 = gather<Vector3fD>(m_sec_edge_info.n0, IntD(edge_idx), active);
+    Vector3fD info_n1 = gather<Vector3fD>(m_sec_edge_info.n1, IntD(edge_idx), active);
+    MaskD info_is_boundary = gather<MaskD>(m_sec_edge_info.is_boundary, IntD(edge_idx), active);
+
+
+    result.p0 = fmadd(info_e1, sample1, info_p0); // p0 = info.p0 + info.e1*sample1;
+    result.edge = normalize(detach(info_e1));
+    result.edge2 = detach(info_p2) - detach(info_p0);
+    const Vector3fC &p0 = detach(result.p0);
+    pdf0 /= norm(detach(info_e1));
+
+    // Sample a point ps2 on a emitter
+    PositionSampleC ps2 = sample_emitter_position<false>(p0, tail<2>(sample3), active);
+    result.p2 = ps2.p;
+
+    // Construct the edge "ray" and check if it is valid
+    Vector3fC e = result.p2 - p0;
+    const FloatC distSqr = squared_norm(e);
+    e /= safe_sqrt(distSqr);
+    const FloatC cosTheta = dot(ps2.n, -e);
+
+    IntC sgn0 = sign<false>(dot(detach(info_n0), e), EdgeEpsilon),
+         sgn1 = sign<false>(dot(detach(info_n1), e), EdgeEpsilon);
+    result.is_valid = active && (cosTheta > Epsilon) && (
+        (detach(info_is_boundary) && neq(sgn0, 0)) || (~detach(info_is_boundary) && (sgn0*sgn1 < 0))
+    );
+
+    result.pdf = (pdf0*ps2.pdf*(distSqr/cosTheta)) & result.is_valid;
+    return result;
+}
+
+
 // Explicit instantiations
-template IntersectionC Scene::ray_intersect<false, false>(const RayC&, MaskC) const;
-template IntersectionD Scene::ray_intersect<true , false>(const RayD&, MaskD) const;
-template IntersectionD Scene::ray_intersect<true , true >(const RayD&, MaskD) const;
+template IntersectionC Scene::ray_intersect<false, false>(const RayC&, MaskC, TriangleInfoD*) const;
+template IntersectionD Scene::ray_intersect<true , false>(const RayD&, MaskD, TriangleInfoD*) const;
+template IntersectionD Scene::ray_intersect<true , true >(const RayD&, MaskD, TriangleInfoD*) const;
 
 template PositionSampleC Scene::sample_emitter_position<false>(const Vector3fC&, const Vector2fC&, MaskC) const;
 template PositionSampleD Scene::sample_emitter_position<true >(const Vector3fD&, const Vector2fD&, MaskD) const;
