@@ -65,7 +65,10 @@ public:
     MaskD                   m_triangle_face_normals;
     bool                    m_has_bound_mesh;
 
-    IntC                    m_edge_cut;
+
+    SecondaryEdgeInfo       m_sec_edge_info;
+    DiscreteDistribution    *m_sec_edge_distrb;
+
 
     bool                    m_loaded;
     Scene_OptiX             *m_optix;
