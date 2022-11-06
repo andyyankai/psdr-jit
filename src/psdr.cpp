@@ -18,6 +18,11 @@
 
 #include <psdr/edge/edge.h>
 
+#include <psdr/sensor/sensor.h>
+
+#include <psdr/sensor/perspective.h>
+
+
 
 #include <psdr/bsdf/bsdf.h>
 #include <psdr/bsdf/diffuse.h>
@@ -270,10 +275,10 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readwrite("normal_map", &NormalMap::m_nmap);
 
     py::class_<Diffuse, BSDF>(m, "DiffuseBSDF")
-        //.def(py::init<>())
-        //.def(py::init<const ScalarVector3f&>())
-        //.def(py::init<const char*>())
-        //.def(py::init<const Bitmap3fD&>())
+        .def(py::init<>())
+        .def(py::init<const ScalarVector3f&>())
+        .def(py::init<const char*>())
+        .def(py::init<const Bitmap3fD&>())
         .def_readwrite("reflectance", &Diffuse::m_reflectance);
 
     py::class_<RoughConductor, BSDF>(m, "RoughConductorBSDF")
@@ -330,8 +335,30 @@ PYBIND11_MODULE(psdr_jit, m) {
     //     .def_readwrite("radiance", &EnvironmentMap::m_radiance)
     //     .def_readwrite("scale", &EnvironmentMap::m_scale);
 
+    py::class_<Sensor, Object>(m, "Sensor")
+        .def("set_transform", &Sensor::set_transform, "mat"_a, "set_left"_a = true)
+        .def("append_transform", &Sensor::append_transform, "mat"_a, "append_left"_a = true)
+        .def_readwrite("to_world", &Sensor::m_to_world_raw)
+        .def_readwrite("to_world_left", &Sensor::m_to_world_left)
+        .def_readwrite("to_world_right", &Sensor::m_to_world_right);
+
+    py::class_<PerspectiveCamera, Sensor>(m, "PerspectiveCamera")
+        .def(py::init<float, float, float>())
+        .def("set_transform", &Sensor::set_transform, "mat"_a, "set_left"_a = true)
+        .def("append_transform", &Sensor::append_transform, "mat"_a, "append_left"_a = true)
+        .def_readwrite("to_world", &PerspectiveCamera::m_to_world_raw)
+        .def_readwrite("to_world_left", &Sensor::m_to_world_left)
+        .def_readwrite("to_world_right", &Sensor::m_to_world_right);
+
+
+
     py::class_<Scene, Object>(m, "Scene")
         .def(py::init<>())
+
+        .def("add_Sensor", &Scene::add_Sensor, "Add Sensor")
+        .def("add_Mesh", &Scene::add_Mesh, "Add Mesh")
+        .def("add_BSDF", &Scene::add_BSDF, "Add BSDf")
+
         .def("load_file", &Scene::load_file, "file_name"_a, "auto_configure"_a = true)
         .def("load_string", &Scene::load_string, "scene_xml"_a, "auto_configure"_a = true)
         .def("configure", &Scene::configure)

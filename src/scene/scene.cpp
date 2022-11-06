@@ -6,6 +6,9 @@
 #include <psdr/core/sampler.h>
 #include <psdr/core/pmf.h>
 #include <psdr/bsdf/bsdf.h>
+#include <psdr/bsdf/diffuse.h>
+#include <psdr/bsdf/microfacet.h>
+
 #include <psdr/emitter/envmap.h>
 #include <psdr/sensor/perspective.h>
 #include <psdr/shape/mesh.h>
@@ -15,6 +18,26 @@
 #include <psdr/scene/scene.h>
 
 NAMESPACE_BEGIN(psdr_jit)
+
+template <typename T>
+void build_param_map(Scene::ParamMap &param_map, const std::vector<T*> arr, const char *name) {
+    for ( size_t i = 0; i < arr.size(); ++i ) {
+        const T *obj = arr[i];
+
+        std::stringstream oss1;
+        oss1 << name << "[" << i << "]";
+        param_map.insert(Scene::ParamMap::value_type(oss1.str(), *obj));
+
+        if ( obj->m_id != "" ) {
+            std::stringstream oss2;
+            oss2 << name << "[id=" << obj->m_id << "]";
+
+            bool is_new;
+            std::tie(std::ignore, is_new) = param_map.insert(Scene::ParamMap::value_type(oss2.str(), *obj));
+            PSDR_ASSERT_MSG(is_new, std::string("Duplicate id: ") + obj->m_id);
+        }
+    }
+}
 
 Scene::Scene() {
     m_has_bound_mesh = false;
@@ -52,8 +75,53 @@ void Scene::load_string(const char *scene_xml, bool auto_configure) {
     if ( auto_configure ) configure();
 }
 
+
+void Scene::add_Sensor(Sensor* sensor) {
+    std::cout << "add_Sensor: " << sensor->to_string() << std::endl;
+    if (PerspectiveCamera *sensor_buff = dynamic_cast<PerspectiveCamera *>(sensor)) {
+        Sensor *sensor_temp = new PerspectiveCamera(sensor_buff->m_fov_x, sensor_buff->m_near_clip, sensor_buff->m_far_clip);
+        sensor_temp->m_to_world_raw = Matrix4fD(Matrix4fD(sensor_buff->m_to_world_raw));
+        m_sensors.push_back(sensor_temp);
+        build_param_map<Sensor >(m_param_map, m_sensors , "Sensor" );
+        m_num_sensors = static_cast<int>(m_sensors.size());
+    } else {
+        PSDR_ASSERT_MSG(0, "Unknown sensor type!");
+    }
+}
+
+
+void Scene::add_Mesh(Mesh* mesh, const char *bsdf_id) {
+    std::cout << "add_Mesh" << std::endl;
+}
+
+
+void Scene::add_BSDF(BSDF* bsdf, const char *bsdf_id) {
+    std::cout << "add_BSDF: " << bsdf->to_string() << " " << bsdf_id << std::endl;
+    if (Diffuse *bsdf_buff = dynamic_cast<Diffuse *>(bsdf)) {
+        Diffuse *bsdf_temp = new Diffuse(bsdf_buff->m_reflectance);
+
+        bsdf_temp->m_id = bsdf_id;
+        m_bsdfs.push_back(bsdf_temp);
+
+        Scene::ParamMap &param_map = m_param_map;
+        std::stringstream oss1, oss2;
+        oss1 << "BSDF[" << m_bsdfs.size() - 1 << "]";
+        oss2 << "BSDF[id=" << bsdf_id << "]";
+        param_map.insert(Scene::ParamMap::value_type(oss1.str(), *bsdf_temp));
+
+        bool is_new;
+        std::tie(std::ignore, is_new) = param_map.insert(Scene::ParamMap::value_type(oss2.str(), *bsdf_temp));
+        PSDR_ASSERT_MSG(is_new, std::string("Duplicate BSDF id: ") + bsdf_id);
+
+    } else {
+        PSDR_ASSERT_MSG(0, "Unknown BSDF type!");
+    }
+}
+
+
 void Scene::configure() {
     PSDR_ASSERT_MSG(m_loaded, "Scene not loaded yet!");
+    std::cout << m_opts.height << " " << m_opts.width << std::endl;
     PSDR_ASSERT(m_num_sensors == static_cast<int>(m_sensors.size()));
     PSDR_ASSERT(m_num_meshes == static_cast<int>(m_meshes.size()));
 

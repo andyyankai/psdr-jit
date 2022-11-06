@@ -3,6 +3,8 @@
 #include <unordered_map>
 #include <psdr/psdr.h>
 #include <psdr/edge/edge.h>
+#include <psdr/shape/mesh.h>
+#include <psdr/bsdf/bsdf.h>
 
 NAMESPACE_BEGIN(psdr_jit)
 
@@ -20,6 +22,11 @@ public:
 
     void configure();
     void configure2(std::vector<int> active_sensor);
+
+    void add_Sensor(Sensor* sensor);
+    void add_Mesh(Mesh* mesh, const char *bsdf_id);
+
+    void add_BSDF(BSDF* bsdf, const char *bsdf_id);
 
     bool is_ready() const;
 
