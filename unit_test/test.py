@@ -46,7 +46,6 @@ def test_diff():
 def test_load_scene():
 	print("INIT load scene")
 	sc = psdr.Scene()
-	
 	sc.opts.spp = 32
 	sc.opts.sppe = 32
 	sc.opts.sppse = 32
@@ -80,15 +79,28 @@ def test_load_scene():
 	sc.add_Mesh("./data/objects/cbox/cbox_greenwall.obj", Matrix4fC([[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]]), "green", None)
 	sc.add_Mesh("./data/objects/cbox/cbox_redwall.obj", Matrix4fC([[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]]), "red", None)
 
-	# sc.param_map["Mesh[0]"].use_face_normal=True
-	# sc.load_file("cbox2.xml", False)
+	P = FloatD(0.)
+	drjit.enable_grad(P)
+	
+	sc.param_map["Mesh[0]"].set_transform(Matrix4fD([[1.,0.,0.,P*100.],
+													 [0.,1.,0.,0.],
+													 [0.,0.,1.,0.],
+													 [0.,0.,0.,1.],]))
 
 
 	sc.configure()
-	img = integrator.renderC(sc, 0)
+	img = integrator.renderD(sc, 0)
 	org_img = img.numpy().reshape((sc.opts.width, sc.opts.height, 3))
 	output = cv2.cvtColor(org_img, cv2.COLOR_RGB2BGR)
-	cv2.imwrite("psdr_jit_load_scene.exr", output)
+	cv2.imwrite("psdr_jit_forward.exr", output)
+
+
+	drjit.set_grad(P, 1.0)
+	drjit.forward_to(img)
+	diff_img = drjit.grad(img)
+	diff_img = diff_img.numpy().reshape((sc.opts.width, sc.opts.height, 3))
+	output = cv2.cvtColor(diff_img, cv2.COLOR_RGB2BGR)
+	cv2.imwrite("psdr_jit_diff_debug.exr", output)
 
 
 def test_scene():
