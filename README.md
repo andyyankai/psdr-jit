@@ -31,7 +31,7 @@ import psdr_jit
 
 ### Example of Diff rendering
 
-```bash
+```python
 import cv2
 import sys
 import torch
@@ -42,9 +42,9 @@ from drjit.cuda.ad import Float as FloatD, Matrix4f as Matrix4fD
 from drjit.cuda import Float as FloatC, Matrix4f as Matrix4fC
 
 sc = psdr.Scene()
-sc.opts.spp = 32
-sc.opts.sppe = 32
-sc.opts.sppse = 32
+sc.opts.spp = 32 # Interior Term
+sc.opts.sppe = 32 # Primary Edge
+sc.opts.sppse = 32 # Secondary Edge
 sc.opts.height = 512
 sc.opts.width = 512
 
@@ -78,10 +78,7 @@ sc.add_Mesh("./data/objects/cbox/cbox_redwall.obj", Matrix4fC([[1.,0.,0.,0.],[0.
 P = FloatD(0.)
 drjit.enable_grad(P)
 
-sc.param_map["Mesh[0]"].set_transform(Matrix4fD([[1.,0.,0.,P*100.],
-												 [0.,1.,0.,0.],
-												 [0.,0.,1.,0.],
-												 [0.,0.,0.,1.],]))
+sc.param_map["Mesh[0]"].set_transform(Matrix4fD([[1.,0.,0.,P*100.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.],]))
 
 
 sc.configure()
