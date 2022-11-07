@@ -78,7 +78,7 @@ void Scene::load_string(const char *scene_xml, bool auto_configure) {
 
 
 void Scene::add_Sensor(Sensor* sensor) {
-    std::cout << "add_Sensor: " << sensor->to_string() << std::endl;
+    if ( m_opts.log_level > 0 ) std::cout << "add_Sensor: " << sensor->to_string() << std::endl;
     if (PerspectiveCamera *sensor_buff = dynamic_cast<PerspectiveCamera *>(sensor)) {
         Sensor *sensor_temp = new PerspectiveCamera(sensor_buff->m_fov_x, sensor_buff->m_near_clip, sensor_buff->m_far_clip);
         sensor_temp->m_to_world_raw = Matrix4fD(Matrix4fD(sensor_buff->m_to_world_raw));
@@ -91,8 +91,8 @@ void Scene::add_Sensor(Sensor* sensor) {
 }
 
 void Scene::add_BSDF(BSDF* bsdf, const char *bsdf_id) {
-    std::cout << "add_BSDF: " << bsdf->to_string() << " " << bsdf_id << std::endl;
     if (Diffuse *bsdf_buff = dynamic_cast<Diffuse *>(bsdf)) {
+        if ( m_opts.log_level > 0 ) std::cout << "add_BSDF: " << "Diffuse" << " " << bsdf_id << std::endl;
         Diffuse *bsdf_temp = new Diffuse(bsdf_buff->m_reflectance);
 
         bsdf_temp->m_id = bsdf_id;
@@ -114,7 +114,7 @@ void Scene::add_BSDF(BSDF* bsdf, const char *bsdf_id) {
 }
 
 void Scene::add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id, Emitter* emitter) {
-    std::cout << "add_Mesh" << std::endl;
+    if ( m_opts.log_level > 0 ) std::cout << "add_Mesh: " << m_meshes.size() << std::endl;
     std::stringstream oss;
     oss << "BSDF[id=" << bsdf_id << "]";
     auto bsdf_info = m_param_map.find(oss.str());
@@ -127,11 +127,11 @@ void Scene::add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id
 
     mesh->m_to_world_raw = Matrix4fD(transform);
     mesh->m_mesh_id = m_meshes.size();
+    mesh->m_use_face_normals = true;
 
     if ( emitter ) {
-        
         if (AreaLight *emitter_buff = dynamic_cast<AreaLight *>(emitter)) {
-            std::cout << "load area light" << std::endl;
+            if ( m_opts.log_level > 0 ) std::cout << "add Area light" << std::endl;
             AreaLight *emitter_temp = new AreaLight(mesh);
             emitter_temp->m_radiance = emitter_buff->m_radiance;
             m_emitters.push_back(emitter_temp);
@@ -152,7 +152,9 @@ void Scene::add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id
 
 void Scene::configure() {
     PSDR_ASSERT_MSG(m_loaded, "Scene not loaded yet!");
-    std::cout << m_opts.height << " " << m_opts.width << std::endl;
+    if ( m_opts.log_level > 0 ) {
+        std::cout << "[Scene] resolution: " << m_opts.height << " " << m_opts.width << std::endl;
+    }
     PSDR_ASSERT(m_num_sensors == static_cast<int>(m_sensors.size()));
     PSDR_ASSERT(m_num_meshes == static_cast<int>(m_meshes.size()));
 
