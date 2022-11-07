@@ -1,6 +1,9 @@
 import cv2
 
 import sys
+import torch
+
+
 
 def test_diff():
 	print("INIT test diff")
@@ -39,6 +42,53 @@ def test_diff():
 		diff_img = diff_img.numpy().reshape((sc.opts.width, sc.opts.height, 3))
 		output = cv2.cvtColor(diff_img, cv2.COLOR_RGB2BGR)
 		cv2.imwrite("psdr_cuda_diff_debug.exr", output)
+
+def test_load_scene():
+	print("INIT load scene")
+	sc = psdr.Scene()
+	
+	sc.opts.spp = 32
+	sc.opts.sppe = 32
+	sc.opts.sppse = 32
+	sc.opts.height = 512
+	sc.opts.width = 512
+
+	integrator = psdr.PathTracer(3)	
+
+
+	sensor = psdr.PerspectiveCamera(60, 0.000001, 10000000.)
+	to_world = Matrix4fD([[1.,0.,0.,208.],
+						 [0.,1.,0.,273.],
+						 [0.,0.,1.,-800.],
+						 [0.,0.,0.,1.],])
+	sensor.to_world = to_world
+	sc.add_Sensor(sensor)
+
+	bsdf = psdr.DiffuseBSDF()
+	sc.add_BSDF(psdr.DiffuseBSDF([0.0, 0.0, 0.0]), "light")
+	sc.add_BSDF(psdr.DiffuseBSDF(), "cat")
+	sc.add_BSDF(psdr.DiffuseBSDF([0.95, 0.95, 0.95]), "white")
+	sc.add_BSDF(psdr.DiffuseBSDF([0.20, 0.90, 0.20]), "green")
+	sc.add_BSDF(psdr.DiffuseBSDF([0.90, 0.20, 0.20]), "red")
+
+	sc.add_Mesh("./data/objects/cbox/cbox_luminaire.obj", Matrix4fC([[1.,0.,0.,0.],[0.,1.,0.,-0.5],[0.,0.,1.,0.],[0.,0.,0.,1.]]), "light", psdr.AreaLight([20.0, 20.0, 8.0]))
+	sc.add_Mesh("./data/objects/cbox/cbox_smallbox.obj", Matrix4fC([[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]]), "cat", None)
+	sc.add_Mesh("./data/objects/cbox/cbox_largebox.obj", Matrix4fC([[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]]), "cat", None)
+	sc.add_Mesh("./data/objects/cbox/cbox_floor.obj", Matrix4fC([[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]]), "white", None)
+	sc.add_Mesh("./data/objects/cbox/cbox_ceiling.obj", Matrix4fC([[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]]), "white", None)
+	sc.add_Mesh("./data/objects/cbox/cbox_back.obj", Matrix4fC([[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]]), "white", None)
+	sc.add_Mesh("./data/objects/cbox/cbox_greenwall.obj", Matrix4fC([[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]]), "green", None)
+	sc.add_Mesh("./data/objects/cbox/cbox_redwall.obj", Matrix4fC([[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]]), "red", None)
+
+	# sc.param_map["Mesh[0]"].use_face_normal=True
+	# sc.load_file("cbox2.xml", False)
+
+
+	sc.configure()
+	img = integrator.renderC(sc, 0)
+	org_img = img.numpy().reshape((sc.opts.width, sc.opts.height, 3))
+	output = cv2.cvtColor(org_img, cv2.COLOR_RGB2BGR)
+	cv2.imwrite("psdr_jit_load_scene.exr", output)
 
 
 def test_scene():
@@ -127,6 +177,7 @@ if __name__ == "__main__":
 		import psdr_jit as psdr
 		import drjit
 		from drjit.cuda.ad import Float as FloatD, Matrix4f as Matrix4fD
+		from drjit.cuda import Float as FloatC, Matrix4f as Matrix4fC
 
 		print("testing psdr-jit")
 	else:
@@ -144,7 +195,8 @@ if __name__ == "__main__":
 	# test_mesh()
 
 	# test_scene()
-	test_diff()
+	# test_diff()
+	test_load_scene()
 	# psdr.drjit_memory()
 
 
