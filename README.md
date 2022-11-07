@@ -24,7 +24,7 @@ add /build/python/drjit to your LD_LIBRARY_PATH
 add /build/python/psdr_jit to your LD_LIBRARY_PATH
 
 ## Getting Started
-```bash
+```python
 import drjit
 import psdr_jit
 ```
