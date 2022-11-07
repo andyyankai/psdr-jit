@@ -7,7 +7,9 @@ NAMESPACE_BEGIN(psdr_jit)
 
 PSDR_CLASS_DECL_BEGIN(AreaLight, final, Emitter)
 public:
+    AreaLight(const ScalarVector3f &radiance) : m_radiance(radiance) {}
     AreaLight(const ScalarVector3f &radiance, const Mesh *mesh) : m_radiance(radiance), m_mesh(mesh) {}
+    AreaLight(const Mesh *mesh) : m_mesh(mesh) {}
 
     void configure() override;
 

@@ -24,9 +24,8 @@ public:
     void configure2(std::vector<int> active_sensor);
 
     void add_Sensor(Sensor* sensor);
-    void add_Mesh(Mesh* mesh, const char *bsdf_id);
-
     void add_BSDF(BSDF* bsdf, const char *bsdf_id);
+    void add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id, Emitter* emitter);
 
     bool is_ready() const;
 

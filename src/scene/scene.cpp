@@ -8,6 +8,7 @@
 #include <psdr/bsdf/bsdf.h>
 #include <psdr/bsdf/diffuse.h>
 #include <psdr/bsdf/microfacet.h>
+#include <psdr/emitter/area.h>
 
 #include <psdr/emitter/envmap.h>
 #include <psdr/sensor/perspective.h>
@@ -41,7 +42,7 @@ void build_param_map(Scene::ParamMap &param_map, const std::vector<T*> arr, cons
 
 Scene::Scene() {
     m_has_bound_mesh = false;
-    m_loaded = false;
+    m_loaded = true;
     m_samplers = new Sampler[3];
     m_optix = new Scene_OptiX();
     m_emitter_env = nullptr;
@@ -89,12 +90,6 @@ void Scene::add_Sensor(Sensor* sensor) {
     }
 }
 
-
-void Scene::add_Mesh(Mesh* mesh, const char *bsdf_id) {
-    std::cout << "add_Mesh" << std::endl;
-}
-
-
 void Scene::add_BSDF(BSDF* bsdf, const char *bsdf_id) {
     std::cout << "add_BSDF: " << bsdf->to_string() << " " << bsdf_id << std::endl;
     if (Diffuse *bsdf_buff = dynamic_cast<Diffuse *>(bsdf)) {
@@ -118,6 +113,42 @@ void Scene::add_BSDF(BSDF* bsdf, const char *bsdf_id) {
     }
 }
 
+void Scene::add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id, Emitter* emitter) {
+    std::cout << "add_Mesh" << std::endl;
+    std::stringstream oss;
+    oss << "BSDF[id=" << bsdf_id << "]";
+    auto bsdf_info = m_param_map.find(oss.str());
+    PSDR_ASSERT_MSG(bsdf_info != m_param_map.end(), std::string("Unknown BSDF id: ") + bsdf_id);
+
+    Mesh *mesh = new Mesh();
+    mesh->load(fname, false);
+    mesh->m_bsdf = dynamic_cast<const BSDF*>(&bsdf_info->second);
+
+
+    mesh->m_to_world_raw = Matrix4fD(transform);
+    mesh->m_mesh_id = m_meshes.size();
+
+    if ( emitter ) {
+        
+        if (AreaLight *emitter_buff = dynamic_cast<AreaLight *>(emitter)) {
+            std::cout << "load area light" << std::endl;
+            AreaLight *emitter_temp = new AreaLight(mesh);
+            emitter_temp->m_radiance = emitter_buff->m_radiance;
+            m_emitters.push_back(emitter_temp);
+            mesh->m_emitter = emitter_temp;
+        } else {
+            PSDR_ASSERT_MSG(0, "Unknown emitter type!");
+        }
+        build_param_map<Emitter>(m_param_map, m_emitters, "Emitter");
+    }
+
+
+
+    m_meshes.push_back(mesh);
+    build_param_map<Mesh   >(m_param_map, m_meshes  , "Mesh"   );
+    m_num_meshes = static_cast<int>(m_meshes.size());
+
+}
 
 void Scene::configure() {
     PSDR_ASSERT_MSG(m_loaded, "Scene not loaded yet!");

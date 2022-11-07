@@ -326,6 +326,7 @@ PYBIND11_MODULE(psdr_jit, m) {
     py::class_<Emitter, Object>(m, "Emitter");
 
     py::class_<AreaLight, Emitter>(m, "AreaLight")
+        .def(py::init<const ScalarVector3f&>())
         .def(py::init<const ScalarVector3f&, const Mesh*>());
 
     // py::class_<EnvironmentMap, Emitter>(m, "EnvironmentMap")

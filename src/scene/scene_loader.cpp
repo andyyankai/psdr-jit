@@ -229,7 +229,7 @@ void build_param_map(Scene::ParamMap &param_map, const std::vector<T*> arr, cons
 
 
 void SceneLoader::load_scene(const pugi::xml_document &doc, Scene &scene) {
-    PSDR_ASSERT_MSG(!scene.m_loaded, "Scene already loaded!");
+    // PSDR_ASSERT_MSG(!scene.m_loaded, "Scene already loaded!");
 
     const pugi::xml_node &root = doc.child("scene");
 
@@ -536,6 +536,7 @@ void SceneLoader::load_shape(const pugi::xml_node &node, Scene &scene, int shape
     }
 
     mesh->m_to_world_raw = Matrix4fD(load_transform(node.child("transform")));
+    std::cout << mesh->m_to_world_raw << std::endl;
     mesh->m_mesh_id = shape_id;
     scene.m_meshes.push_back(mesh);
 }
