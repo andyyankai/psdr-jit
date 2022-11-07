@@ -53,13 +53,12 @@ integrator = psdr.PathTracer(3)
 
 sensor = psdr.PerspectiveCamera(60, 0.000001, 10000000.)
 to_world = Matrix4fD([[1.,0.,0.,208.],
-					 [0.,1.,0.,273.],
-					 [0.,0.,1.,-800.],
-					 [0.,0.,0.,1.],])
+                     [0.,1.,0.,273.],
+                     [0.,0.,1.,-800.],
+                     [0.,0.,0.,1.],])
 sensor.to_world = to_world
 sc.add_Sensor(sensor)
 
-bsdf = psdr.DiffuseBSDF()
 sc.add_BSDF(psdr.DiffuseBSDF([0.0, 0.0, 0.0]), "light")
 sc.add_BSDF(psdr.DiffuseBSDF(), "cat")
 sc.add_BSDF(psdr.DiffuseBSDF([0.95, 0.95, 0.95]), "white")
