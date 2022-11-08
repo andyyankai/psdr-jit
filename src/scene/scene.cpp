@@ -395,6 +395,9 @@ void Scene::configure() {
 
 void Scene::configure2(std::vector<int> active_sensor) {
     PSDR_ASSERT_MSG(m_loaded, "Scene not loaded yet!");
+    if ( m_opts.log_level > 0 ) {
+        std::cout << "[Scene] resolution: " << m_opts.height << " " << m_opts.width << std::endl;
+    }
     PSDR_ASSERT(m_num_sensors == static_cast<int>(m_sensors.size()));
     PSDR_ASSERT(m_num_meshes == static_cast<int>(m_meshes.size()));
 
@@ -426,13 +429,14 @@ void Scene::configure2(std::vector<int> active_sensor) {
     edge_offset.reserve(m_num_meshes + 1);
     edge_offset.push_back(0);
 
+
     m_lower = full<Vector3fC>(std::numeric_limits<float>::max());
     m_upper = full<Vector3fC>(std::numeric_limits<float>::min());
     for ( Mesh *mesh : m_meshes ) {
         mesh->configure();
         face_offset.push_back(face_offset.back() + mesh->m_num_faces);
         if ( m_opts.sppse > 0 && mesh->m_enable_edges ) {
-            std::cout << (mesh->m_sec_edge_info)->size() << std::endl;
+            // std::cout << (mesh->m_sec_edge_info)->size() << std::endl;
             edge_offset.push_back(edge_offset.back() + static_cast<int>((mesh->m_sec_edge_info)->size()));
         } else {
             edge_offset.push_back(edge_offset.back());
@@ -443,7 +447,9 @@ void Scene::configure2(std::vector<int> active_sensor) {
         }
     }
 
+
     
+
 
     // Preprocess sensors
     PSDR_ASSERT_MSG(!m_sensors.empty(), "Missing sensor!");
@@ -452,7 +458,7 @@ void Scene::configure2(std::vector<int> active_sensor) {
     for (int sensor_id : active_sensor) {
         m_sensors[sensor_id]->m_resolution = ScalarVector2i(m_opts.width, m_opts.height);
         m_sensors[sensor_id]->m_scene = this;
-        m_sensors[sensor_id]->configure(false);
+        m_sensors[sensor_id]->configure(true);
         if ( m_opts.sppe > 0 ) num_edges.push_back(m_sensors[sensor_id]->m_edge_distrb.m_size);
 
         for ( int i = 0; i < 3; ++i ) {
@@ -462,6 +468,7 @@ void Scene::configure2(std::vector<int> active_sensor) {
             }
         }
     }
+
     
 
     if ( m_opts.log_level > 0 ) {
@@ -571,6 +578,35 @@ void Scene::configure2(std::vector<int> active_sensor) {
         }
     }
 
+
+
+    // Generate global sec. edge arrays
+    if ( m_opts.sppse > 0 ) {
+        m_sec_edge_info = empty<SecondaryEdgeInfo>(edge_offset.back());
+        for ( int i = 0; i < m_num_meshes; ++i ) {
+            const Mesh &mesh = *m_meshes[i];
+            if ( mesh.m_enable_edges ) {
+                PSDR_ASSERT(mesh.m_sec_edge_info != nullptr);
+                const int m = static_cast<int>((mesh.m_sec_edge_info->size()));
+                const IntD idx = arange<IntD>(m) + edge_offset[i];
+                scatter(m_sec_edge_info, *mesh.m_sec_edge_info, idx);
+            }
+        }
+        drjit::eval(m_sec_edge_info);
+        FloatC edge_pmf = norm(detach(m_sec_edge_info.e1));
+        drjit::eval(edge_pmf);
+
+        // std::cout << edge_pmf << std::endl;
+        m_sec_edge_distrb->init(edge_pmf);
+        if ( m_opts.log_level > 0 ) {
+            std::stringstream oss;
+            oss << edge_offset.back() << " secondary edges initialized.";
+            log(oss.str().c_str());
+        }
+    } else {
+        m_sec_edge_info = empty<SecondaryEdgeInfo>();
+    }
+
     // Initialize OptiX
 
     m_optix->configure(m_meshes);
@@ -580,6 +616,7 @@ void Scene::configure2(std::vector<int> active_sensor) {
         Mesh *mesh = m_meshes[i];
 
         if ( mesh->m_emitter == nullptr ) {
+            // std::cout << "clean emitter" << std::endl;
             PSDR_ASSERT(mesh->m_triangle_info != nullptr);
             delete mesh->m_triangle_info;
             mesh->m_triangle_info = nullptr;
