@@ -238,10 +238,14 @@ void Scene::configure(std::vector<int> active_sensor, bool dirty) {
             if ( m_opts.sppe > 0 ) num_edges.push_back(m_sensors[sensor_id]->m_edge_distrb.m_size);
         }
     } else {
+        std::cout << "Inital Config! Remember to call sc.configure(active_sensor=[...], dirty=True/False) again!" << std::endl;
         for ( Sensor *sensor : m_sensors ) {
             sensor->m_resolution = ScalarVector2i(m_opts.width, m_opts.height);
             sensor->m_scene = this;
             sensor->configure(true);
+            sensor->m_edge_info = empty<PrimaryEdgeInfo>(0);
+            sensor->m_edge_distrb.init(FloatC(1));
+
             if ( m_opts.sppe > 0 ) num_edges.push_back(sensor->m_edge_distrb.m_size);
 
             for ( int i = 0; i < 3; ++i ) {
