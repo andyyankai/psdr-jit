@@ -221,6 +221,10 @@ void Scene::configure(std::vector<int> active_sensor, bool dirty) {
     if ( m_opts.sppe > 0 ) num_edges.reserve(m_sensors.size());
 
     if (active_sensor.size() > 0) {
+        for (int sensor_id=0; sensor_id<m_num_sensors; ++sensor_id) {
+            m_sensors[sensor_id]->m_edge_info = empty<PrimaryEdgeInfo>(0);
+            m_sensors[sensor_id]->m_edge_distrb.init(FloatC(1));
+        }
         for (int sensor_id : active_sensor) {
             m_sensors[sensor_id]->m_resolution = ScalarVector2i(m_opts.width, m_opts.height);
             m_sensors[sensor_id]->m_scene = this;
