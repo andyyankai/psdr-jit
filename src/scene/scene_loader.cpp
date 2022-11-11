@@ -256,15 +256,15 @@ void SceneLoader::load_scene(const pugi::xml_document &doc, Scene &scene) {
         ++shape_id;
     }
 
-    // // Build the parameter map
-    // build_param_map<Mesh   >(scene.m_param_map, scene.m_meshes  , "Mesh"   );
-    // build_param_map<Emitter>(scene.m_param_map, scene.m_emitters, "Emitter");
-    // build_param_map<Sensor >(scene.m_param_map, scene.m_sensors , "Sensor" );
+    // Build the parameter map
+    build_param_map<Mesh   >(scene.m_param_map, scene.m_meshes  , "Mesh"   );
+    build_param_map<Emitter>(scene.m_param_map, scene.m_emitters, "Emitter");
+    build_param_map<Sensor >(scene.m_param_map, scene.m_sensors , "Sensor" );
 
-    // scene.m_num_sensors = static_cast<int>(scene.m_sensors.size());
-    // scene.m_num_meshes = static_cast<int>(scene.m_meshes.size());
+    scene.m_num_sensors = static_cast<int>(scene.m_sensors.size());
+    scene.m_num_meshes = static_cast<int>(scene.m_meshes.size());
 
-    // scene.m_loaded = true;
+    scene.m_loaded = true;
 }
 
 
