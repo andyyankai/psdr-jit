@@ -83,11 +83,13 @@ void Scene::add_Sensor(Sensor* sensor) {
         Sensor *sensor_temp = new PerspectiveCamera(sensor_buff->m_fov_x, sensor_buff->m_near_clip, sensor_buff->m_far_clip);
         sensor_temp->m_to_world_raw = Matrix4fD(Matrix4fD(sensor_buff->m_to_world_raw));
         m_sensors.push_back(sensor_temp);
-        build_param_map<Sensor >(m_param_map, m_sensors , "Sensor" );
         m_num_sensors = static_cast<int>(m_sensors.size());
     } else {
         PSDR_ASSERT_MSG(0, "Unknown sensor type!");
     }
+    build_param_map<Sensor >(m_param_map, m_sensors , "Sensor" );
+    m_num_sensors = static_cast<int>(m_sensors.size());
+
 }
 
 void Scene::add_BSDF(BSDF* bsdf, const char *bsdf_id) {
@@ -139,19 +141,24 @@ void Scene::add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id
         } else {
             PSDR_ASSERT_MSG(0, "Unknown emitter type!");
         }
-        build_param_map<Emitter>(m_param_map, m_emitters, "Emitter");
     }
 
 
 
     m_meshes.push_back(mesh);
     build_param_map<Mesh   >(m_param_map, m_meshes  , "Mesh"   );
+    build_param_map<Emitter>(m_param_map, m_emitters, "Emitter");
     m_num_meshes = static_cast<int>(m_meshes.size());
 
 }
 
 void Scene::configure() {
+    
+    // Build the parameter map
+
+    m_loaded = true;
     PSDR_ASSERT_MSG(m_loaded, "Scene not loaded yet!");
+
     if ( m_opts.log_level > 0 ) {
         std::cout << "[Scene] resolution: " << m_opts.height << " " << m_opts.width << std::endl;
     }
