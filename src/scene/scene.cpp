@@ -152,7 +152,7 @@ void Scene::add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id
 
 }
 
-void Scene::configure() {
+void Scene::configure(std::vector<int> active_sensor, bool dirty) {
     
     // Build the parameter map
 
@@ -219,20 +219,36 @@ void Scene::configure() {
     PSDR_ASSERT_MSG(!m_sensors.empty(), "Missing sensor!");
     std::vector<size_t> num_edges;
     if ( m_opts.sppe > 0 ) num_edges.reserve(m_sensors.size());
-    for ( Sensor *sensor : m_sensors ) {
-        sensor->m_resolution = ScalarVector2i(m_opts.width, m_opts.height);
-        sensor->m_scene = this;
-        sensor->configure(true);
-        if ( m_opts.sppe > 0 ) num_edges.push_back(sensor->m_edge_distrb.m_size);
 
-        for ( int i = 0; i < 3; ++i ) {
-            if ( PerspectiveCamera *camera = dynamic_cast<PerspectiveCamera *>(sensor) ) {
-                m_lower[i] = minimum(m_lower[i], detach(camera->m_camera_pos[i]));
-                m_upper[i] = maximum(m_upper[i], detach(camera->m_camera_pos[i]));
+    if (active_sensor.size() > 0) {
+        for (int sensor_id : active_sensor) {
+            m_sensors[sensor_id]->m_resolution = ScalarVector2i(m_opts.width, m_opts.height);
+            m_sensors[sensor_id]->m_scene = this;
+            m_sensors[sensor_id]->configure(true);
+            if ( m_opts.sppe > 0 ) num_edges.push_back(m_sensors[sensor_id]->m_edge_distrb.m_size);
+
+            for ( int i = 0; i < 3; ++i ) {
+                if ( PerspectiveCamera *camera = dynamic_cast<PerspectiveCamera *>(m_sensors[sensor_id]) ) {
+                    m_lower[i] = minimum(m_lower[i], detach(camera->m_camera_pos[i]));
+                    m_upper[i] = maximum(m_upper[i], detach(camera->m_camera_pos[i]));
+                }
+            }
+        }
+    } else {
+        for ( Sensor *sensor : m_sensors ) {
+            sensor->m_resolution = ScalarVector2i(m_opts.width, m_opts.height);
+            sensor->m_scene = this;
+            sensor->configure(true);
+            if ( m_opts.sppe > 0 ) num_edges.push_back(sensor->m_edge_distrb.m_size);
+
+            for ( int i = 0; i < 3; ++i ) {
+                if ( PerspectiveCamera *camera = dynamic_cast<PerspectiveCamera *>(sensor) ) {
+                    m_lower[i] = minimum(m_lower[i], detach(camera->m_camera_pos[i]));
+                    m_upper[i] = maximum(m_upper[i], detach(camera->m_camera_pos[i]));
+                }
             }
         }
     }
-
     
 
     if ( m_opts.log_level > 0 ) {
@@ -373,250 +389,7 @@ void Scene::configure() {
 
     // Initialize OptiX
 
-    m_optix->configure(m_meshes);
-
-    // Cleanup
-    for ( int i = 0; i < m_num_meshes; ++i ) {
-        Mesh *mesh = m_meshes[i];
-
-        if ( mesh->m_emitter == nullptr ) {
-            // std::cout << "clean emitter" << std::endl;
-            PSDR_ASSERT(mesh->m_triangle_info != nullptr);
-            delete mesh->m_triangle_info;
-            mesh->m_triangle_info = nullptr;
-
-            if ( mesh->m_triangle_uv != nullptr ) {
-                delete mesh->m_triangle_uv;
-                mesh->m_triangle_uv = nullptr;
-            }
-        }
-    }
-
-    auto end_time = high_resolution_clock::now();
-    if ( m_opts.log_level > 0 ) {
-        std::stringstream oss;
-        oss << "Configured in " << duration_cast<duration<double>>(end_time - start_time).count() << " seconds.";
-        log(oss.str().c_str());
-    }
-}
-
-void Scene::configure2(std::vector<int> active_sensor) {
-    PSDR_ASSERT_MSG(m_loaded, "Scene not loaded yet!");
-    if ( m_opts.log_level > 0 ) {
-        std::cout << "[Scene] resolution: " << m_opts.height << " " << m_opts.width << std::endl;
-    }
-    PSDR_ASSERT(m_num_sensors == static_cast<int>(m_sensors.size()));
-    PSDR_ASSERT(m_num_meshes == static_cast<int>(m_meshes.size()));
-
-    using namespace std::chrono;
-    auto start_time = high_resolution_clock::now();
-
-    // Seed samplers
-    if ( m_opts.spp  > 0 ) {
-        int64_t sample_count = static_cast<int64_t>(m_opts.height)*m_opts.width*m_opts.spp;
-        if ( m_samplers[0].m_sample_count != sample_count )
-            m_samplers[0].seed(arange<UInt64C>(sample_count)+seed);
-    }
-    if ( m_opts.sppe > 0 ) {
-        int64_t sample_count = static_cast<int64_t>(m_opts.height)*m_opts.width*m_opts.sppe;
-        if ( m_samplers[1].m_sample_count != sample_count )
-            m_samplers[1].seed(arange<UInt64C>(sample_count)+seed);
-    }
-    if ( m_opts.sppse > 0 ) {
-        int64_t sample_count = static_cast<int64_t>(m_opts.height)*m_opts.width*m_opts.sppse;
-        if ( m_samplers[2].m_sample_count != sample_count )
-            m_samplers[2].seed(arange<UInt64C>(sample_count)+seed);
-    }
-
-    // Preprocess meshes
-    PSDR_ASSERT_MSG(!m_meshes.empty(), "Missing meshes!");
-    std::vector<int> face_offset, edge_offset;
-    face_offset.reserve(m_num_meshes + 1);
-    face_offset.push_back(0);
-    edge_offset.reserve(m_num_meshes + 1);
-    edge_offset.push_back(0);
-
-
-    m_lower = full<Vector3fC>(std::numeric_limits<float>::max());
-    m_upper = full<Vector3fC>(std::numeric_limits<float>::min());
-    for ( Mesh *mesh : m_meshes ) {
-        mesh->configure();
-        face_offset.push_back(face_offset.back() + mesh->m_num_faces);
-        if ( m_opts.sppse > 0 && mesh->m_enable_edges ) {
-            // std::cout << (mesh->m_sec_edge_info)->size() << std::endl;
-            edge_offset.push_back(edge_offset.back() + static_cast<int>((mesh->m_sec_edge_info)->size()));
-        } else {
-            edge_offset.push_back(edge_offset.back());
-        }
-        for ( int i = 0; i < 3; ++i ) {
-            m_lower[i] = minimum(m_lower[i], min(detach(mesh->m_vertex_positions[i])));
-            m_upper[i] = maximum(m_upper[i], max(detach(mesh->m_vertex_positions[i])));
-        }
-    }
-
-
-    
-
-
-    // Preprocess sensors
-    PSDR_ASSERT_MSG(!m_sensors.empty(), "Missing sensor!");
-    std::vector<size_t> num_edges;
-    if ( m_opts.sppe > 0 ) num_edges.reserve(m_sensors.size());
-    for (int sensor_id : active_sensor) {
-        m_sensors[sensor_id]->m_resolution = ScalarVector2i(m_opts.width, m_opts.height);
-        m_sensors[sensor_id]->m_scene = this;
-        m_sensors[sensor_id]->configure(true);
-        if ( m_opts.sppe > 0 ) num_edges.push_back(m_sensors[sensor_id]->m_edge_distrb.m_size);
-
-        for ( int i = 0; i < 3; ++i ) {
-            if ( PerspectiveCamera *camera = dynamic_cast<PerspectiveCamera *>(m_sensors[sensor_id]) ) {
-                m_lower[i] = minimum(m_lower[i], detach(camera->m_camera_pos[i]));
-                m_upper[i] = maximum(m_upper[i], detach(camera->m_camera_pos[i]));
-            }
-        }
-    }
-
-    
-
-    if ( m_opts.log_level > 0 ) {
-        std::stringstream oss;
-        oss << "AABB: [lower = " << m_lower << ", upper = " << m_upper << "]";
-        log(oss.str().c_str());
-
-        if ( m_opts.sppe > 0 ) {
-            std::stringstream oss;
-            oss << "(" << num_edges[0];
-            for ( size_t i = 1; i < num_edges.size(); ++i ) oss << ", " << num_edges[i];
-            oss << ") primary edges initialized.";
-            log(oss.str().c_str());
-        }
-    }
-
-
-
-
-    // Handling env. lighting
-    if ( m_emitter_env != nullptr && !m_has_bound_mesh ) {
-        FloatC margin = min((m_upper - m_lower)*0.05f);
-        m_lower -= margin; m_upper += margin;
-
-        m_emitter_env->m_lower = m_lower;
-        m_emitter_env->m_upper = m_upper;
-
-        // Adding a bounding mesh
-        std::array<std::vector<float>, 3> lower_, upper_;
-        copy_cuda_array<float, 3>(m_lower, lower_);
-        copy_cuda_array<float, 3>(m_upper, upper_);
-
-        float vtx_data[3][8];
-        for ( int i = 0; i < 8; ++i )
-            for ( int j = 0; j < 3; ++j )
-                vtx_data[j][i] = (i & (1 << j)) ? upper_[j][0] : lower_[j][0];
-
-        const int face_data[3][12] = {
-            0, 0, 1, 1, 2, 2, 0, 0, 0, 0, 4, 4,
-            1, 3, 5, 7, 3, 7, 5, 4, 2, 6, 7, 6,
-            3, 2, 7, 3, 7, 6, 1, 5, 6, 4, 5, 7
-        };
-
-        Mesh *bound_mesh = new Mesh();
-        bound_mesh->m_num_vertices = 8;
-        bound_mesh->m_num_faces = 12;
-        bound_mesh->m_use_face_normals = true;
-        bound_mesh->m_enable_edges = false;
-        bound_mesh->m_bsdf = nullptr;
-        bound_mesh->m_emitter = m_emitter_env;
-        for ( int i = 0; i < 3; ++i ) {
-            bound_mesh->m_vertex_positions_raw[i] = load<FloatD>(vtx_data[i], 8);
-            bound_mesh->m_face_indices[i] = load<IntD>(face_data[i], 12);
-        }
-        bound_mesh->configure();
-        m_meshes.push_back(bound_mesh);
-
-        face_offset.push_back(face_offset.back() + 12);
-        edge_offset.push_back(edge_offset.back());
-
-        ++m_num_meshes;
-        m_has_bound_mesh = true;
-        if ( m_opts.log_level > 0 ) {
-            log("Bounding mesh added for environmental lighting.");
-        }
-    }
-
-
-    // Preprocess emitters
-    if ( !m_emitters.empty() ) {
-        std::vector<float> weights;
-        weights.reserve(m_emitters.size());
-        for ( Emitter *e : m_emitters ) {
-            e->configure();
-            weights.push_back(e->m_sampling_weight);
-        }
-        m_emitters_distrb->init(load<FloatC>(weights.data(), weights.size()));
-
-        float inv_total_weight = rcp(m_emitters_distrb->m_sum)[0];
-        for ( Emitter *e : m_emitters ) {
-            e->m_sampling_weight *= inv_total_weight;
-        }
-    }
-
-
-    // PSDR_ASSERT(0);
-
-
-    // Initialize CUDA arrays
-    if ( !m_emitters.empty() ) {
-        m_emitters_cuda = load<EmitterArrayD>(m_emitters.data(), m_emitters.size());
-
-    }
-    m_meshes_cuda = load<MeshArrayD>(m_meshes.data(), m_num_meshes);
-
-    // Generate global triangle arrays
-    m_triangle_info = empty<TriangleInfoD>(face_offset.back());
-    m_triangle_uv = zeros<TriangleUVD>(face_offset.back());
-    m_triangle_face_normals = empty<MaskD>(face_offset.back());
-    for ( int i = 0; i < m_num_meshes; ++i ) {
-        const Mesh &mesh = *m_meshes[i];
-        const IntD idx = arange<IntD>(mesh.m_num_faces) + face_offset[i];
-        scatter(m_triangle_info, *mesh.m_triangle_info, idx);
-        scatter(m_triangle_face_normals, MaskD(mesh.m_use_face_normals), idx);
-        if ( mesh.m_has_uv ) {
-            scatter(m_triangle_uv, *mesh.m_triangle_uv, idx);
-        }
-    }
-
-
-
-    // Generate global sec. edge arrays
-    if ( m_opts.sppse > 0 ) {
-        m_sec_edge_info = empty<SecondaryEdgeInfo>(edge_offset.back());
-        for ( int i = 0; i < m_num_meshes; ++i ) {
-            const Mesh &mesh = *m_meshes[i];
-            if ( mesh.m_enable_edges ) {
-                PSDR_ASSERT(mesh.m_sec_edge_info != nullptr);
-                const int m = static_cast<int>((mesh.m_sec_edge_info->size()));
-                const IntD idx = arange<IntD>(m) + edge_offset[i];
-                scatter(m_sec_edge_info, *mesh.m_sec_edge_info, idx);
-            }
-        }
-        drjit::eval(m_sec_edge_info);
-        FloatC edge_pmf = norm(detach(m_sec_edge_info.e1));
-        drjit::eval(edge_pmf);
-
-        // std::cout << edge_pmf << std::endl;
-        m_sec_edge_distrb->init(edge_pmf);
-        if ( m_opts.log_level > 0 ) {
-            std::stringstream oss;
-            oss << edge_offset.back() << " secondary edges initialized.";
-            log(oss.str().c_str());
-        }
-    } else {
-        m_sec_edge_info = empty<SecondaryEdgeInfo>();
-    }
-
-    // Initialize OptiX
-
-    m_optix->configure(m_meshes);
+    m_optix->configure(m_meshes, dirty);
 
     // Cleanup
     for ( int i = 0; i < m_num_meshes; ++i ) {

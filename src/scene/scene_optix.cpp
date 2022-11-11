@@ -125,14 +125,14 @@ Scene_OptiX::~Scene_OptiX() {
 }
 
 
-void Scene_OptiX::configure(const std::vector<Mesh *> &meshes) {
+void Scene_OptiX::configure(const std::vector<Mesh *> &meshes, bool dirty) {
 
     init_optix_api();
     // drjit::sync_thread();
     PSDR_ASSERT(!meshes.empty());
     size_t num_meshes = meshes.size();
     
-    if ( m_accel != nullptr ) {
+    if ( m_accel != nullptr && dirty ) {
         jit_free((m_accel)->d_gas);
         delete m_accel;
         m_accel = nullptr;

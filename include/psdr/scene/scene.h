@@ -20,8 +20,7 @@ public:
     void load_file(const char *file_name, bool auto_configure = true);
     void load_string(const char *scene_xml, bool auto_configure = true);
 
-    void configure();
-    void configure2(std::vector<int> active_sensor);
+    void configure(std::vector<int> active_sensor=std::vector<int>(), bool dirty=false);
 
     void add_Sensor(Sensor* sensor);
     void add_BSDF(BSDF* bsdf, const char *bsdf_id);
