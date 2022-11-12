@@ -47,8 +47,8 @@ def test_load_scene():
 	print("INIT load scene")
 	sc = psdr.Scene()
 	sc.opts.spp = 32
-	sc.opts.sppe = 32
-	sc.opts.sppse = 32
+	sc.opts.sppe = 0
+	sc.opts.sppse = 0
 	sc.opts.height = 512
 	sc.opts.width = 512
 
@@ -56,6 +56,15 @@ def test_load_scene():
 
 
 	sensor = psdr.PerspectiveCamera(60, 0.000001, 10000000.)
+	to_world = Matrix4fD([[1.,0.,0.,208.],
+						 [0.,1.,0.,273.],
+						 [0.,0.,1.,-800.],
+						 [0.,0.,0.,1.],])
+	sensor.to_world = to_world
+	sc.add_Sensor(sensor)
+
+
+	sensor = psdr.PerspectiveCamera(40, 0.000001, 10000000.)
 	to_world = Matrix4fD([[1.,0.,0.,208.],
 						 [0.,1.,0.,273.],
 						 [0.,0.,1.,-800.],
@@ -79,21 +88,38 @@ def test_load_scene():
 	sc.add_Mesh("./data/objects/cbox/cbox_greenwall.obj", Matrix4fC([[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]]), "green", None)
 	sc.add_Mesh("./data/objects/cbox/cbox_redwall.obj", Matrix4fC([[1.,0.,0.,0.],[0.,1.,0.,0.],[0.,0.,1.,0.],[0.,0.,0.,1.]]), "red", None)
 
+	sc.configure()
+
 	P = FloatD(0.)
 	drjit.enable_grad(P)
 	
-	sc.param_map["Mesh[0]"].set_transform(Matrix4fD([[1.,0.,0.,P*100.],
-													 [0.,1.,0.,0.],
+	# sc.param_map["Mesh[0]"].set_transform(Matrix4fD([[1.,0.,0.,P*100.],
+	# 												 [0.,1.,0.,0.],
+	# 												 [0.,0.,1.,0.],
+	# 												 [0.,0.,0.,1.],]))
+
+	temp_v = sc.param_map["Mesh[0]"].vertex_positions.torch()
+	temp_v[0][1] -= 10.0 
+	# print(temp_v)
+	# print(sc.param_map["Mesh[0]"].to_world)
+	sc.param_map["Mesh[0]"].set_transform(Matrix4fD([[1.,0.,0.,0.],
+													 [0.,1.,0.,-10.],
 													 [0.,0.,1.,0.],
 													 [0.,0.,0.,1.],]))
 
+	sc.param_map["Mesh[0]"].vertex_positions = Vector3fD(temp_v)
+	# drjit.make_opaque(sc.param_map["Mesh[0]"].vertex_positions);
+	# print(sc.param_map["Mesh[0]"].vertex_positions)
 
-	sc.configure()
-	img = integrator.renderD(sc, 0)
+
+	sc.configure(active_sensor=[1], dirty=True)
+
+	# sc.param_map["Mesh[0]"].dump("debug.obj")
+	img = integrator.renderC(sc, 1)
 	org_img = img.numpy().reshape((sc.opts.width, sc.opts.height, 3))
 	output = cv2.cvtColor(org_img, cv2.COLOR_RGB2BGR)
 	cv2.imwrite("psdr_jit_forward.exr", output)
-
+	exit()
 
 	drjit.set_grad(P, 1.0)
 	drjit.forward_to(img)
@@ -190,6 +216,8 @@ if __name__ == "__main__":
 		import drjit
 		from drjit.cuda.ad import Float as FloatD, Matrix4f as Matrix4fD
 		from drjit.cuda import Float as FloatC, Matrix4f as Matrix4fC
+		from drjit.cuda.ad import Array3f as Vector3fD
+		from drjit.cuda import Array3f as Vector3fC
 
 		print("testing psdr-jit")
 	else:
