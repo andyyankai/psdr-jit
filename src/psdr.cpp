@@ -197,12 +197,12 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("load_openexr", &Bitmap1fD::load_openexr)
         .def("eval", &Bitmap1fD::eval<true>, "uv"_a, "flip_v"_a = true)
         .def_readwrite("resolution", &Bitmap1fD::m_resolution)
-        .def_readwrite("data", &Bitmap1fD::m_data);
-        // .def_readwrite("to_world", &Bitmap1fD::m_to_world_raw)
-        // .def_readwrite("to_world_left", &Bitmap1fD::m_to_world_left)
-        // .def_readwrite("to_world_right", &Bitmap1fD::m_to_world_right)
-        // .def("set_transform", &Bitmap1fD::set_transform, "mat"_a, "set_left"_a = true)
-        // .def("append_transform", &Bitmap1fD::append_transform, "mat"_a, "append_left"_a = true);
+        .def_readwrite("data", &Bitmap1fD::m_data)
+        .def_readwrite("to_world", &Bitmap1fD::m_to_world_raw)
+        .def_readwrite("to_world_left", &Bitmap1fD::m_to_world_left)
+        .def_readwrite("to_world_right", &Bitmap1fD::m_to_world_right)
+        .def("set_transform", &Bitmap1fD::set_transform, "mat"_a, "set_left"_a = true)
+        .def("append_transform", &Bitmap1fD::append_transform, "mat"_a, "append_left"_a = true);
 
     py::class_<Bitmap3fD>(m, "Bitmap3fD")
         .def(py::init<>())
@@ -212,12 +212,12 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("load_openexr", &Bitmap3fD::load_openexr)
         .def("eval", &Bitmap3fD::eval<true>, "uv"_a, "flip_v"_a = true)
         .def_readwrite("resolution", &Bitmap3fD::m_resolution)
-        .def_readwrite("data", &Bitmap3fD::m_data);
-        // .def_readwrite("to_world", &Bitmap3fD::m_to_world_raw)
-        // .def_readwrite("to_world_left", &Bitmap3fD::m_to_world_left)
-        // .def_readwrite("to_world_right", &Bitmap3fD::m_to_world_right)
-        // .def("set_transform", &Bitmap3fD::set_transform, "mat"_a, "set_left"_a = true)
-        // .def("append_transform", &Bitmap3fD::append_transform, "mat"_a, "append_left"_a = true);
+        .def_readwrite("data", &Bitmap3fD::m_data)
+        .def_readwrite("to_world", &Bitmap3fD::m_to_world_raw)
+        .def_readwrite("to_world_left", &Bitmap3fD::m_to_world_left)
+        .def_readwrite("to_world_right", &Bitmap3fD::m_to_world_right)
+        .def("set_transform", &Bitmap3fD::set_transform, "mat"_a, "set_left"_a = true)
+        .def("append_transform", &Bitmap3fD::append_transform, "mat"_a, "append_left"_a = true);
 
 
     
