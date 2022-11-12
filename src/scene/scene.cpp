@@ -276,7 +276,7 @@ void Scene::configure(std::vector<int> active_sensor, bool dirty) {
 
 
     // Handling env. lighting
-    if ( m_emitter_env != nullptr && !m_has_bound_mesh ) {
+    if ( m_emitter_env != nullptr && (!m_has_bound_mesh || dirty) ) {
         FloatC margin = min((m_upper - m_lower)*0.05f);
         m_lower -= margin; m_upper += margin;
 
@@ -311,13 +311,18 @@ void Scene::configure(std::vector<int> active_sensor, bool dirty) {
             bound_mesh->m_face_indices[i] = load<IntD>(face_data[i], 12);
         }
         bound_mesh->configure();
-        m_meshes.push_back(bound_mesh);
 
-        face_offset.push_back(face_offset.back() + 12);
-        edge_offset.push_back(edge_offset.back());
-
-        ++m_num_meshes;
-        m_has_bound_mesh = true;
+        if (m_has_bound_mesh) {
+            delete m_meshes[m_meshes.size()-1];
+            m_meshes[m_meshes.size()-1] = bound_mesh;
+        } else {
+            m_meshes.push_back(bound_mesh);
+            face_offset.push_back(face_offset.back() + 12);
+            edge_offset.push_back(edge_offset.back());
+            ++m_num_meshes;
+            m_has_bound_mesh = true;
+        }
+        
         if ( m_opts.log_level > 0 ) {
             log("Bounding mesh added for environmental lighting.");
         }
