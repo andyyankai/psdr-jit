@@ -7,13 +7,12 @@
 	</integrator>
 
 	<sensor type="perspective">
-		<float name="focusDistance" value="132.411"/>
-		<float name="fov" value="25"/>
+		<float name="fov" value="20"/>
 		<string name="fovAxis" value="x"/>
 		<string name="fov_axis" value="x"/>
 		<transform name="toWorld">
 
-			<lookat target="279.843, 342.896, -902.25" origin="279.858, 343.448, -903.084" up="-0.00993918, 0.833699, 0.55213"/>
+			<lookat target="0, 9, 0" origin="0, 10, 0" up="0, 0, 1"/>
 		</transform>
 
 		<sampler type="independent">
@@ -21,27 +20,23 @@
 		</sampler>
 
 		<film type="hdrfilm">
-			<integer name="height" value="256"/>
+			<integer name="height" value="512"/>
 			<string name="pixel_format" value="rgb"/>
-			<integer name="width" value="256"/>
+			<integer name="width" value="512"/>
+
 			<rfilter type="box"/>
 		</film>
 	</sensor>
 
 	<bsdf type="diffuse" id="red">
-		<rgb name="reflectance" value="0.90, 0.20, 0.20"/>
+		<texture name="reflectance" type="bitmap">
+			<boolean name="raw" value="true"/>
+			<string name="filename" value="./data/illya.exr"/>
+		</texture>
 	</bsdf>
 
-	<emitter type="envmap">
-		<string name="filename" value="../envmaps/ballroom_1k.exr"/>
-	</emitter>
-
 	<shape type="obj">
-		<string name="filename" value="./data/square.obj"/>
-		<transform name="toWorld">
-			<scale x="20" z="20"/>
-			<translate x="278" y="272" z="-799"/>
-		</transform>
+		<string name="filename" value="./data/uv_plane.obj"/>
 		<boolean name="face_normals" value="true"/>
 
 		<ref id="red"/>
