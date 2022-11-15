@@ -9,7 +9,7 @@ NAMESPACE_BEGIN(psdr_jit)
 PSDR_CLASS_DECL_BEGIN(Diffuse, final, BSDF)
 public:
     Diffuse() : m_reflectance(0.5f) {}
-    Diffuse(const ScalarVector3f &ref) : m_reflectance(ref) {}
+    Diffuse(const ScalarVector3f &ref) : m_reflectance(ref) { drjit::make_opaque(m_reflectance); }
     Diffuse(const char *refl_file);
     Diffuse(const Bitmap3fD &reflectance);
 

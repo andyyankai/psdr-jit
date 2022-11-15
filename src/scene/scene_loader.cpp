@@ -536,7 +536,6 @@ void SceneLoader::load_shape(const pugi::xml_node &node, Scene &scene, int shape
     }
 
     mesh->m_to_world_raw = Matrix4fD(load_transform(node.child("transform")));
-    std::cout << mesh->m_to_world_raw << std::endl;
     mesh->m_mesh_id = shape_id;
     scene.m_meshes.push_back(mesh);
 }

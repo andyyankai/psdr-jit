@@ -279,6 +279,7 @@ void Mesh::configure() {
     }
 
     m_ready = true;
+    drjit::make_opaque(m_vertex_positions, m_vertex_normals_raw, m_to_world_left, m_to_world_raw, m_to_world_right, m_triangle_uv);
 
     prepare_optix_buffers();
     drjit::eval(); drjit::sync_thread();

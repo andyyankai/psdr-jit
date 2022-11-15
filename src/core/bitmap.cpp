@@ -7,22 +7,24 @@ NAMESPACE_BEGIN(psdr_jit)
 
 template <int channels>
 Bitmap<channels>::Bitmap()
-    : m_resolution(1, 1), m_data(zeros<ValueD>()) {}
+    : m_resolution(1, 1), m_data(zeros<ValueD>()) {drjit::make_opaque(m_to_world_raw);}
 
 
 template <int channels>
 Bitmap<channels>::Bitmap(const char *file_name) {
     load_openexr(file_name);
+    drjit::make_opaque(m_to_world_raw);
 }
 
 
 template <int channels>
-Bitmap<channels>::Bitmap(ScalarValue value) : m_resolution(1, 1), m_data(value) {}
+Bitmap<channels>::Bitmap(ScalarValue value) : m_resolution(1, 1), m_data(value) {drjit::make_opaque(m_to_world_raw);}
 
 
 template <int channels>
 Bitmap<channels>::Bitmap(int width, int height, const ValueD &data) : m_resolution(width, height), m_data(data) {
     PSDR_ASSERT(width*height == static_cast<int>(data.size()));
+    drjit::make_opaque(m_to_world_raw);
 }
 
 
@@ -55,8 +57,6 @@ typename Bitmap<channels>::template Value<ad> Bitmap<channels>::eval(Vector2f<ad
         if ( width < 2 || height < 2 )
             throw Exception("Bitmap: invalid resolution!");
 
-        Matrix3fD to_world = m_to_world_left * m_to_world_raw * m_to_world_right;
-
         if ( flip_v ) {
             // flip the v coordinates to match common practices
             uv.y() = -uv.y();
@@ -64,9 +64,9 @@ typename Bitmap<channels>::template Value<ad> Bitmap<channels>::eval(Vector2f<ad
 
         // BUG
         if constexpr ( ad ) {
-            uv = transform2d_pos(to_world, uv);
+            uv = transform2d_pos(m_to_world_raw, uv);
         } else {
-            const Matrix3fC &to_worldC = detach(to_world);
+            const Matrix3fC &to_worldC = detach(m_to_world_raw);
             uv = transform2d_pos(to_worldC, uv);
         }
         uv -= floor(uv);

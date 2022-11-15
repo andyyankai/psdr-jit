@@ -131,200 +131,194 @@ void Scene_OptiX::configure(const std::vector<Mesh *> &meshes, bool dirty) {
     // drjit::sync_thread();
     PSDR_ASSERT(!meshes.empty());
     size_t num_meshes = meshes.size();
-
-    int first_config = false;
     
     if ( m_accel == nullptr ) {
         m_accel = new PathTracerState();
-        first_config = true;
+
+        std::vector<int> face_offset(num_meshes + 1);
+        face_offset[0] = 0;
+        for ( size_t i = 0; i < num_meshes; ++i ) {
+            face_offset[i + 1] = face_offset[i] + meshes[i]->m_num_faces;
+            // std::cout << face_offset[i+1] << std::endl;
+        }
+    
+
+
+        uint32_t triangle_input_flags[] = { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT };
+        std::vector<void*> vertex_buffer_ptrs(num_meshes);
+        std::vector<OptixBuildInput> build_inputs(num_meshes);
+
+        for ( size_t i = 0; i < num_meshes; ++i ) {
+            const Mesh *mesh = meshes[i];
+
+            build_inputs[i].type                        = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
+            build_inputs[i].triangleArray.vertexFormat  = OPTIX_VERTEX_FORMAT_FLOAT3;
+            build_inputs[i].triangleArray.numVertices   = static_cast<uint32_t>(mesh->m_num_vertices);
+
+            vertex_buffer_ptrs[i] = jit_malloc(AllocType::Device, sizeof(float)*(mesh->m_num_vertices*3));
+            jit_memcpy(JitBackend::CUDA, vertex_buffer_ptrs[i], mesh->m_vertex_buffer.data(), sizeof(float)*(mesh->m_num_vertices*3));
+
+            build_inputs[i].triangleArray.vertexBuffers = &vertex_buffer_ptrs[i];
+            build_inputs[i].triangleArray.flags         = triangle_input_flags;
+            build_inputs[i].triangleArray.numSbtRecords = 1;
+            build_inputs[i].triangleArray.indexFormat           = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
+            build_inputs[i].triangleArray.numIndexTriplets      = mesh->m_num_faces;
+            build_inputs[i].triangleArray.indexBuffer           = (CUdeviceptr) mesh->m_face_buffer.data();
+        }
+
+
         m_accel->context = jit_optix_context();
-    }
+        
+        m_accel->accel_options.operation = OPTIX_BUILD_OPERATION_BUILD;
+        m_accel->accel_options.buildFlags =
+            OPTIX_BUILD_FLAG_ALLOW_COMPACTION | OPTIX_BUILD_FLAG_PREFER_FAST_TRACE;
 
-    if ( dirty || first_config) {
+        
+        jit_optix_check(optixAccelComputeMemoryUsage(
+            m_accel->context, &m_accel->accel_options, build_inputs.data(), num_meshes, &m_accel->gas_buffer_sizes));
 
-            if (!first_config) jit_free((m_accel)->d_gas);
+        m_accel->d_gas_temp =
+            jit_malloc(AllocType::Device, m_accel->gas_buffer_sizes.tempSizeInBytes);
 
-            uint32_t triangle_input_flags[] = { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT };
-            std::vector<void*> vertex_buffer_ptrs(num_meshes);
-            std::vector<OptixBuildInput> build_inputs(num_meshes);
-            for ( size_t i = 0; i < num_meshes; ++i ) {
-                const Mesh *mesh = meshes[i];
-                build_inputs[i].type                        = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
-                build_inputs[i].triangleArray.vertexFormat  = OPTIX_VERTEX_FORMAT_FLOAT3;
-                build_inputs[i].triangleArray.numVertices   = static_cast<uint32_t>(mesh->m_num_vertices);
-                vertex_buffer_ptrs[i] = jit_malloc(AllocType::Device, sizeof(float)*(mesh->m_num_vertices*3));
-                jit_memcpy(JitBackend::CUDA, vertex_buffer_ptrs[i], mesh->m_vertex_buffer.data(), sizeof(float)*(mesh->m_num_vertices*3));
-                build_inputs[i].triangleArray.vertexBuffers = &vertex_buffer_ptrs[i];
-                build_inputs[i].triangleArray.flags         = triangle_input_flags;
-                build_inputs[i].triangleArray.numSbtRecords = 1;
-                build_inputs[i].triangleArray.indexFormat           = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
-                build_inputs[i].triangleArray.numIndexTriplets      = mesh->m_num_faces;
-                build_inputs[i].triangleArray.indexBuffer           = (CUdeviceptr) mesh->m_face_buffer.data();
-            }
-            m_accel->accel_options.operation = OPTIX_BUILD_OPERATION_BUILD;
-            m_accel->accel_options.buildFlags =
-                OPTIX_BUILD_FLAG_ALLOW_COMPACTION | OPTIX_BUILD_FLAG_PREFER_FAST_TRACE;
-            jit_optix_check(optixAccelComputeMemoryUsage(
-                m_accel->context, &m_accel->accel_options, build_inputs.data(), num_meshes, &m_accel->gas_buffer_sizes));
-            m_accel->d_gas_temp =
-                jit_malloc(AllocType::Device, m_accel->gas_buffer_sizes.tempSizeInBytes);
+        m_accel->d_gas = jit_malloc(AllocType::Device, m_accel->gas_buffer_sizes.outputSizeInBytes);
 
-            // jit_optix_check(optixAccelBuild(
-            //     m_accel->context, 0, &m_accel->accel_options, build_inputs.data(), num_meshes, m_accel->d_gas_temp,
-            //     m_accel->gas_buffer_sizes.tempSizeInBytes, m_accel->d_gas,
-            //     m_accel->gas_buffer_sizes.outputSizeInBytes, &m_accel->gas_handle, &m_accel->build_property, 1));
-            // jit_free(m_accel->d_gas_temp);
+        size_t *d_compacted_size = (size_t *) jit_malloc(AllocType::Device, sizeof(size_t));
+        
+        
+        m_accel->build_property.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
+        m_accel->build_property.result = d_compacted_size;
 
-            m_accel->d_gas = jit_malloc(AllocType::Device, m_accel->gas_buffer_sizes.outputSizeInBytes);
-            size_t *d_compacted_size = (size_t *) jit_malloc(AllocType::Device, sizeof(size_t));
-            m_accel->build_property.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
-            m_accel->build_property.result = d_compacted_size;
-
-            jit_optix_check(optixAccelBuild(
-                m_accel->context, 0, &m_accel->accel_options, build_inputs.data(), num_meshes, m_accel->d_gas_temp,
-                m_accel->gas_buffer_sizes.tempSizeInBytes, m_accel->d_gas,
-                m_accel->gas_buffer_sizes.outputSizeInBytes, &m_accel->gas_handle, &m_accel->build_property, 1));
-            jit_free(m_accel->d_gas_temp);
+        
+        jit_optix_check(optixAccelBuild(
+            m_accel->context, 0, &m_accel->accel_options, build_inputs.data(), num_meshes, m_accel->d_gas_temp,
+            m_accel->gas_buffer_sizes.tempSizeInBytes, m_accel->d_gas,
+            m_accel->gas_buffer_sizes.outputSizeInBytes, &m_accel->gas_handle, &m_accel->build_property, 1));
 
 
-            for ( size_t i = 0; i < num_meshes; ++i )
-                jit_free(vertex_buffer_ptrs[i]);
+        jit_free(m_accel->d_gas_temp);
 
-            jit_memcpy(JitBackend::CUDA, &m_accel->h_compacted_size, d_compacted_size, sizeof(size_t));
+        for ( size_t i = 0; i < num_meshes; ++i )
+            jit_free(vertex_buffer_ptrs[i]);
 
-            if (m_accel->h_compacted_size < m_accel->gas_buffer_sizes.outputSizeInBytes) {
-                void *d_gas_compact = jit_malloc(AllocType::Device, m_accel->h_compacted_size);
-                jit_optix_check(optixAccelCompact(m_accel->context, jit_cuda_stream(),
-                                                   m_accel->gas_handle, d_gas_compact,
-                                                   m_accel->h_compacted_size, &m_accel->gas_handle));
-                jit_free(m_accel->d_gas);
-                m_accel->d_gas = d_gas_compact;
-            }
+        jit_memcpy(JitBackend::CUDA, &m_accel->h_compacted_size, d_compacted_size, sizeof(size_t));
 
-            jit_free(d_compacted_size);
+        if (m_accel->h_compacted_size < m_accel->gas_buffer_sizes.outputSizeInBytes) {
+            void *d_gas_compact = jit_malloc(AllocType::Device, m_accel->h_compacted_size);
+            jit_optix_check(optixAccelCompact(m_accel->context, jit_cuda_stream(),
+                                               m_accel->gas_handle, d_gas_compact,
+                                               m_accel->h_compacted_size, &m_accel->gas_handle));
+            jit_free(m_accel->d_gas);
+            m_accel->d_gas = d_gas_compact;
+        }
 
-
-        if ( first_config ) {
-
-
-
-
-
-
-
-
-            std::vector<int> face_offset(num_meshes + 1);
-            face_offset[0] = 0;
-            for ( size_t i = 0; i < num_meshes; ++i ) {
-                face_offset[i + 1] = face_offset[i] + meshes[i]->m_num_faces;
-            }
+        jit_free(d_compacted_size);
 
         // =====================================================
         // Configure options for OptiX pipeline
         // =====================================================
 
+        m_accel->module_compile_options.debugLevel    = OPTIX_COMPILE_DEBUG_LEVEL_NONE;
+        m_accel->module_compile_options.optLevel      = OPTIX_COMPILE_OPTIMIZATION_LEVEL_0;
+
+        m_accel->pipeline_compile_options.usesMotionBlur = false;
+        m_accel->pipeline_compile_options.traversableGraphFlags =
+            OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS; // <-- Use this when possible
+        m_accel->pipeline_compile_options.numPayloadValues = 4;
+        m_accel->pipeline_compile_options.numAttributeValues = 0;
+        m_accel->pipeline_compile_options.exceptionFlags =
+            OPTIX_EXCEPTION_FLAG_DEBUG | OPTIX_EXCEPTION_FLAG_TRACE_DEPTH |
+            OPTIX_EXCEPTION_FLAG_STACK_OVERFLOW;
+        m_accel->pipeline_compile_options.pipelineLaunchParamsVariableName = "params";
+        m_accel->pipeline_compile_options.usesPrimitiveTypeFlags =
+            (unsigned) OPTIX_PRIMITIVE_TYPE_FLAGS_TRIANGLE; // <-- Use this when possible
+
+        // =====================================================
+        // Create Optix module from supplemental PTX code
+        // =====================================================
+
+        char log[1024];
+        size_t log_size = sizeof(log);
+
         
-            m_accel->module_compile_options.debugLevel    = OPTIX_COMPILE_DEBUG_LEVEL_NONE;
-            m_accel->module_compile_options.optLevel      = OPTIX_COMPILE_OPTIMIZATION_LEVEL_0;
-
-            m_accel->pipeline_compile_options.usesMotionBlur = false;
-            m_accel->pipeline_compile_options.traversableGraphFlags =
-                OPTIX_TRAVERSABLE_GRAPH_FLAG_ALLOW_SINGLE_GAS; // <-- Use this when possible
-            m_accel->pipeline_compile_options.numPayloadValues = 4;
-            m_accel->pipeline_compile_options.numAttributeValues = 0;
-            m_accel->pipeline_compile_options.exceptionFlags =
-                OPTIX_EXCEPTION_FLAG_DEBUG | OPTIX_EXCEPTION_FLAG_TRACE_DEPTH |
-                OPTIX_EXCEPTION_FLAG_STACK_OVERFLOW;
-            m_accel->pipeline_compile_options.pipelineLaunchParamsVariableName = "params";
-            m_accel->pipeline_compile_options.usesPrimitiveTypeFlags =
-                (unsigned) OPTIX_PRIMITIVE_TYPE_FLAGS_TRIANGLE; // <-- Use this when possible
-
-            // =====================================================
-            // Create Optix module from supplemental PTX code
-            // =====================================================
-
-            char log[1024];
-            size_t log_size = sizeof(log);
-
-            
-            int rv = optixModuleCreateFromPTX(
-                m_accel->context, &m_accel->module_compile_options, &m_accel->pipeline_compile_options,
-                miss_and_closesthit_ptx, strlen(miss_and_closesthit_ptx), log,
-                &log_size, &m_accel->mod);
-            if (rv) {
-                fputs(log, stderr);
-                jit_optix_check(rv);
-            }
-
-
-
-            // =====================================================
-            // Create program groups (raygen provided by Dr.Jit..)
-            // =====================================================
-
-
-
-            m_accel->pgd[0].kind                         = OPTIX_PROGRAM_GROUP_KIND_MISS;
-            m_accel->pgd[0].miss.module                  = m_accel->mod;
-            m_accel->pgd[0].miss.entryFunctionName       = "__miss__ms";
-            m_accel->pgd[1].kind                         = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
-            m_accel->pgd[1].hitgroup.moduleCH            = m_accel->mod;
-            m_accel->pgd[1].hitgroup.entryFunctionNameCH = "__closesthit__ch";
-
-            log_size = sizeof(log);
-            jit_optix_check(optixProgramGroupCreate(m_accel->context, m_accel->pgd, 2 /* two at once */,
-                                                    &m_accel->pgo, log, &log_size, m_accel->pg));
-
-            // =====================================================
-            // Shader binding table setup
-            // =====================================================
-            m_accel->sbt.missRecordBase =
-                jit_malloc(AllocType::HostPinned, OPTIX_SBT_RECORD_HEADER_SIZE);
-            m_accel->sbt.missRecordStrideInBytes     = OPTIX_SBT_RECORD_HEADER_SIZE;
-            m_accel->sbt.missRecordCount             = 1;
-
-
-            for ( size_t i = 0; i < num_meshes; ++i ) {
-                m_accel->hg_sbts.push_back(HitGroupSbtRecord());
-                m_accel->hg_sbts.back().data.shape_offset = face_offset[i];
-                m_accel->hg_sbts.back().data.shape_id = i;
-                jit_optix_check(optixSbtRecordPackHeader(m_accel->pg[1], &m_accel->hg_sbts.back()));
-
-            }
-
-            m_accel->sbt.hitgroupRecordBase =
-                jit_malloc(AllocType::HostPinned, num_meshes * sizeof(HitGroupSbtRecord));
-            m_accel->sbt.hitgroupRecordStrideInBytes = sizeof(HitGroupSbtRecord);
-            m_accel->sbt.hitgroupRecordCount         = num_meshes;
-
-            jit_optix_check(optixSbtRecordPackHeader(m_accel->pg[0], m_accel->sbt.missRecordBase));
-            
-            jit_memcpy_async(JitBackend::CUDA, m_accel->sbt.hitgroupRecordBase, m_accel->hg_sbts.data(),
-                                 num_meshes * sizeof(HitGroupSbtRecord));
-
-            m_accel->sbt.missRecordBase =
-                jit_malloc_migrate(m_accel->sbt.missRecordBase, AllocType::Device, 1);
-            m_accel->sbt.hitgroupRecordBase =
-                jit_malloc_migrate(m_accel->sbt.hitgroupRecordBase, AllocType::Device, 1);
-
-
-            // =====================================================
-            // Let Dr.Jit know about all of this
-            // =====================================================
-
-            m_accel->pipeline_handle = UInt32::steal(jit_optix_configure_pipeline(
-                &m_accel->pipeline_compile_options, // <-- these pointers must stay
-                m_accel->mod,
-                m_accel->pg, 2
-            ));
-
-            m_accel->sbt_handle = UInt32::steal(jit_optix_configure_sbt(
-                &m_accel->sbt, //     alive while Dr.Jit runs
-                m_accel->pipeline_handle.index()
-            ));
+        int rv = optixModuleCreateFromPTX(
+            m_accel->context, &m_accel->module_compile_options, &m_accel->pipeline_compile_options,
+            miss_and_closesthit_ptx, strlen(miss_and_closesthit_ptx), log,
+            &log_size, &m_accel->mod);
+        if (rv) {
+            fputs(log, stderr);
+            jit_optix_check(rv);
         }
+
+
+
+        // =====================================================
+        // Create program groups (raygen provided by Dr.Jit..)
+        // =====================================================
+
+
+
+        m_accel->pgd[0].kind                         = OPTIX_PROGRAM_GROUP_KIND_MISS;
+        m_accel->pgd[0].miss.module                  = m_accel->mod;
+        m_accel->pgd[0].miss.entryFunctionName       = "__miss__ms";
+        m_accel->pgd[1].kind                         = OPTIX_PROGRAM_GROUP_KIND_HITGROUP;
+        m_accel->pgd[1].hitgroup.moduleCH            = m_accel->mod;
+        m_accel->pgd[1].hitgroup.entryFunctionNameCH = "__closesthit__ch";
+
+        log_size = sizeof(log);
+        jit_optix_check(optixProgramGroupCreate(m_accel->context, m_accel->pgd, 2 /* two at once */,
+                                                &m_accel->pgo, log, &log_size, m_accel->pg));
+
+        // =====================================================
+        // Shader binding table setup
+        // =====================================================
+        m_accel->sbt.missRecordBase =
+            jit_malloc(AllocType::HostPinned, OPTIX_SBT_RECORD_HEADER_SIZE);
+        m_accel->sbt.missRecordStrideInBytes     = OPTIX_SBT_RECORD_HEADER_SIZE;
+        m_accel->sbt.missRecordCount             = 1;
+
+
+        for ( size_t i = 0; i < num_meshes; ++i ) {
+            m_accel->hg_sbts.push_back(HitGroupSbtRecord());
+            m_accel->hg_sbts.back().data.shape_offset = face_offset[i];
+            m_accel->hg_sbts.back().data.shape_id = i;
+            jit_optix_check(optixSbtRecordPackHeader(m_accel->pg[1], &m_accel->hg_sbts.back()));
+
+        }
+
+        m_accel->sbt.hitgroupRecordBase =
+            jit_malloc(AllocType::HostPinned, num_meshes * sizeof(HitGroupSbtRecord));
+        m_accel->sbt.hitgroupRecordStrideInBytes = sizeof(HitGroupSbtRecord);
+        m_accel->sbt.hitgroupRecordCount         = num_meshes;
+
+        jit_optix_check(optixSbtRecordPackHeader(m_accel->pg[0], m_accel->sbt.missRecordBase));
+        
+        jit_memcpy_async(JitBackend::CUDA, m_accel->sbt.hitgroupRecordBase, m_accel->hg_sbts.data(),
+                             num_meshes * sizeof(HitGroupSbtRecord));
+
+        m_accel->sbt.missRecordBase =
+            jit_malloc_migrate(m_accel->sbt.missRecordBase, AllocType::Device, 1);
+        m_accel->sbt.hitgroupRecordBase =
+            jit_malloc_migrate(m_accel->sbt.hitgroupRecordBase, AllocType::Device, 1);
+
+
+        // =====================================================
+        // Let Dr.Jit know about all of this
+        // =====================================================
+
+        m_accel->pipeline_handle = UInt32::steal(jit_optix_configure_pipeline(
+            &m_accel->pipeline_compile_options, // <-- these pointers must stay
+            m_accel->mod,
+            m_accel->pg, 2
+        ));
+
+        m_accel->sbt_handle = UInt32::steal(jit_optix_configure_sbt(
+            &m_accel->sbt, //     alive while Dr.Jit runs
+            m_accel->pipeline_handle.index()
+        ));
+
     }
 }
+
 
 
 bool Scene_OptiX::is_ready() const {
