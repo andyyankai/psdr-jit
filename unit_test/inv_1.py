@@ -13,7 +13,7 @@ import drjit
 from drjit.cuda.ad import Array3f as Vector3fD
 
 
-output_path = Path('inv_1')
+output_path = Path('result','inv_1')
 output_path.mkdir(parents=True, exist_ok=True)
 
 sc = psdr.Scene()
