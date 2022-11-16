@@ -19,7 +19,7 @@ sc.load_file("texture.xml")
 sc.opts.spp = 128
 sc.opts.sppe = 0
 sc.opts.sppse = 0
-sc.opts.log_level = 0
+sc.opts.log_level = 1
 
 # sc.param_map["BSDF[0]"].reflectance.to_world = Matrix3fD([[1.,0.,0.2],[0.,1.,0.2],[0.,0.,1.]])
 # print(sc.param_map["BSDF[0]"].reflectance.resolution, sc.param_map["BSDF[0]"].reflectance.data)
@@ -37,7 +37,7 @@ sc.param_map["BSDF[0]"].reflectance.rotate = FloatD(rot_init)
 
 sc.configure()
 
-
+# exit()
 col_integrator = psdr.CollocatedIntegrator(200)	
 
 # Write target image

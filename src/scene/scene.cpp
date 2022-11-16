@@ -220,31 +220,31 @@ void Scene::configure(std::vector<int> active_sensor, bool dirty) {
     std::vector<size_t> num_edges;
     if ( m_opts.sppe > 0 ) num_edges.reserve(m_sensors.size());
 
-    // if (active_sensor.size() > 0) {
-    //     for (int sensor_id=0; sensor_id<m_num_sensors; ++sensor_id) {
-    //         m_sensors[sensor_id]->m_edge_info = empty<PrimaryEdgeInfo>(0);
-    //         m_sensors[sensor_id]->m_edge_distrb.init(FloatC(1));
-    //         for ( int i = 0; i < 3; ++i ) {
-    //             if ( PerspectiveCamera *camera = dynamic_cast<PerspectiveCamera *>(m_sensors[sensor_id]) ) {
-    //                 m_lower[i] = minimum(m_lower[i], detach(camera->m_camera_pos[i]));
-    //                 m_upper[i] = maximum(m_upper[i], detach(camera->m_camera_pos[i]));
-    //             }
-    //         }
-    //     }
-    //     for (int sensor_id : active_sensor) {
-    //         m_sensors[sensor_id]->m_resolution = ScalarVector2i(m_opts.width, m_opts.height);
-    //         m_sensors[sensor_id]->m_scene = this;
-    //         m_sensors[sensor_id]->configure(true);
-    //         if ( m_opts.sppe > 0 ) num_edges.push_back(m_sensors[sensor_id]->m_edge_distrb.m_size);
-    //     }
-    // } else {
+    if (active_sensor.size() > 0) {
+        for (int sensor_id=0; sensor_id<m_num_sensors; ++sensor_id) {
+            m_sensors[sensor_id]->m_edge_info = empty<PrimaryEdgeInfo>(0);
+            m_sensors[sensor_id]->m_edge_distrb.init(FloatC(1));
+            for ( int i = 0; i < 3; ++i ) {
+                if ( PerspectiveCamera *camera = dynamic_cast<PerspectiveCamera *>(m_sensors[sensor_id]) ) {
+                    m_lower[i] = minimum(m_lower[i], detach(camera->m_camera_pos[i]));
+                    m_upper[i] = maximum(m_upper[i], detach(camera->m_camera_pos[i]));
+                }
+            }
+        }
+        for (int sensor_id : active_sensor) {
+            m_sensors[sensor_id]->m_resolution = ScalarVector2i(m_opts.width, m_opts.height);
+            m_sensors[sensor_id]->m_scene = this;
+            m_sensors[sensor_id]->configure(true);
+            if ( m_opts.sppe > 0 ) num_edges.push_back(m_sensors[sensor_id]->m_edge_distrb.m_size);
+        }
+    } else {
         // std::cout << "Inital Config! Remember to call sc.configure(active_sensor=[...], dirty=True/False) again!" << std::endl;
         for ( Sensor *sensor : m_sensors ) {
             sensor->m_resolution = ScalarVector2i(m_opts.width, m_opts.height);
             sensor->m_scene = this;
             sensor->configure(true);
-            // sensor->m_edge_info = empty<PrimaryEdgeInfo>(0);
-            // sensor->m_edge_distrb.init(FloatC(1));
+            sensor->m_edge_info = empty<PrimaryEdgeInfo>(0);
+            sensor->m_edge_distrb.init(FloatC(1));
 
             if ( m_opts.sppe > 0 ) num_edges.push_back(sensor->m_edge_distrb.m_size);
 
@@ -255,7 +255,7 @@ void Scene::configure(std::vector<int> active_sensor, bool dirty) {
                 }
             }
         }
-    // }
+    }
     
 
     if ( m_opts.log_level > 0 ) {

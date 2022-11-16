@@ -127,91 +127,23 @@ Scene_OptiX::~Scene_OptiX() {
 
 void Scene_OptiX::configure(const std::vector<Mesh *> &meshes, bool dirty) {
 
-    init_optix_api();
-    // drjit::sync_thread();
     PSDR_ASSERT(!meshes.empty());
     size_t num_meshes = meshes.size();
-    
     if ( m_accel == nullptr ) {
+        init_optix_api();
+        
+
+
         m_accel = new PathTracerState();
 
         std::vector<int> face_offset(num_meshes + 1);
         face_offset[0] = 0;
         for ( size_t i = 0; i < num_meshes; ++i ) {
             face_offset[i + 1] = face_offset[i] + meshes[i]->m_num_faces;
-            // std::cout << face_offset[i+1] << std::endl;
         }
-    
-
-
-        uint32_t triangle_input_flags[] = { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT };
-        std::vector<void*> vertex_buffer_ptrs(num_meshes);
-        std::vector<OptixBuildInput> build_inputs(num_meshes);
-
-        for ( size_t i = 0; i < num_meshes; ++i ) {
-            const Mesh *mesh = meshes[i];
-
-            build_inputs[i].type                        = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
-            build_inputs[i].triangleArray.vertexFormat  = OPTIX_VERTEX_FORMAT_FLOAT3;
-            build_inputs[i].triangleArray.numVertices   = static_cast<uint32_t>(mesh->m_num_vertices);
-
-            vertex_buffer_ptrs[i] = jit_malloc(AllocType::Device, sizeof(float)*(mesh->m_num_vertices*3));
-            jit_memcpy(JitBackend::CUDA, vertex_buffer_ptrs[i], mesh->m_vertex_buffer.data(), sizeof(float)*(mesh->m_num_vertices*3));
-
-            build_inputs[i].triangleArray.vertexBuffers = &vertex_buffer_ptrs[i];
-            build_inputs[i].triangleArray.flags         = triangle_input_flags;
-            build_inputs[i].triangleArray.numSbtRecords = 1;
-            build_inputs[i].triangleArray.indexFormat           = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
-            build_inputs[i].triangleArray.numIndexTriplets      = mesh->m_num_faces;
-            build_inputs[i].triangleArray.indexBuffer           = (CUdeviceptr) mesh->m_face_buffer.data();
-        }
-
 
         m_accel->context = jit_optix_context();
         
-        m_accel->accel_options.operation = OPTIX_BUILD_OPERATION_BUILD;
-        m_accel->accel_options.buildFlags =
-            OPTIX_BUILD_FLAG_ALLOW_COMPACTION | OPTIX_BUILD_FLAG_PREFER_FAST_TRACE;
-
-        
-        jit_optix_check(optixAccelComputeMemoryUsage(
-            m_accel->context, &m_accel->accel_options, build_inputs.data(), num_meshes, &m_accel->gas_buffer_sizes));
-
-        m_accel->d_gas_temp =
-            jit_malloc(AllocType::Device, m_accel->gas_buffer_sizes.tempSizeInBytes);
-
-        m_accel->d_gas = jit_malloc(AllocType::Device, m_accel->gas_buffer_sizes.outputSizeInBytes);
-
-        size_t *d_compacted_size = (size_t *) jit_malloc(AllocType::Device, sizeof(size_t));
-        
-        
-        m_accel->build_property.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
-        m_accel->build_property.result = d_compacted_size;
-
-        
-        jit_optix_check(optixAccelBuild(
-            m_accel->context, 0, &m_accel->accel_options, build_inputs.data(), num_meshes, m_accel->d_gas_temp,
-            m_accel->gas_buffer_sizes.tempSizeInBytes, m_accel->d_gas,
-            m_accel->gas_buffer_sizes.outputSizeInBytes, &m_accel->gas_handle, &m_accel->build_property, 1));
-
-
-        jit_free(m_accel->d_gas_temp);
-
-        for ( size_t i = 0; i < num_meshes; ++i )
-            jit_free(vertex_buffer_ptrs[i]);
-
-        jit_memcpy(JitBackend::CUDA, &m_accel->h_compacted_size, d_compacted_size, sizeof(size_t));
-
-        if (m_accel->h_compacted_size < m_accel->gas_buffer_sizes.outputSizeInBytes) {
-            void *d_gas_compact = jit_malloc(AllocType::Device, m_accel->h_compacted_size);
-            jit_optix_check(optixAccelCompact(m_accel->context, jit_cuda_stream(),
-                                               m_accel->gas_handle, d_gas_compact,
-                                               m_accel->h_compacted_size, &m_accel->gas_handle));
-            jit_free(m_accel->d_gas);
-            m_accel->d_gas = d_gas_compact;
-        }
-
-        jit_free(d_compacted_size);
 
         // =====================================================
         // Configure options for OptiX pipeline
@@ -316,7 +248,78 @@ void Scene_OptiX::configure(const std::vector<Mesh *> &meshes, bool dirty) {
             m_accel->pipeline_handle.index()
         ));
 
+
     }
+
+        uint32_t triangle_input_flags[] = { OPTIX_GEOMETRY_FLAG_DISABLE_ANYHIT };
+        std::vector<void*> vertex_buffer_ptrs(num_meshes);
+        std::vector<OptixBuildInput> build_inputs(num_meshes);
+        for ( size_t i = 0; i < num_meshes; ++i ) {
+            const Mesh *mesh = meshes[i];
+
+            build_inputs[i].type                        = OPTIX_BUILD_INPUT_TYPE_TRIANGLES;
+            build_inputs[i].triangleArray.vertexFormat  = OPTIX_VERTEX_FORMAT_FLOAT3;
+            build_inputs[i].triangleArray.numVertices   = static_cast<uint32_t>(mesh->m_num_vertices);
+
+            vertex_buffer_ptrs[i] = jit_malloc(AllocType::Device, sizeof(float)*(mesh->m_num_vertices*3));
+            jit_memcpy(JitBackend::CUDA, vertex_buffer_ptrs[i], mesh->m_vertex_buffer.data(), sizeof(float)*(mesh->m_num_vertices*3));
+
+            build_inputs[i].triangleArray.vertexBuffers = &vertex_buffer_ptrs[i];
+            build_inputs[i].triangleArray.flags         = triangle_input_flags;
+            build_inputs[i].triangleArray.numSbtRecords = 1;
+            build_inputs[i].triangleArray.indexFormat           = OPTIX_INDICES_FORMAT_UNSIGNED_INT3;
+            build_inputs[i].triangleArray.numIndexTriplets      = mesh->m_num_faces;
+            build_inputs[i].triangleArray.indexBuffer           = (CUdeviceptr) mesh->m_face_buffer.data();
+        }
+        m_accel->accel_options.operation = OPTIX_BUILD_OPERATION_BUILD;
+        m_accel->accel_options.buildFlags =
+            OPTIX_BUILD_FLAG_ALLOW_COMPACTION | OPTIX_BUILD_FLAG_PREFER_FAST_TRACE;
+
+        
+        jit_optix_check(optixAccelComputeMemoryUsage(
+            m_accel->context, &m_accel->accel_options, build_inputs.data(), num_meshes, &m_accel->gas_buffer_sizes));
+
+        m_accel->d_gas_temp =
+            jit_malloc(AllocType::Device, m_accel->gas_buffer_sizes.tempSizeInBytes);
+
+        if ((m_accel)->d_gas != nullptr) {
+            jit_free((m_accel)->d_gas);
+        }
+        
+
+        m_accel->d_gas = jit_malloc(AllocType::Device, m_accel->gas_buffer_sizes.outputSizeInBytes);
+
+        size_t *d_compacted_size = (size_t *) jit_malloc(AllocType::Device, sizeof(size_t));
+        
+        
+        m_accel->build_property.type = OPTIX_PROPERTY_TYPE_COMPACTED_SIZE;
+        m_accel->build_property.result = d_compacted_size;
+
+        
+        jit_optix_check(optixAccelBuild(
+            m_accel->context, 0, &m_accel->accel_options, build_inputs.data(), num_meshes, m_accel->d_gas_temp,
+            m_accel->gas_buffer_sizes.tempSizeInBytes, m_accel->d_gas,
+            m_accel->gas_buffer_sizes.outputSizeInBytes, &m_accel->gas_handle, &m_accel->build_property, 1));
+
+
+        jit_free(m_accel->d_gas_temp);
+
+        for ( size_t i = 0; i < num_meshes; ++i )
+            jit_free(vertex_buffer_ptrs[i]);
+
+        jit_memcpy(JitBackend::CUDA, &m_accel->h_compacted_size, d_compacted_size, sizeof(size_t));
+
+        if (m_accel->h_compacted_size < m_accel->gas_buffer_sizes.outputSizeInBytes) {
+            void *d_gas_compact = jit_malloc(AllocType::Device, m_accel->h_compacted_size);
+            jit_optix_check(optixAccelCompact(m_accel->context, jit_cuda_stream(),
+                                               m_accel->gas_handle, d_gas_compact,
+                                               m_accel->h_compacted_size, &m_accel->gas_handle));
+            jit_free(m_accel->d_gas);
+            m_accel->d_gas = d_gas_compact;
+        }
+
+        jit_free(d_compacted_size);
+    
 }
 
 
