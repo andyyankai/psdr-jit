@@ -345,8 +345,6 @@ void SceneLoader::load_bsdf(const pugi::xml_node &node, Scene &scene) {
     const char *bsdf_id = node.attribute("id").value();
     PSDR_ASSERT_MSG(bsdf_id && strcmp(bsdf_id, ""), "BSDF must have an id");
 
-    ScalarMatrix3f to_world = load_transform2D(node.child("transform"));
-
     BSDF* bsdf = nullptr;
     const char *bsdf_type = node.attribute("type").value();
     if ( strcmp(bsdf_type, "diffuse") == 0 ) {
@@ -354,7 +352,6 @@ void SceneLoader::load_bsdf(const pugi::xml_node &node, Scene &scene) {
         pugi::xml_node refl_node = find_child_by_name(node, {"reflectance"});
         Diffuse *b = new Diffuse();
         load_texture(refl_node, b->m_reflectance);
-        b->m_reflectance.m_to_world_raw = to_world;
         bsdf = b;
     } else if ( strcmp(bsdf_type, "roughconductor") == 0 ){
         // roughconductor BSDF
@@ -393,9 +390,6 @@ void SceneLoader::load_bsdf(const pugi::xml_node &node, Scene &scene) {
         load_texture(spec_refl_node, b->m_specularReflectance);
         load_texture(diff_refl_node, b->m_diffuseReflectance);
         load_texture(roughness_node, b->m_roughness);
-        b->m_specularReflectance.m_to_world_raw = to_world;
-        b->m_diffuseReflectance.m_to_world_raw = to_world;
-        b->m_roughness.m_to_world_raw = to_world;
 
         bsdf = b;
     } else if (strcmp(bsdf_type, "normalmap") == 0 ) {
@@ -411,7 +405,6 @@ void SceneLoader::load_bsdf(const pugi::xml_node &node, Scene &scene) {
             pugi::xml_node nmap_refl_node = find_child_by_name(bsdf_node, {"reflectance"});
             Diffuse *nmap_b = new Diffuse();
             load_texture(nmap_refl_node, nmap_b->m_reflectance);
-            nmap_b->m_reflectance.m_to_world_raw = to_world;
             b->m_bsdf = nmap_b;
         } else if ( strcmp(nmap_bsdf_type, "roughconductor") == 0 ){
             // roughconductor BSDF
@@ -451,16 +444,12 @@ void SceneLoader::load_bsdf(const pugi::xml_node &node, Scene &scene) {
             load_texture(diff_refl_node, nmap_b->m_diffuseReflectance);
             load_texture(roughness_node, nmap_b->m_roughness);
 
-            nmap_b->m_specularReflectance.m_to_world_raw = to_world;
-            nmap_b->m_diffuseReflectance.m_to_world_raw = to_world;
-            nmap_b->m_roughness.m_to_world_raw = to_world;
 
             b->m_bsdf = nmap_b;
         } else {
             PSDR_ASSERT_MSG(false, std::string("Unsupported normal map nested BSDF: ") + nmap_bsdf_type);
         }
         load_texture(normalmap_node, b->m_nmap);
-        b->m_nmap.m_to_world_raw = to_world;
         // b->m_nmap.m_data = normalize(b->m_nmap.m_data);
         bsdf = b;
     } else {

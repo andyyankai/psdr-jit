@@ -31,7 +31,7 @@
 	<bsdf type="diffuse" id="red">
 		<texture name="reflectance" type="bitmap">
 			<boolean name="raw" value="true"/>
-			<string name="filename" value="./data/albedo.exr"/>
+			<string name="filename" value="./data/illya.exr"/>
 		</texture>
 	</bsdf>
 

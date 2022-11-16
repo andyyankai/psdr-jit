@@ -198,8 +198,9 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("eval", &Bitmap1fD::eval<true>, "uv"_a, "flip_v"_a = true)
         .def_readwrite("resolution", &Bitmap1fD::m_resolution)
         .def_readwrite("data", &Bitmap1fD::m_data)
-        .def_readwrite("to_world", &Bitmap1fD::m_to_world_raw)
-        .def("set_transform", &Bitmap1fD::set_transform, "mat"_a, "set_left"_a = true);
+        .def_readwrite("translate", &Bitmap1fD::m_trans)
+        .def_readwrite("rotate", &Bitmap1fD::m_rot)
+        .def_readwrite("scale", &Bitmap1fD::m_scale);
 
     py::class_<Bitmap3fD>(m, "Bitmap3fD")
         .def(py::init<>())
@@ -210,8 +211,9 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("eval", &Bitmap3fD::eval<true>, "uv"_a, "flip_v"_a = true)
         .def_readwrite("resolution", &Bitmap3fD::m_resolution)
         .def_readwrite("data", &Bitmap3fD::m_data)
-        .def_readwrite("to_world", &Bitmap3fD::m_to_world_raw)
-        .def("set_transform", &Bitmap3fD::set_transform, "mat"_a, "set_left"_a = true);
+        .def_readwrite("translate", &Bitmap3fD::m_trans)
+        .def_readwrite("rotate", &Bitmap3fD::m_rot)
+        .def_readwrite("scale", &Bitmap3fD::m_scale);
 
 
     

@@ -8,59 +8,8 @@ import numpy as np
 import psdr_jit as psdr
 import drjit
 # drjit.set_flag(drjit.JitFlag.PrintIR, True)
-from drjit.cuda.ad import Array3f as Vector3fD
-from drjit.cuda.ad import Float as FloatD, Matrix3f as Matrix3fD
+from drjit.cuda.ad import Array3f as Vector3fD, Array2f as Vector2fD, Float as FloatD
 from drjit.cuda import Array3f as Vector3fC
-
-
-def translateT(t_vec):
-    device = t_vec.device
-    dtype = t_vec.dtype 
-
-    to_world = torch.eye(3).to(device).to(dtype)
-    to_world[:2, 2] = t_vec
-
-    return to_world
-
-def rotateT(angle, use_degree=True):
-    device = angle.device
-    dtype = angle.dtype 
-
-    to_world = torch.eye(3).to(device).to(dtype)
-    if not torch.is_tensor(angle):
-        angle = torch.tensor(angle).to(device).to(dtype)
-    if use_degree:
-        angle = torch.deg2rad(angle)
-
-    sin_theta = torch.sin(angle)
-    cos_theta = torch.cos(angle)
-
-    R = cos_theta * torch.eye(2).to(device).to(dtype)
-
-    R[0 ,1] = -sin_theta
-    R[1 ,0] = sin_theta
-
-    to_world[:2, :2] = R
-
-    return to_world
-
-def scaleT(size):
-    device = size.device
-    dtype = size.dtype 
-
-    to_world = torch.eye(3).to(device).to(dtype)
-
-    if size.size(dim=0) == 1:
-        to_world[:2, :2] = torch.diag(size).to(device).to(dtype) * torch.eye(2).to(device).to(dtype)
-    elif size.size(dim=0) == 2:
-        to_world[:2, :2] = torch.diag(size).to(device).to(dtype)
-    else:
-        print("error transform.py for scale")
-        exit()
-
-    return to_world
-
-
 
 output_path = Path('result','inv_3')
 output_path.mkdir(parents=True, exist_ok=True)
@@ -76,17 +25,15 @@ sc.opts.log_level = 0
 # print(sc.param_map["BSDF[0]"].reflectance.resolution, sc.param_map["BSDF[0]"].reflectance.data)
 
 
-tex_init=[10.,.05,.05,1.2,1.2]
+scale_init = 1.5
+trans_init = [0.1,-0.2]
+rot_init = 0.5
 
-
-rot_T = torch.tensor(tex_init[0], device='cuda').requires_grad_()
-tran_T = torch.tensor([tex_init[1], tex_init[2]], device='cuda').requires_grad_()
-scale_T = torch.tensor([tex_init[3], tex_init[4]], device='cuda').requires_grad_()
-
-
-tex_to_world = torch.matmul(torch.matmul(rotateT(rot_T), translateT(tran_T)), scaleT(scale_T))
+# tex_to_world = torch.matmul(torch.matmul(rotateT(rot_T), translateT(tran_T)), scaleT(scale_T))
 # tex_to_world = translateT(tran_T)
-sc.param_map["BSDF[0]"].reflectance.set_transform(Matrix3fD(tex_to_world.detach().cpu().numpy()))
+sc.param_map["BSDF[0]"].reflectance.scale = FloatD(scale_init)
+sc.param_map["BSDF[0]"].reflectance.translate = Vector2fD(trans_init)
+sc.param_map["BSDF[0]"].reflectance.rotate = FloatD(rot_init)
 
 sc.configure()
 
@@ -102,14 +49,16 @@ img = img_target.numpy().reshape((sc.opts.width, sc.opts.height, 3))
 
 output = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 cv2.imwrite(str(output_path / f"target.exr"), output)
-
+# exit()
 
 # inital_map = np.zeros((sc.param_map["BSDF[0]"].reflectance.resolution[0],sc.param_map["BSDF[0]"].reflectance.resolution[1],3))+np.array([.5,.5,.5])
 # inital_map = inital_map.reshape(-1,3)
 # sc.param_map["BSDF[0]"].reflectance.data = Vector3fD(inital_map)
 
-tex_to_world = torch.eye(3, device='cuda', dtype=torch.float32)
-sc.param_map["BSDF[0]"].reflectance.set_transform(Matrix3fD(tex_to_world.detach().cpu().numpy()))
+
+sc.param_map["BSDF[0]"].reflectance.scale = FloatD(1.0)
+sc.param_map["BSDF[0]"].reflectance.translate = Vector2fD(0.0, 0.0)
+sc.param_map["BSDF[0]"].reflectance.rotate = FloatD(0.0)
 
 
 sc.configure([0], True)
@@ -124,88 +73,86 @@ cv2.imwrite(str(output_path / f"inital.exr"), output)
 
 class RenderFunction(torch.autograd.Function):
 	@staticmethod
-	def forward(ctx, integrator, scene, sensor_id, param):
-		# scene.param_map["BSDF[0]"].reflectance.data = Vector3fD(param.detach().cpu().numpy().reshape(-1,3))
-		sc.param_map["BSDF[0]"].reflectance.set_transform(Matrix3fD(param.detach().cpu().numpy()))
+	def forward(ctx, integrator, scene, sensor_id, param1, param2, param3):
 
+		sc.param_map["BSDF[0]"].reflectance.scale = FloatD(param1)
+		sc.param_map["BSDF[0]"].reflectance.translate = Vector2fD(param2)
+		sc.param_map["BSDF[0]"].reflectance.rotate = FloatD(param3)
 
 		scene.configure([0], True)
 		psdr_image = integrator.renderC(scene, 0)
 		image = psdr_image.torch()
 		ctx.scene = scene
 		ctx.integrator = integrator
-		ctx.param = param
+		ctx.param1 = param1
+		ctx.param2 = param2
+		ctx.param3 = param3
 		return image.reshape((scene.opts.height, scene.opts.width, 3))
 
 	@staticmethod
 	def backward(ctx, grad_out):
-		drjit_param = ctx.scene.param_map["BSDF[0]"].reflectance.to_world
-		drjit.enable_grad(drjit_param)
+		drjit_param1 = ctx.scene.param_map["BSDF[0]"].reflectance.scale
+		drjit.enable_grad(drjit_param1)
+
+		drjit_param2 = ctx.scene.param_map["BSDF[0]"].reflectance.translate
+		drjit.enable_grad(drjit_param2)
+
+		drjit_param3 = ctx.scene.param_map["BSDF[0]"].reflectance.rotate
+		drjit.enable_grad(drjit_param3)
+
+
+
 		ctx.scene.configure([0], True)
 		image_grad = Vector3fC(grad_out.reshape(-1,3))
 
 		image = ctx.integrator.renderD(ctx.scene, 0)
 		tmp = drjit.dot(image_grad, image)
 		drjit.backward(tmp)
-		grad_tmp = drjit.grad(drjit_param)
-		# print(grad_tmp)
-		param_grad = torch.nan_to_num(grad_tmp.torch().cuda())
-		return tuple([None]*3 + [param_grad])
+
+		param_grad1 = torch.nan_to_num(drjit.grad(drjit_param1).torch().cuda())
+		param_grad2 = torch.nan_to_num(drjit.grad(drjit_param2).torch().cuda())
+		param_grad3 = torch.nan_to_num(drjit.grad(drjit_param3).torch().cuda())
+		return tuple([None]*3 + [param_grad1] + [param_grad2] + [param_grad3])
 
 class Renderer(torch.nn.Module):
 	def __init__(self):
 		super().__init__()
 
-	def forward(self, integrator, scene, sensor_id, param):
-		image = RenderFunction.apply(integrator,scene,sensor_id,param)
+	def forward(self, integrator, scene, sensor_id, param1, param2, param3):
+		image = RenderFunction.apply(integrator,scene,sensor_id,param1, param2, param3)
 		return image
 
 psdr_render = Renderer()
 
 
-# opt_map = np.zeros((sc.param_map["BSDF[0]"].reflectance.resolution[0],sc.param_map["BSDF[0]"].reflectance.resolution[1],3))+np.array([.5,.5,.5])
-# opt_map = torch.tensor(opt_map, device="cuda", dtype=torch.float32).requires_grad_()
-# tex_to_world = torch.matmul(torch.matmul(rotateT(rot_T), translateT(tran_T)), scaleT(scale_T))
 
-# exit()
-# optimizer = torch.optim.Adam([{'params':opt_map, "lr":0.01}])
-# optimizer = torch.optim.Adam([{'params':rot_T, "lr":0.0}])
-# optimizer.add_param_group({'params':tran_T, "lr":0.0})
-# optimizer.add_param_group({'params':scale_T, "lr":0.0})
+opt_scale = torch.tensor([1.0], device='cuda', dtype=torch.float32).requires_grad_()
+opt_trans = torch.tensor([[0.0,0.0]], device='cuda', dtype=torch.float32).requires_grad_()
+opt_rot = torch.tensor([0.0], device='cuda', dtype=torch.float32).requires_grad_()
 
-rot_T = torch.tensor(0., device='cuda').requires_grad_()
-tran_T = torch.tensor([0.,0.], device='cuda').requires_grad_()
-scale_T = torch.tensor([1.,1.], device='cuda').requires_grad_()
-
-
-optimizer = torch.optim.Adam([{'params':tran_T, "lr":0.01}])
-optimizer.add_param_group({'params':rot_T, "lr":0.5})
-optimizer.add_param_group({'params':scale_T, "lr":0.1})
-
+optimizer = torch.optim.Adam([{'params':opt_scale, "lr":0.01},{'params':opt_trans, "lr":0.01},{'params':opt_rot, "lr":0.01}])
 
 target_img = img_target.torch().reshape((sc.opts.width, sc.opts.height, 3))
-num_iter = 10000
+num_iter = 100
 for it in range(num_iter):
 	optimizer.zero_grad()
 
 
-	tex_to_world = torch.matmul(torch.matmul(rotateT(rot_T), translateT(tran_T)), scaleT(scale_T))
-
-	curr_img = psdr_render(col_integrator, sc, 0, tex_to_world)
+	curr_img = psdr_render(col_integrator, sc, 0, opt_scale, opt_trans, opt_rot)
 	# print(curr_img.shape)
 	# print(target_img.shape)
 	loss = (target_img-curr_img).abs().mean()
 	loss.backward()
 
-	print("rot_T", rot_T)
-	print("tran_T", tran_T)
-	print("scale_T", scale_T)
+	print("opt_scale", opt_scale)
+	print("opt_trans", opt_trans)
+	print("opt_rot", opt_rot)
 
 	optimizer.step()
 	print("it:", it, "loss", loss.item())
 	img = curr_img.detach().cpu().numpy().reshape((sc.opts.width, sc.opts.height, 3))
 	output = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
-	# cv2.imwrite(str(output_path / f"iter_{it}.exr"), output)
+	cv2.imwrite(str(output_path / f"iter_{it}.exr"), output)
 
 	del curr_img, loss
 

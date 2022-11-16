@@ -2,29 +2,28 @@
 #include <psdr/core/bitmap_loader.h>
 #include <psdr/core/bitmap.h>
 #include <psdr/core/transform.h>
+#include <drjit/math.h>
 
 NAMESPACE_BEGIN(psdr_jit)
 
 template <int channels>
 Bitmap<channels>::Bitmap()
-    : m_resolution(1, 1), m_data(zeros<ValueD>()) {drjit::make_opaque(m_to_world_raw);}
+    : m_resolution(1, 1), m_data(zeros<ValueD>()) {}
 
 
 template <int channels>
 Bitmap<channels>::Bitmap(const char *file_name) {
     load_openexr(file_name);
-    drjit::make_opaque(m_to_world_raw);
 }
 
 
 template <int channels>
-Bitmap<channels>::Bitmap(ScalarValue value) : m_resolution(1, 1), m_data(value) {drjit::make_opaque(m_to_world_raw);}
+Bitmap<channels>::Bitmap(ScalarValue value) : m_resolution(1, 1), m_data(value) {}
 
 
 template <int channels>
 Bitmap<channels>::Bitmap(int width, int height, const ValueD &data) : m_resolution(width, height), m_data(data) {
     PSDR_ASSERT(width*height == static_cast<int>(data.size()));
-    drjit::make_opaque(m_to_world_raw);
 }
 
 
@@ -57,25 +56,33 @@ typename Bitmap<channels>::template Value<ad> Bitmap<channels>::eval(Vector2f<ad
         if ( width < 2 || height < 2 )
             throw Exception("Bitmap: invalid resolution!");
 
-        if ( flip_v ) {
-            // flip the v coordinates to match common practices
-            uv.y() = -uv.y();
-        }        
-
-        // BUG
         if constexpr ( ad ) {
-            uv = transform2d_pos(m_to_world_raw, uv);
+            uv = Vector2fD((uv.x()-0.5f)*cos((m_rot)) + (uv.y()-0.5f)*sin((m_rot)), -(uv.x()-0.5f)*sin((m_rot)) + (uv.y()-0.5f)*cos((m_rot)));
+            uv += .5f;
+            if ( flip_v ) {
+                // flip the v coordinates to match common practices
+                uv.y() = -uv.y();
+            }
+            uv *= (m_scale);
+            uv.x() -= -.5f+(m_scale)/2;
+            uv.y() += -.5f+(m_scale)/2;
+            uv += (m_trans);
         } else {
-            const Matrix3fC &to_worldC = detach(m_to_world_raw);
-            uv = transform2d_pos(to_worldC, uv);
+            uv = Vector2fC((uv.x()-0.5f)*cos(detach(m_rot)) + (uv.y()-0.5f)*sin(detach(m_rot)), -(uv.x()-0.5f)*sin(detach(m_rot)) + (uv.y()-0.5f)*cos(detach(m_rot)));
+            uv += .5f;
+            if ( flip_v ) {
+                // flip the v coordinates to match common practices
+                uv.y() = -uv.y();
+            }
+            uv *= detach(m_scale);
+            uv.x() -= -.5f+detach(m_scale)/2;
+            uv.y() += -.5f+detach(m_scale)/2;
+            uv += detach(m_trans);
         }
+
+          
         uv -= floor(uv);
-
-
         uv *= Vector2f<ad>(m_resolution - 1);
-
-
-        // std::cout << uv+0.1f << std::endl;
 
         Vector2i<ad> pos = floor2int<Vector2i<ad>, Vector2f<ad>>(uv);
         Vector2f<ad> w1 = uv - Vector2f<ad>(pos), w0 = 1.0f - w1;

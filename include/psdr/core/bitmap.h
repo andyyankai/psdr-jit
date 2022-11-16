@@ -24,10 +24,6 @@ struct Bitmap {
 
     void load_openexr(const char *file_name);
 
-    inline void set_transform(const Matrix3fD &mat, bool set_left = true) {
-        m_to_world_raw = mat;
-    }
-
     inline void fill(ScalarValue value) {
         m_resolution = ScalarVector2i(1, 1);
         m_data = ValueD(value);
@@ -38,7 +34,9 @@ struct Bitmap {
     ScalarVector2i m_resolution;
     ValueD m_data;
 
-    Matrix3fD               m_to_world_raw   = identity<Matrix3fD>();
+    FloatD m_scale = 1.0f;
+    Vector2fD m_trans = Vector2fD(0.f,0.f);
+    FloatD m_rot = 0.f;
 };
 
 using Bitmap1fD = Bitmap<1>;
