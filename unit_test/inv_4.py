@@ -21,7 +21,26 @@ sc.load_file("texture.xml")
 sc.opts.spp = 128
 sc.opts.sppe = 0
 sc.opts.sppse = 0
-sc.opts.log_level = 0
+sc.opts.log_level = 1
+sc.configure()
+
+integrator = psdr.PathTracer(1)	
+
+# Write target image
+img_target = integrator.renderC(sc, 0)
+img = img_target.numpy().reshape((sc.opts.width, sc.opts.height, 3))
+num_pixels = sc.opts.width * sc.opts.height
+output = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
+cv2.imwrite(str(output_path / f"inv_target.exr"), output)
+exit()
+
+
+sc = psdr.Scene()
+sc.load_file("texture.xml")
+sc.opts.spp = 1
+sc.opts.sppe = 0
+sc.opts.sppse = 0
+sc.opts.log_level = 1
 
 # sc.param_map["BSDF[0]"].reflectance.to_world = Matrix3fD([[1.,0.,0.2],[0.,1.,0.2],[0.,0.,1.]])
 # print(sc.param_map["BSDF[0]"].reflectance.resolution, sc.param_map["BSDF[0]"].reflectance.data)
@@ -29,15 +48,17 @@ sc.opts.log_level = 0
 
 sc.configure()
 
-col_integrator = psdr.CollocatedIntegrator(200)	
+# col_integrator = psdr.CollocatedIntegrator(200)	
+col_integrator = psdr.PathTracer(1)
 
 # Write target image
 img_target = col_integrator.renderC(sc, 0)
+print(img_target)
 img = img_target.numpy().reshape((sc.opts.width, sc.opts.height, 3))
 
 output = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 cv2.imwrite(str(output_path / f"target.exr"), output)
-
+exit()
 
 inital_map = np.zeros((sc.param_map["BSDF[0]"].reflectance.resolution[0],sc.param_map["BSDF[0]"].reflectance.resolution[1],3))+np.array([.5,.5,.5])
 inital_map = inital_map.reshape(-1,3)

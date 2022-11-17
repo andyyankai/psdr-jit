@@ -34,7 +34,7 @@ img = img_target.numpy().reshape((sc.opts.width, sc.opts.height, 3))
 num_pixels = sc.opts.width * sc.opts.height
 output = cv2.cvtColor(img, cv2.COLOR_RGB2BGR)
 cv2.imwrite(str(output_path / f"inv_target.exr"), output)
-
+exit()
 # Write initial image
 init_diffuse = Vector3fD([0.5, 0.5, 0.5])
 if test_psdrjit:

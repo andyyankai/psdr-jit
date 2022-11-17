@@ -28,12 +28,19 @@
 		</film>
 	</sensor>
 
-	<bsdf type="diffuse" id="red">
+	<!-- <bsdf type="diffuse" id="red">
 		<texture name="reflectance" type="bitmap">
 			<boolean name="raw" value="true"/>
 			<string name="filename" value="./data/illya.exr"/>
 		</texture>
-	</bsdf>
+	</bsdf> -->
+
+	<bsdf type="diffuse" id="red">
+        <rgb name="reflectance" value="0.90, 0.20, 0.20"/>
+    </bsdf>
+    <emitter type="envmap">
+        <string name="filename" value="./data/envmaps/ballroom_1k.exr"/>
+    </emitter>
 
 	<shape type="obj">
 		<string name="filename" value="./data/uv_plane.obj"/>
