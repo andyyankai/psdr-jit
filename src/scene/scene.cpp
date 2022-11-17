@@ -83,13 +83,11 @@ void Scene::add_Sensor(Sensor* sensor) {
         Sensor *sensor_temp = new PerspectiveCamera(sensor_buff->m_fov_x, sensor_buff->m_near_clip, sensor_buff->m_far_clip);
         sensor_temp->m_to_world_raw = Matrix4fD(Matrix4fD(sensor_buff->m_to_world_raw));
         m_sensors.push_back(sensor_temp);
+        build_param_map<Sensor >(m_param_map, m_sensors , "Sensor" );
         m_num_sensors = static_cast<int>(m_sensors.size());
     } else {
         PSDR_ASSERT_MSG(0, "Unknown sensor type!");
     }
-    build_param_map<Sensor >(m_param_map, m_sensors , "Sensor" );
-    m_num_sensors = static_cast<int>(m_sensors.size());
-
 }
 
 void Scene::add_BSDF(BSDF* bsdf, const char *bsdf_id) {
@@ -141,13 +139,13 @@ void Scene::add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id
         } else {
             PSDR_ASSERT_MSG(0, "Unknown emitter type!");
         }
+        build_param_map<Emitter>(m_param_map, m_emitters, "Emitter");
     }
 
 
 
     m_meshes.push_back(mesh);
     build_param_map<Mesh   >(m_param_map, m_meshes  , "Mesh"   );
-    build_param_map<Emitter>(m_param_map, m_emitters, "Emitter");
     m_num_meshes = static_cast<int>(m_meshes.size());
 
 }
@@ -276,7 +274,7 @@ void Scene::configure(std::vector<int> active_sensor, bool dirty) {
 
 
     // Handling env. lighting
-    if ( m_emitter_env != nullptr && (!m_has_bound_mesh || dirty) ) {
+    if ( m_emitter_env != nullptr && (!m_has_bound_mesh) ) {
         FloatC margin = min((m_upper - m_lower)*0.05f);
         m_lower -= margin; m_upper += margin;
 
@@ -401,7 +399,7 @@ void Scene::configure(std::vector<int> active_sensor, bool dirty) {
 
     // Initialize OptiX
 
-    m_optix->configure(m_meshes, dirty);
+    m_optix->configure(m_meshes);
 
     // Cleanup
     for ( int i = 0; i < m_num_meshes; ++i ) {
@@ -427,6 +425,7 @@ void Scene::configure(std::vector<int> active_sensor, bool dirty) {
         log(oss.str().c_str());
     }
 }
+
 
 bool Scene::is_ready() const {
     return (m_opts.spp   == 0 || m_samplers[0].is_ready()) &&

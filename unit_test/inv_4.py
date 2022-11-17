@@ -30,7 +30,7 @@ sc.opts.log_level = 1
 # print(sc.param_map["BSDF[0]"].reflectance.resolution, sc.param_map["BSDF[0]"].reflectance.data)
 
 
-sc.configure()
+sc.configure([0])
 
 # col_integrator = psdr.CollocatedIntegrator(200)	
 col_integrator = psdr.PathTracer(1)
@@ -48,7 +48,7 @@ inital_map = np.zeros((sc.param_map["BSDF[0]"].reflectance.resolution[0],sc.para
 inital_map = inital_map.reshape(-1,3)
 sc.param_map["BSDF[0]"].reflectance.data = Vector3fD(inital_map)
 
-sc.configure([0], True)
+sc.configure([0])
 
 # Write target image
 curr_image = col_integrator.renderC(sc, 0)
@@ -61,7 +61,7 @@ class RenderFunction(torch.autograd.Function):
 	@staticmethod
 	def forward(ctx, integrator, scene, sensor_id, param):
 		scene.param_map["BSDF[0]"].reflectance.data = Vector3fD(param.detach().cpu().numpy().reshape(-1,3))
-		scene.configure([0], True)
+		scene.configure([0])
 		psdr_image = integrator.renderC(scene, 0)
 		image = psdr_image.torch()
 		ctx.scene = scene
@@ -73,7 +73,7 @@ class RenderFunction(torch.autograd.Function):
 	def backward(ctx, grad_out):
 		drjit_param = ctx.scene.param_map["BSDF[0]"].reflectance.data
 		drjit.enable_grad(drjit_param)
-		ctx.scene.configure([0], True)
+		ctx.scene.configure([0])
 		image_grad = Vector3fC(grad_out.reshape(-1,3))
 
 		image = ctx.integrator.renderD(ctx.scene, 0)
@@ -105,7 +105,7 @@ cv2.imwrite(str(output_path / f"renderer.exr"), output)
 
 optimizer = torch.optim.Adam([{'params':opt_map, "lr":0.01}])
 target_img = img_target.torch().reshape((sc.opts.width, sc.opts.height, 3))
-num_iter = 100
+num_iter = 1000
 for it in range(num_iter):
 	optimizer.zero_grad()
 	curr_img = psdr_render(col_integrator, sc, 0, opt_map)

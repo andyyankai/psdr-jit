@@ -29,7 +29,7 @@ public:
 
 protected:
     Scene_OptiX();
-    void configure(const std::vector<Mesh*> &meshes, bool dirty=false);
+    void configure(const std::vector<Mesh*> &meshes);
     bool is_ready() const;
 
     template <bool ad>

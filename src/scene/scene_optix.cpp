@@ -125,7 +125,7 @@ Scene_OptiX::~Scene_OptiX() {
 }
 
 
-void Scene_OptiX::configure(const std::vector<Mesh *> &meshes, bool dirty) {
+void Scene_OptiX::configure(const std::vector<Mesh *> &meshes) {
 
     PSDR_ASSERT(!meshes.empty());
     size_t num_meshes = meshes.size();
