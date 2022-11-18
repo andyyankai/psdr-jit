@@ -323,7 +323,8 @@ PYBIND11_MODULE(psdr_jit, m) {
 
     py::class_<AreaLight, Emitter>(m, "AreaLight")
         .def(py::init<const ScalarVector3f&>())
-        .def(py::init<const ScalarVector3f&, const Mesh*>());
+        .def(py::init<const ScalarVector3f&, const Mesh*>())
+        .def_readwrite("radiance", &AreaLight::m_radiance);
 
     // py::class_<EnvironmentMap, Emitter>(m, "EnvironmentMap")
     //     .def(py::init<const char *>())
@@ -358,7 +359,7 @@ PYBIND11_MODULE(psdr_jit, m) {
 
         .def("load_file", &Scene::load_file, "file_name"_a, "auto_configure"_a = true)
         .def("load_string", &Scene::load_string, "scene_xml"_a, "auto_configure"_a = true)
-        .def("configure", &Scene::configure, "active_sensor"_a=std::vector<int>(), "dirty"_a=false)
+        .def("configure", &Scene::configure, "active_sensor"_a=std::vector<int>())
         .def_readwrite("opts", &Scene::m_opts, "Render options")
         .def_readwrite("seed", &Scene::seed, "Sample seed")
         .def_readonly("num_sensors", &Scene::m_num_sensors)

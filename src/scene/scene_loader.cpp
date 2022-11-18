@@ -78,28 +78,6 @@ inline static pugi::xml_node find_child_by_name(const pugi::xml_node &parent,
     return result;
 }
 
-static ScalarMatrix3f load_transform2D(const pugi::xml_node &parent) {
-    ScalarMatrix3f result = identity<ScalarMatrix4f>();
-
-    if ( parent ) {
-        const char *node_name = parent.attribute("name").value();
-        PSDR_ASSERT_MSG(strcmp(node_name, "to_world") == 0 || strcmp(node_name, "toWorld") == 0,
-                        std::string("Invalid transformation name: ") + node_name);
-
-        for ( auto node = parent.first_child(); node; node = node.next_sibling() ) {
-            if ( strcmp(node.name(), "matrix") == 0 ) {
-                Array<float, 9> buf = parse_vector<9>(node.attribute("value").value());
-                result = transpose(load<ScalarMatrix3f>(buf.data()))*result;
-            } else {
-                PSDR_ASSERT_MSG(false, std::string("Unsupported transformation: ") + node.name());
-            }
-        }
-    }
-
-    return result;
-}
-
-
 static ScalarMatrix4f load_transform(const pugi::xml_node &parent) {
     ScalarMatrix4f result = identity<ScalarMatrix4f>();
 

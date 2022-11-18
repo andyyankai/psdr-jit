@@ -150,7 +150,7 @@ void Scene::add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id
 
 }
 
-void Scene::configure(std::vector<int> active_sensor, bool dirty) {
+void Scene::configure(std::vector<int> active_sensor) {
     
     // Build the parameter map
 
