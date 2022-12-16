@@ -16,7 +16,7 @@ then add /build/python/ to your PYTHONPATH
 ### On Ubuntu:
 ```bash
 git submodule update --init --recursive
-cmake -S . -B build -D PYTHON_ROOT=/usr/include/python3.8/ -D OptiX_INSTALL_DIR=../optix -DCMAKE_C_COMPILER=gcc-9 -DCMAKE_CXX_COMPILER=g++-
+cmake -S . -B build -D PYTHON_ROOT=/usr/include/python3.8/ -D OptiX_INSTALL_DIR=../optix -DCMAKE_C_COMPILER=gcc-9 -DCMAKE_CXX_COMPILER=g++-9
 cmake --build build --target install --config Release -j
 ```
 then add /build/python/ to your PYTHONPATH
