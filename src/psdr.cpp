@@ -357,6 +357,9 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("add_Mesh", &Scene::add_Mesh, "Add Mesh")
         .def("add_BSDF", &Scene::add_BSDF, "Add BSDf")
 
+        .def("unit_ray_intersect", &Scene::unit_ray_intersect<false>)
+        .def("unit_ray_intersectAD", &Scene::unit_ray_intersect<true>)
+
         .def("load_file", &Scene::load_file, "file_name"_a, "auto_configure"_a = true)
         .def("load_string", &Scene::load_string, "scene_xml"_a, "auto_configure"_a = true)
         .def("configure", &Scene::configure, "active_sensor"_a=std::vector<int>())
