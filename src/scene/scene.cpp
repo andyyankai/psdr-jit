@@ -877,6 +877,10 @@ template IntersectionC Scene::ray_intersect<false, false>(const RayC&, MaskC, Tr
 template IntersectionD Scene::ray_intersect<true , false>(const RayD&, MaskD, TriangleInfoD*) const;
 template IntersectionD Scene::ray_intersect<true , true >(const RayD&, MaskD, TriangleInfoD*) const;
 
+template IntersectionC Scene::unit_ray_intersect<false, false>(const RayC&, MaskC) const;
+template IntersectionD Scene::unit_ray_intersect<true , false>(const RayD&, MaskD) const;
+template IntersectionD Scene::unit_ray_intersect<true , true >(const RayD&, MaskD) const;
+
 template PositionSampleC Scene::sample_emitter_position<false>(const Vector3fC&, const Vector2fC&, MaskC) const;
 template PositionSampleD Scene::sample_emitter_position<true >(const Vector3fD&, const Vector2fD&, MaskD) const;
 

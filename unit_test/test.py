@@ -235,8 +235,8 @@ if __name__ == "__main__":
 	# test_mesh()
 
 	# test_scene()
-	# test_diff()
-	test_load_scene()
+	test_diff()
+	# test_load_scene()
 	# psdr.drjit_memory()
 
 
