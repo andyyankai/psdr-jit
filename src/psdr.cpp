@@ -346,11 +346,17 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def(py::init<float, float, float>())
         .def("set_transform", &Sensor::set_transform, "mat"_a, "set_left"_a = true)
         .def("append_transform", &Sensor::append_transform, "mat"_a, "append_left"_a = true)
+        .def("sample_direct", &Sensor::sample_direct, "vec"_a)
+        .def_readonly("world_to_sample", &PerspectiveCamera::m_world_to_sample)
         .def_readwrite("to_world", &PerspectiveCamera::m_to_world_raw)
         .def_readwrite("to_world_left", &Sensor::m_to_world_left)
         .def_readwrite("to_world_right", &Sensor::m_to_world_right);
 
-
+    py::class_<SensorDirectSample_<FloatC>, SampleRecord_<FloatC>>(m, "SensorDirectSample")
+        .def_readwrite("q", &SensorDirectSample_<FloatC>::q)
+        .def_readwrite("pixel_idx", &SensorDirectSample_<FloatC>::pixel_idx)
+        .def_readwrite("sensor_val", &SensorDirectSample_<FloatC>::sensor_val)
+        .def_readwrite("is_valid", &SensorDirectSample_<FloatC>::is_valid);
 
     py::class_<Scene, Object>(m, "Scene")
         .def(py::init<>())
