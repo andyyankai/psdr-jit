@@ -38,7 +38,7 @@
 #include <psdr/emitter/emitter.h>
 
 #include <psdr/emitter/area.h>
-// #include <psdr/emitter/envmap.h>
+#include <psdr/emitter/envmap.h>
 
 #include <psdr/shape/mesh.h>
 #include <psdr/scene/scene.h>
@@ -328,13 +328,13 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def(py::init<const ScalarVector3f&, const Mesh*>())
         .def_readwrite("radiance", &AreaLight::m_radiance);
 
-    // py::class_<EnvironmentMap, Emitter>(m, "EnvironmentMap")
-    //     .def(py::init<const char *>())
-    //     .def_readonly("to_world", &EnvironmentMap::m_to_world_raw)
-    //     .def("set_transform", &EnvironmentMap::set_transform)
-    //     .def_readwrite("radiance", &EnvironmentMap::m_radiance)
-    //     .def_readwrite("scale", &EnvironmentMap::m_scale);
-
+    py::class_<EnvironmentMap, Emitter>(m, "EnvironmentMap")
+        .def(py::init<const char *>())
+        .def_readonly("to_world", &EnvironmentMap::m_to_world_raw)
+        .def("set_transform", &EnvironmentMap::set_transform)
+        .def_readwrite("radiance", &EnvironmentMap::m_radiance)
+        .def_readwrite("scale", &EnvironmentMap::m_scale);
+        
     py::class_<Sensor, Object>(m, "Sensor")
         .def("set_transform", &Sensor::set_transform, "mat"_a, "set_left"_a = true)
         .def("append_transform", &Sensor::append_transform, "mat"_a, "append_left"_a = true)
