@@ -11,6 +11,7 @@ NAMESPACE_BEGIN(psdr_jit)
 FieldExtractionIntegrator::FieldExtractionIntegrator(char *field) {
     std::string field_name = strtok(field, " ");
     PSDR_ASSERT_MSG(
+        field_name == "bsdf" ||
         field_name == "segmentation" ||
         field_name == "silhouette" ||
         field_name == "position"   ||
@@ -71,6 +72,29 @@ Spectrum<ad> FieldExtractionIntegrator::__Li(const Scene &scene, const Ray<ad> &
             IntC rresult = detach(its.shape)->get_obj_id();
             result = Vector3f<ad>(rresult,rresult,rresult);
         }
+    } else if ( m_field == "bsdf" ) {
+        if constexpr (ad) {
+            active &= its.is_valid();
+            if ( scene.m_bsdfs.size() == 1U || scene.m_meshes.size() == 1U ) {
+                const BSDF *bsdf = scene.m_meshes[0]->m_bsdf;
+                result = bsdf->evalD(its, its.wi, active);
+            } else {
+                BSDFArray<ad> bsdf_array = its.shape->bsdf();
+                
+                result = bsdf_array->evalD(its, its.wi, active);
+            }
+        } else {
+            active &= its.is_valid();
+            if ( scene.m_bsdfs.size() == 1U || scene.m_meshes.size() == 1U ) {
+                const BSDF *bsdf = scene.m_meshes[0]->m_bsdf;
+                result = bsdf->evalC(its, its.wi, active);
+            } else {
+                BSDFArray<ad> bsdf_array = its.shape->bsdf();
+                
+                result = bsdf_array->evalC(its, its.wi, active);
+            }
+        }
+
     } else if ( m_field == "silhouette" ) {
         result = full<Spectrum<ad>>(1.f);
     } else if ( m_field == "position" ) {
