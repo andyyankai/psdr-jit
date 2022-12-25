@@ -334,6 +334,13 @@ Intersection_OptiX Scene_OptiX::ray_intersect(const Ray<ad> &ray, Mask<ad> &acti
     drjit::sync_thread();
     const int m = static_cast<int>(slices<Vector3f<ad>>(ray.o));
 
+    active &= ~isnan(ray.o.x());
+    active &= ~isnan(ray.o.y());
+    active &= ~isnan(ray.o.z());
+    active &= ~isnan(ray.d.x());
+    active &= ~isnan(ray.d.y());
+    active &= ~isnan(ray.d.z());
+
     Intersection_OptiX m_its;
     m_its.reserve(m);
     FloatC ox,oy,oz,dx,dy,dz;
