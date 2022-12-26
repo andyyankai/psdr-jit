@@ -183,6 +183,8 @@ void Scene::configure(std::vector<int> active_sensor) {
     using namespace std::chrono;
     auto start_time = high_resolution_clock::now();
 
+
+
     // Seed samplers
     if ( m_opts.spp  > 0 ) {
         int64_t sample_count = static_cast<int64_t>(m_opts.height)*m_opts.width*m_opts.spp;
@@ -441,6 +443,7 @@ void Scene::configure(std::vector<int> active_sensor) {
         oss << "Configured in " << duration_cast<duration<double>>(end_time - start_time).count() << " seconds.";
         log(oss.str().c_str());
     }
+    // PSDR_ASSERT(0);
 }
 
 

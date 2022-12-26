@@ -63,8 +63,14 @@ void PerspectiveCamera::configure(bool cache=true) {
 
                 if (mesh->m_has_uv) {
                     Vector3iD fuv1_d = gather<Vector3iD>(mesh->m_face_uv_indices, mesh->m_edge_indices[2]);
-                    Vector3iD fuv2_d = gather<Vector3iD>(mesh->m_face_uv_indices, mesh->m_edge_indices[3]);
+                    Vector3iD fuv2_d = gather<Vector3iD>(mesh->m_face_uv_indices, mesh->m_edge_indices[3], neq(mesh->m_edge_indices[3], -1));
 
+                    // drjit::eval(mesh->m_face_uv_indices, mesh->m_edge_indices);
+                    // std::cout << mesh->m_face_uv_indices << std::endl;
+                    // std::cout << mesh->m_edge_indices[2] << std::endl;
+                    // std::cout << mesh->m_edge_indices[3] << std::endl;
+                    // std::cout << fuv1_d << std::endl;
+                    // std::cout << fuv2_d << std::endl;
                     Vector3iC fuv1 = detach(fuv1_d);
                     Vector3iC fuv2 = detach(fuv2_d);
 
@@ -118,13 +124,8 @@ void PerspectiveCamera::configure(bool cache=true) {
                     Vector3fD q0 = transform_pos(m_world_to_sample, p0),
                               q1 = transform_pos(m_world_to_sample, p1);
 
-#ifdef PSDR_PRIMARY_EDGE_VIS_CHECK
-                    scatter(m_edge_info.p0, q0, idx);
-                    scatter(m_edge_info.p1, q1, idx);
-#else
                     scatter(m_edge_info.p0, head<2>(q0), idx);
                     scatter(m_edge_info.p1, head<2>(q1), idx);
-#endif
 
                     Vector2fD e = head<2>(detach(q1) - detach(q0));
                     FloatD len = norm(e);
