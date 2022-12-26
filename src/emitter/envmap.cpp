@@ -15,6 +15,7 @@
 NAMESPACE_BEGIN(psdr_jit)
 
 void EnvironmentMap::configure() {
+    m_sampling_weight = 0.0f;
     int width = m_radiance.m_resolution.x(), height = m_radiance.m_resolution.y();
 
     PSDR_ASSERT(width > 1 && height > 1);

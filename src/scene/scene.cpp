@@ -350,8 +350,21 @@ void Scene::configure(std::vector<int> active_sensor) {
     if ( !m_emitters.empty() ) {
         std::vector<float> weights;
         weights.reserve(m_emitters.size());
+
+        double total_weight = 0.0;
+
         for ( Emitter *e : m_emitters ) {
             e->configure();
+            total_weight += e->m_sampling_weight;
+        }
+        // std::cout << total_weight << std::endl;
+        for ( Emitter *e : m_emitters ) {
+            if (EnvironmentMap *enve = dynamic_cast<EnvironmentMap *>(e)) {
+                e->m_sampling_weight = total_weight;
+            }
+        }
+
+        for ( Emitter *e : m_emitters ) {
             weights.push_back(e->m_sampling_weight);
         }
         m_emitters_distrb->init(load<FloatC>(weights.data(), weights.size()));

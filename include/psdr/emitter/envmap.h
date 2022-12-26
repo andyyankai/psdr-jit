@@ -9,6 +9,8 @@ NAMESPACE_BEGIN(psdr_jit)
 
 PSDR_CLASS_DECL_BEGIN(EnvironmentMap, final, Emitter)
 public:
+    inline EnvironmentMap() {}
+
     inline EnvironmentMap(const char *file_name) {
         m_radiance.load_openexr(file_name);
     }
