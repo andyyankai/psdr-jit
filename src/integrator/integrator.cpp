@@ -24,7 +24,7 @@ SpectrumC Integrator::renderC(const Scene &scene, int sensor_id, int npass) cons
         oss << "Rendered in " << duration_cast<duration<double>>(end_time - start_time).count() << " seconds.";
         log(oss.str().c_str());
     }
-
+    drjit::eval(result);
     return result;
 }
 
@@ -51,7 +51,7 @@ SpectrumD Integrator::renderD(const Scene &scene, int sensor_id) const {
         oss << "Rendered in " << duration_cast<duration<double>>(end_time - start_time).count() << " seconds.";
         log(oss.str().c_str());
     }
-
+    drjit::eval(result);
     return result;
 }
 
