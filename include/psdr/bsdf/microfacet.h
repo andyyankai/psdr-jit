@@ -7,7 +7,7 @@ NAMESPACE_BEGIN(psdr_jit)
 
 PSDR_CLASS_DECL_BEGIN(Microfacet, final, BSDF)
 public:
-    Microfacet() : m_specularReflectance(0.5f), m_diffuseReflectance(0.5f), m_roughness(0.5f) {}
+    Microfacet() : m_specularReflectance(0.04f), m_diffuseReflectance(0.5f), m_roughness(0.8f) {}
 
     Microfacet(const ScalarVector3f &specularRef, const ScalarVector3f &diffuseRef, float roughnessRef) :
         m_specularReflectance(specularRef), m_diffuseReflectance(diffuseRef), m_roughness(roughnessRef) {}

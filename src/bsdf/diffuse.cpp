@@ -21,7 +21,15 @@ SpectrumD Diffuse::eval(const IntersectionD &its, const Vector3fD &wo, MaskD act
 
 
 template <bool ad>
-Spectrum<ad> Diffuse::__eval(const Intersection<ad> &its, const Vector3f<ad> &wo, Mask<ad> active) const {
+Spectrum<ad> Diffuse::__eval(const Intersection<ad> &_its, const Vector3f<ad> &_wo, Mask<ad> active) const {
+    Intersection<ad> its(_its);
+    Vector3f<ad> wo(_wo);
+
+    if (m_twoSide) {
+        wo.z() = drjit::mulsign(wo.z(), its.wi.z());
+        its.wi.z() = drjit::abs(its.wi.z());
+    }
+
     Float<ad> cos_theta_i = Frame<ad>::cos_theta(its.wi),
               cos_theta_o = Frame<ad>::cos_theta(wo);
 
@@ -42,14 +50,20 @@ BSDFSampleD Diffuse::sample(const IntersectionD &its, const Vector3fD &sample, M
 }
 
 template <bool ad>
-BSDFSample<ad> Diffuse::__sample(const Intersection<ad> &its, const Vector3f<ad> &sample, Mask<ad> active) const {
+BSDFSample<ad> Diffuse::__sample(const Intersection<ad> &_its, const Vector3f<ad> &sample, Mask<ad> active) const {
+
+    Intersection<ad> its(_its);
+
+    if (m_twoSide) {
+        its.wi.z() = drjit::abs(its.wi.z());
+    }
+
     Float<ad> cos_theta_i = Frame<ad>::cos_theta(its.wi);
     BSDFSample<ad> bs;
     Vector2f<ad> sample2 = tail<2>(sample);
     bs.wo = warp::square_to_cosine_hemisphere<ad>(sample2);
 
     bs.eta = 1.0f;
-    // bs.pdf = 1.0f;
     bs.pdf = warp::square_to_cosine_hemisphere_pdf<ad>(bs.wo);
     bs.is_valid = active && (cos_theta_i > 0.f);
     return detach(bs);
@@ -67,7 +81,18 @@ FloatD Diffuse::pdf(const IntersectionD &its, const Vector3fD &wo, MaskD active)
 
 
 template <bool ad>
-Float<ad> Diffuse::__pdf(const Intersection<ad> &its, const Vector3f<ad> &wo, Mask<ad> active) const {
+Float<ad> Diffuse::__pdf(const Intersection<ad> &_its, const Vector3f<ad> &_wo, Mask<ad> active) const {
+
+
+    Intersection<ad> its(_its);
+    Vector3f<ad> wo(_wo);
+
+    if (m_twoSide) {
+        wo.z() = drjit::mulsign(wo.z(), its.wi.z());
+        its.wi.z() = drjit::abs(its.wi.z());
+    }
+
+
     FloatC cos_theta_i, cos_theta_o;
     if constexpr ( ad ) {
         cos_theta_i = FrameC::cos_theta(detach(its.wi));

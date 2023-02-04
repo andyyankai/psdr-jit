@@ -19,8 +19,6 @@ struct BSDFSample_ : public SampleRecord_<Float_> {
 };
 
 
-// PSDR_CLASS_DECL_BEGIN(BSDF,, Object)
-
 PSDR_CLASS_DECL_BEGIN(BSDF,, Object)
 public:
     BSDF() {}
@@ -56,6 +54,8 @@ public:
     };
 
     virtual bool anisotropic() const = 0;
+
+    bool m_twoSide = false;
 
     DRJIT_VCALL_REGISTER(FloatD, BSDF);
                     

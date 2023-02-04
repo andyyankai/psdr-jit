@@ -35,7 +35,15 @@ FloatD RoughConductor::pdf(const IntersectionD& its, const Vector3fD& wo, MaskD 
 
 
 template <bool ad>
-Spectrum<ad> RoughConductor::__eval(const Intersection<ad>& its, const Vector3f<ad>& wo, Mask<ad> active) const {
+Spectrum<ad> RoughConductor::__eval(const Intersection<ad>& _its, const Vector3f<ad>& _wo, Mask<ad> active) const {
+    Intersection<ad> its(_its);
+    Vector3f<ad> wo(_wo);
+
+    if (m_twoSide) {
+        wo.z() = drjit::mulsign(wo.z(), its.wi.z());
+        its.wi.z() = drjit::abs(its.wi.z());
+    }
+
     Float<ad> cos_theta_i = Frame<ad>::cos_theta(its.wi),
               cos_theta_o = Frame<ad>::cos_theta(wo);
     active &= cos_theta_i > 0.f && cos_theta_o > 0.f;
@@ -55,7 +63,16 @@ Spectrum<ad> RoughConductor::__eval(const Intersection<ad>& its, const Vector3f<
 
 
 template <bool ad>
-Float<ad> RoughConductor::__pdf(const Intersection<ad>& its, const Vector3f<ad>& wo, Mask<ad> active) const {
+Float<ad> RoughConductor::__pdf(const Intersection<ad>& _its, const Vector3f<ad>& _wo, Mask<ad> active) const {
+
+    Intersection<ad> its(_its);
+    Vector3f<ad> wo(_wo);
+
+    if (m_twoSide) {
+        wo.z() = drjit::mulsign(wo.z(), its.wi.z());
+        its.wi.z() = drjit::abs(its.wi.z());
+    }
+
     Float<ad> cos_theta_i = Frame<ad>::cos_theta(its.wi),
               cos_theta_o = Frame<ad>::cos_theta(wo);
 
@@ -75,7 +92,14 @@ Float<ad> RoughConductor::__pdf(const Intersection<ad>& its, const Vector3f<ad>&
 
 
 template <bool ad>
-BSDFSample<ad> RoughConductor::__sample(const Intersection<ad>& its, const Vector3f<ad>& sample, Mask<ad> active) const {
+BSDFSample<ad> RoughConductor::__sample(const Intersection<ad>& _its, const Vector3f<ad>& sample, Mask<ad> active) const {
+
+    Intersection<ad> its(_its);
+
+    if (m_twoSide) {
+        its.wi.z() = drjit::abs(its.wi.z());
+    }
+
     BSDFSample<ad> bs;
     Float<ad> cos_theta_i = Frame<ad>::cos_theta(its.wi);
     Float<ad> alpha_u = m_alpha_u.eval<ad>(its.uv);

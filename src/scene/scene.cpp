@@ -8,6 +8,8 @@
 #include <psdr/bsdf/bsdf.h>
 #include <psdr/bsdf/diffuse.h>
 #include <psdr/bsdf/microfacet.h>
+#include <psdr/bsdf/normalmap.h>
+
 #include <psdr/emitter/area.h>
 
 #include <psdr/emitter/envmap.h>
@@ -17,6 +19,7 @@
 #include <psdr/scene/scene_optix.h>
 #include <psdr/scene/scene_loader.h>
 #include <psdr/scene/scene.h>
+#include <psdr/core/bitmap.h>
 
 NAMESPACE_BEGIN(psdr_jit)
 
@@ -77,6 +80,18 @@ void Scene::load_string(const char *scene_xml, bool auto_configure) {
 }
 
 
+void Scene::add_EnvironmentMap(const char *fname, ScalarMatrix4f to_world, float scale) {
+    PSDR_ASSERT_MSG(m_emitter_env == nullptr, "A scene is only allowed to have one envmap!");
+
+    EnvironmentMap *emitter = new EnvironmentMap(fname);
+    emitter->m_scale = scale;
+    emitter->m_to_world_raw = Matrix4fD(to_world);
+    m_emitters.push_back(emitter);
+    m_emitter_env = emitter;
+
+    build_param_map<Emitter>(m_param_map, m_emitters, "Emitter");
+}
+
 void Scene::add_Sensor(Sensor* sensor) {
     if ( m_opts.log_level > 0 ) std::cout << "add_Sensor: " << sensor->to_string() << std::endl;
     if (PerspectiveCamera *sensor_buff = dynamic_cast<PerspectiveCamera *>(sensor)) {
@@ -90,10 +105,11 @@ void Scene::add_Sensor(Sensor* sensor) {
     }
 }
 
-void Scene::add_BSDF(BSDF* bsdf, const char *bsdf_id) {
+void Scene::add_BSDF(BSDF* bsdf, const char *bsdf_id, bool twoSide) {
     if (Diffuse *bsdf_buff = dynamic_cast<Diffuse *>(bsdf)) {
         if ( m_opts.log_level > 0 ) std::cout << "add_BSDF: " << "Diffuse" << " " << bsdf_id << std::endl;
         Diffuse *bsdf_temp = new Diffuse(bsdf_buff->m_reflectance);
+        bsdf_temp->m_twoSide = twoSide;
 
         bsdf_temp->m_id = bsdf_id;
         m_bsdfs.push_back(bsdf_temp);
@@ -111,9 +127,35 @@ void Scene::add_BSDF(BSDF* bsdf, const char *bsdf_id) {
     } else if (Microfacet *bsdf_buff = dynamic_cast<Microfacet *>(bsdf)) {
         if ( m_opts.log_level > 0 ) std::cout << "add_BSDF: " << "Microfacet" << " " << bsdf_id << std::endl;
         Microfacet *bsdf_temp = new Microfacet(bsdf_buff->m_specularReflectance, bsdf_buff->m_diffuseReflectance, bsdf_buff->m_roughness);
-
+        bsdf_temp->m_twoSide = twoSide;
         bsdf_temp->m_id = bsdf_id;
         m_bsdfs.push_back(bsdf_temp);
+
+        Scene::ParamMap &param_map = m_param_map;
+        std::stringstream oss1, oss2;
+        oss1 << "BSDF[" << m_bsdfs.size() - 1 << "]";
+        oss2 << "BSDF[id=" << bsdf_id << "]";
+        param_map.insert(Scene::ParamMap::value_type(oss1.str(), *bsdf_temp));
+
+        bool is_new;
+        std::tie(std::ignore, is_new) = param_map.insert(Scene::ParamMap::value_type(oss2.str(), *bsdf_temp));
+        PSDR_ASSERT_MSG(is_new, std::string("Duplicate BSDF id: ") + bsdf_id);
+
+    }
+    else if (NormalMap *bsdf_buff = dynamic_cast<NormalMap *>(bsdf)) {
+        if ( m_opts.log_level > 0 ) std::cout << "add_BSDF: " << "NormalMapBSDF" << " " << bsdf_id << std::endl;
+        NormalMap *bsdf_temp = new NormalMap(ScalarVector3f(.499999f,.499999f,1.f));
+        bsdf_temp->m_twoSide = twoSide;
+        bsdf_temp->m_id = bsdf_id;
+
+        Microfacet *nmap_b = new Microfacet();
+
+        bsdf_temp->m_bsdf = nmap_b;
+
+
+        m_bsdfs.push_back(bsdf_temp);
+
+
 
         Scene::ParamMap &param_map = m_param_map;
         std::stringstream oss1, oss2;
@@ -288,8 +330,6 @@ void Scene::configure(std::vector<int> active_sensor) {
             log(oss.str().c_str());
         }
     }
-
-
 
 
     // Handling env. lighting

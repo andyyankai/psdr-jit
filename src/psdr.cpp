@@ -264,9 +264,11 @@ PYBIND11_MODULE(psdr_jit, m) {
 
 
     py::class_<BSDF, Object>(m, "BSDF")
+        .def_readwrite("twoSide", &BSDF::m_twoSide)
         .def("anisotropic", &BSDF::anisotropic);
 
     py::class_<NormalMap, BSDF>(m, "NormalMapBSDF")
+        .def(py::init<>())
         .def_readwrite("nested_bsdf", &NormalMap::m_bsdf)
         .def_readwrite("normal_map", &NormalMap::m_nmap);
 
@@ -362,8 +364,9 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def(py::init<>())
 
         .def("add_Sensor", &Scene::add_Sensor, "Add Sensor")
+        .def("add_EnvironmentMap", &Scene::add_EnvironmentMap, "Add EnvironmentMap")
         .def("add_Mesh", &Scene::add_Mesh, "Add Mesh")
-        .def("add_BSDF", &Scene::add_BSDF, "Add BSDf")
+        .def("add_BSDF", &Scene::add_BSDF, "Add BSDf", "bsdf"_a, "name"_a, "twoSide"_a = false)
 
         .def("unit_ray_intersect", &Scene::unit_ray_intersect<false>)
         .def("unit_ray_intersectAD", &Scene::unit_ray_intersect<true>)
