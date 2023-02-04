@@ -42,7 +42,9 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
     Spectrum<ad> eta(1.0f); // Tracks radiance scaling due to index of refraction changes
     Spectrum<ad> result = m_hide_emitters ? zeros<Spectrum<ad>>() : its.Le(active);
 
-    for (int depth=0; depth < m_max_depth; depth++) {
+    drjit::Loop<Mask<ad>> loop("Path Tracer", its, result, throughput, eta, curr_ray, sampler, active);
+    loop.set_max_iterations(m_max_depth);
+    while (loop(active)) {
         BSDFArray<ad> bsdf_array = its.shape->bsdf();
         {
 
