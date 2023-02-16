@@ -22,8 +22,8 @@ template <bool ad>
 Spectrum<ad> CollocatedIntegrator::__Li(const Scene &scene, const Ray<ad> &ray, Mask<ad> active) const {
     Intersection<ad> its = scene.ray_intersect<ad>(ray, active);
     Spectrum<ad> result;
-
-
+    // std::cout << "here" << std::endl;
+    // return its.p;
 
     if constexpr (ad) {
         active &= its.is_valid();

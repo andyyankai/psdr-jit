@@ -432,6 +432,8 @@ void Scene::configure(std::vector<int> active_sensor) {
     m_triangle_face_normals = empty<MaskD>(face_offset.back());
     for ( int i = 0; i < m_num_meshes; ++i ) {
         const Mesh &mesh = *m_meshes[i];
+        // std::cout << mesh.m_num_faces << std::endl;
+        // std::cout << face_offset[i] << std::endl;
         const IntD idx = arange<IntD>(mesh.m_num_faces) + face_offset[i];
         scatter(m_triangle_info, *mesh.m_triangle_info, idx);
         scatter(m_triangle_face_normals, MaskD(mesh.m_use_face_normals), idx);
@@ -516,7 +518,10 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active, Trian
     Intersection_OptiX optix_its = m_optix->ray_intersect<ad>(ray, active);
 
 
+
     Vector2i<ad> idx(optix_its.triangle_id, optix_its.shape_id);
+    // its.t = idx[1];
+    // return its;
 
     TriangleUV<ad>      tri_uv_info;
     Mask<ad>            face_normal_mask;
@@ -534,6 +539,11 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active, Trian
     Float<ad> tri_info_face_area; 
 
 
+    // std::cout << m_triangle_info.face_normal << std::endl;
+    // std::cout << idx[1] << std::endl;
+
+    // its.p = idx[1];
+    // return its;
 
     if constexpr ( ad ) {
         its.n = gather<Vector3f<ad>>(m_triangle_info.face_normal, idx[1], active);
@@ -666,6 +676,9 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active, Trian
 
         its.shape = gather<MeshArrayD>(m_meshes_cuda, idx[0], active);
         its.p = ray(t);
+
+        its.p = tri_info_n1;
+        
         its.t = t;
         its.uv = bilinear2<true>(tri_uv_info[0],
                                  tri_uv_info[1] - tri_uv_info[0],
