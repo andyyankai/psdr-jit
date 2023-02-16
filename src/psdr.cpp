@@ -301,6 +301,7 @@ PYBIND11_MODULE(psdr_jit, m) {
 
     py::class_<Mesh, Object>(m, "Mesh")
         .def(py::init<>())
+        .def("load_raw", &Mesh::load_raw, "v"_a,  "f"_a, "verbose"_a = false)
         .def("load", &Mesh::load, "filename"_a, "verbose"_a = false)
         .def("configure", &Mesh::configure)
         .def("set_transform", &Mesh::set_transform, "mat"_a, "set_left"_a = true)

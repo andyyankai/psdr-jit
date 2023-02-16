@@ -69,6 +69,35 @@ Mesh::~Mesh() {
 }
 
 
+void Mesh::load_raw(const Vector3fC &new_vertex_positions, const Vector3iC &new_face_indices, bool verbose) {
+
+    const char *fname = "psdr_jit_temp_update_mesh.obj";
+    std::array<std::vector<float>, 3> vertex_positions, vertex_normals;
+    {
+        const Vector3fC &vertex_positions_ = detach(m_vertex_positions_raw);
+        copy_cuda_array<float, 3>(new_vertex_positions, vertex_positions);
+    }
+
+    FILE *fout = fopen(fname, "wt");
+    for ( int i = 0; i < m_num_vertices; ++i ) {
+        fprintf(fout, "v %.6e %.6e %.6e\n", vertex_positions[0][i], vertex_positions[1][i], vertex_positions[2][i]);
+    }
+
+    std::array<std::vector<int32_t>, 3> face_indices;
+    copy_cuda_array<int32_t, 3>(new_face_indices, face_indices);
+    for ( int i = 0; i < m_num_faces; ++i ) {
+        int v0 = face_indices[0][i] + 1, v1 = face_indices[1][i] + 1, v2 = face_indices[2][i] + 1;
+        if ( m_use_face_normals ) {
+            fprintf(fout, "f %d %d %d\n", v0, v1, v2);
+        } else {
+            fprintf(fout, "f %d//%d %d//%d %d//%d\n", v0, v0, v1, v1, v2, v2);
+        }
+    }
+    fclose(fout);
+    load(fname, verbose);
+}
+
+
 void Mesh::load(const char *fname, bool verbose) {
     tinyobj::attrib_t attrib;
     std::vector<tinyobj::shape_t> shapes;
