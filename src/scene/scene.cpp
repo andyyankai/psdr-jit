@@ -183,7 +183,6 @@ void Scene::add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id
     mesh->load(fname, false);
     mesh->m_bsdf = dynamic_cast<const BSDF*>(&bsdf_info->second);
 
-
     mesh->m_to_world_raw = Matrix4fD(transform);
     mesh->m_mesh_id = m_meshes.size();
     mesh->m_use_face_normals = true;
@@ -201,12 +200,26 @@ void Scene::add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id
         build_param_map<Emitter>(m_param_map, m_emitters, "Emitter");
     }
 
+    m_meshes.push_back(mesh);
+    build_param_map<Mesh>(m_param_map, m_meshes, "Mesh");
+    m_num_meshes = static_cast<int>(m_meshes.size());
+}
 
+void Scene::add_Mesh(Mesh &mesh_, const char *bsdf_id) {
+    if ( m_opts.log_level > 0 ) std::cout << "add_Mesh: " << m_meshes.size() << std::endl;
+    Mesh *mesh = new Mesh(mesh_);
+    mesh->m_mesh_id = m_meshes.size();
+    mesh->m_use_face_normals = true;
+
+    std::stringstream oss;
+    oss << "BSDF[id=" << bsdf_id << "]";
+    auto bsdf_info = m_param_map.find(oss.str());
+    PSDR_ASSERT_MSG(bsdf_info != m_param_map.end(), std::string("Unknown BSDF id: ") + bsdf_id);
+    mesh->m_bsdf = dynamic_cast<const BSDF*>(&bsdf_info->second);
 
     m_meshes.push_back(mesh);
-    build_param_map<Mesh   >(m_param_map, m_meshes  , "Mesh"   );
+    build_param_map<Mesh>(m_param_map, m_meshes, "Mesh");
     m_num_meshes = static_cast<int>(m_meshes.size());
-
 }
 
 void Scene::configure(std::vector<int> active_sensor) {
