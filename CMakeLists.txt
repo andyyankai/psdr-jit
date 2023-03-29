@@ -44,13 +44,11 @@ set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 
-find_package(OptiX REQUIRED)
 
 set(CUDA_GENERATED_OUTPUT_DIR "${CMAKE_BINARY_DIR}/lib/ptx")
 
 include_directories(
     include/
-    ${OptiX_INCLUDE}
     ${DRJIT_DIR}/include
     ${PYBIND11_ROOT}/include
     ${PYTHON_INCLUDE_DIRS}
