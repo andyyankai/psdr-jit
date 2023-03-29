@@ -140,6 +140,8 @@ set(PSDR_SOURCE_FILES
 
     ${PSDR_INCLUDE_DIR}/sensor/perspective.h
     ${PSDR_SOURCE_DIR}/sensor/perspective.cpp
+    ${PSDR_INCLUDE_DIR}/sensor/orthographic.h
+    ${PSDR_SOURCE_DIR}/sensor/orthographic.cpp
 
     ${PSDR_INCLUDE_DIR}/core/tinyexr.h
     ${PSDR_INCLUDE_DIR}/core/miniz.h

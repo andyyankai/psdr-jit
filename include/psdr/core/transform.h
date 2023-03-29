@@ -60,6 +60,11 @@ static inline ScalarMatrix4f perspective(float fov, float near_, float far_) {
     return trafo;
 }
 
+static inline ScalarMatrix4f orthographic(float near_, float far_) {
+    return scale(Array<float, 3>(1.f, 1.f, 1.f / (far_ - near_))) *
+            translate(Array<float, 3>( 0.f, 0.f, -near_ ));
+}
+
 /** \brief Create a look-at camera transformation
  *
  * \param origin Camera position

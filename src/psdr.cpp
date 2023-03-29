@@ -21,6 +21,7 @@
 #include <psdr/sensor/sensor.h>
 
 #include <psdr/sensor/perspective.h>
+#include <psdr/sensor/orthographic.h>
 
 
 
@@ -354,6 +355,18 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readwrite("to_world", &PerspectiveCamera::m_to_world_raw)
         .def_readwrite("to_world_left", &Sensor::m_to_world_left)
         .def_readwrite("to_world_right", &Sensor::m_to_world_right);
+
+    py::class_<OrthographicCamera, Sensor>(m, "OrthographicCamera")
+        .def(py::init<float, float>())
+        .def("set_transform", &Sensor::set_transform, "mat"_a, "set_left"_a = true)
+        .def("append_transform", &Sensor::append_transform, "mat"_a, "append_left"_a = true)
+        .def("sample_direct", &Sensor::sample_direct, "vec"_a)
+        .def_readonly("world_to_sample", &OrthographicCamera::m_world_to_sample)
+        .def_readwrite("to_world", &OrthographicCamera::m_to_world_raw)
+        .def_readwrite("to_world_left", &Sensor::m_to_world_left)
+        .def_readwrite("to_world_right", &Sensor::m_to_world_right);
+
+
 
     py::class_<SensorDirectSample_<FloatC>, SampleRecord_<FloatC>>(m, "SensorDirectSample")
         .def_readwrite("q", &SensorDirectSample_<FloatC>::q)
