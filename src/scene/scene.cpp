@@ -675,10 +675,7 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active, Trian
         masked(sh_n, face_normal_mask) = its.n;
 
         its.shape = gather<MeshArrayD>(m_meshes_cuda, idx[0], active);
-        its.p = ray(t);
-
-        its.p = tri_info_n1;
-        
+        its.p = ray(t);        
         its.t = t;
         its.uv = bilinear2<true>(tri_uv_info[0],
                                  tri_uv_info[1] - tri_uv_info[0],
