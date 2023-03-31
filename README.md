@@ -81,6 +81,8 @@ sc.param_map["Mesh[0]"].set_transform(Matrix4fD([[1.,0.,0.,P*100.],[0.,1.,0.,0.]
 
 
 sc.configure()
+sc.configure([0])
+
 img = integrator.renderD(sc, 0)
 org_img = img.numpy().reshape((sc.opts.width, sc.opts.height, 3))
 output = cv2.cvtColor(org_img, cv2.COLOR_RGB2BGR)
