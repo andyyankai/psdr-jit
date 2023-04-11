@@ -293,6 +293,7 @@ PYBIND11_MODULE(psdr_jit, m) {
     py::class_<Microfacet, BSDF>(m, "MicrofacetBSDF")
         .def(py::init<>())
         .def(py::init<const ScalarVector3f&, const ScalarVector3f&, float>())
+        .def(py::init<const Bitmap3fD&, const Bitmap3fD&, const Bitmap1fD&>())
         .def_readwrite("roughness", &Microfacet::m_roughness)
         .def_readwrite("diffuseReflectance", &Microfacet::m_diffuseReflectance)
         .def_readwrite("specularReflectance", &Microfacet::m_specularReflectance);
