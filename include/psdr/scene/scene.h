@@ -25,6 +25,7 @@ public:
 
     void add_Sensor(Sensor *sensor);
     void add_EnvironmentMap(const char *fname, ScalarMatrix4f to_world, float scale);
+    void add_EnvironmentMap(EnvironmentMap *emitter);
     void add_BSDF(BSDF *bsdf, const char *bsdf_id, bool twoSide = false);
     void add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id, Emitter *emitter);
     void add_Mesh(Mesh *mesh, const char *bsdf_id, Emitter *emitter);
