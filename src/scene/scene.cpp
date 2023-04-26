@@ -197,7 +197,6 @@ void Scene::add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id
 
     mesh->m_to_world_raw = Matrix4fD(transform);
     mesh->m_mesh_id = m_meshes.size();
-    mesh->m_use_face_normals = true;
 
     if ( emitter ) {
         if (AreaLight *emitter_buff = dynamic_cast<AreaLight *>(emitter)) {
@@ -222,7 +221,6 @@ void Scene::add_Mesh(Mesh *mesh_, const char *bsdf_id, Emitter *emitter) {
     Mesh *mesh = new Mesh();
     mesh->load_raw(detach(mesh_->m_vertex_positions), detach(mesh_->m_face_indices));
     mesh->m_mesh_id = m_meshes.size();
-    mesh->m_use_face_normals = true;
 
     std::stringstream oss;
     oss << "BSDF[id=" << bsdf_id << "]";
