@@ -380,8 +380,8 @@ PYBIND11_MODULE(psdr_jit, m) {
 
         .def("add_Sensor", &Scene::add_Sensor, "Add Sensor")
         .def("add_EnvironmentMap", &Scene::add_EnvironmentMap, "Add EnvironmentMap")
-        .def("add_Mesh", py::overload_cast<const char *, Matrix4fC, const char *, Emitter*>(&Scene::add_Mesh), "Add Mesh")
-        .def("add_Mesh", py::overload_cast<Mesh &, const char *>(&Scene::add_Mesh), "Add Mesh")
+        .def("add_Mesh", py::overload_cast<const char *, Matrix4fC, const char *, Emitter *>(&Scene::add_Mesh), "Add Mesh")
+        .def("add_Mesh", py::overload_cast<Mesh *, const char *, Emitter *>(&Scene::add_Mesh), "Add Mesh", "mesh"_a, "bsdf_id"_a, "emitter"_a = nullptr)
         .def("add_BSDF", &Scene::add_BSDF, "Add BSDf", "bsdf"_a, "name"_a, "twoSide"_a = false)
 
         .def("unit_ray_intersect", &Scene::unit_ray_intersect<false>)
