@@ -400,18 +400,28 @@ FloatD Mesh::sample_position_pdfD(const IntersectionD &its, MaskD active) const 
 }
 
 
-void Mesh::dump(const char *fname) const {
+void Mesh::dump(const char *fname, bool raw) const {
     std::array<std::vector<float>, 3> vertex_positions, vertex_normals;
     {
-        const Vector3fC &vertex_positions_ = detach(m_vertex_positions_raw);
-        copy_cuda_array<float, 3>(vertex_positions_, vertex_positions);
+        if (!raw) {
+            const Vector3fC &vertex_positions_ = detach(m_vertex_positions_raw);
+            copy_cuda_array<float, 3>(vertex_positions_, vertex_positions);
+            if ( !m_use_face_normals ) {
+                Vector3fC vertex_normals_;
+                std::tie(std::ignore, vertex_normals_) = process_mesh<false>(vertex_positions_, detach(m_face_indices));
+                copy_cuda_array<float, 3>(vertex_normals_, vertex_normals);
+            }
+        } else {
+            const Vector3fC &vertex_positions_ = detach(m_vertex_positions);
+            copy_cuda_array<float, 3>(vertex_positions_, vertex_positions);
+            if ( !m_use_face_normals ) {
+                Vector3fC vertex_normals_;
+                std::tie(std::ignore, vertex_normals_) = process_mesh<false>(vertex_positions_, detach(m_face_indices));
+                copy_cuda_array<float, 3>(vertex_normals_, vertex_normals);
+            }
+        }
         // PSDR_ASSERT(0);
 
-        if ( !m_use_face_normals ) {
-            Vector3fC vertex_normals_;
-            std::tie(std::ignore, vertex_normals_) = process_mesh<false>(vertex_positions_, detach(m_face_indices));
-            copy_cuda_array<float, 3>(vertex_normals_, vertex_normals);
-        }
     }
 
     FILE *fout = fopen(fname, "wt");

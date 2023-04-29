@@ -73,7 +73,7 @@ public:
         return m_emitter;
     }
 
-    void dump(const char *fname) const;
+    void dump(const char *fname, bool raw) const;
 
 
     std::string to_string() const override;
