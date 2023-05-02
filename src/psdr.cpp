@@ -314,6 +314,8 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readonly("num_faces", &Mesh::m_num_faces)
         .def_readonly("bsdf", &Mesh::m_bsdf)
         .def_readwrite("to_world", &Mesh::m_to_world_raw)
+        .def_readwrite("to_world_right", &Mesh::m_to_world_right)
+        .def_readwrite("to_world_left", &Mesh::m_to_world_left)
         .def_readwrite("vertex_positions", &Mesh::m_vertex_positions_raw, "Object-space vertex positions")
         .def_readonly("vertex_normals", &Mesh::m_vertex_normals_raw, "Object-space vertex normals")
         .def_readwrite("vertex_uv", &Mesh::m_vertex_uv)
