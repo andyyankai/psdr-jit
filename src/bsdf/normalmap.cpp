@@ -43,10 +43,19 @@ Float<ad> lambda_p(Vector3f<ad> wp, Vector3f<ad> wi) {
 
 
 template <bool ad>
-Spectrum<ad> NormalMap::__eval(const Intersection<ad> &its, const Vector3f<ad> &wo, Mask<ad> active) const {
+Spectrum<ad> NormalMap::__eval(const Intersection<ad> &_its, const Vector3f<ad> &_wo, Mask<ad> active) const {
+    Intersection<ad> its(_its);
+    Vector3f<ad> wo(_wo);
+    if (m_twoSide) {
+        wo.z() = drjit::mulsign(wo.z(), its.wi.z());
+        its.wi.z() = drjit::abs(its.wi.z());
+    }
+
     Float<ad> cos_theta_i = Frame<ad>::cos_theta(its.wi),
               cos_theta_o = Frame<ad>::cos_theta(wo);
     active &= cos_theta_i > 0.f && cos_theta_o > 0.f;
+
+
 
     Vector3f<ad> wp = normalize(fmadd(m_nmap.eval<ad>(its.uv), 2, -1.f));    
     Frame<ad> p_frame(wp, normalize(fnmadd(wp, dot(wp, its.dp_du), its.dp_du)));
@@ -98,7 +107,18 @@ FloatD NormalMap::pdf(const IntersectionD &its, const Vector3fD &wo, MaskD activ
 
 
 template <bool ad>
-Float<ad> NormalMap::__pdf(const Intersection<ad> &its, const Vector3f<ad> &wo, Mask<ad> active) const {    
+Float<ad> NormalMap::__pdf(const Intersection<ad> &_its, const Vector3f<ad> &_wo, Mask<ad> active) const { 
+    Intersection<ad> its(_its);
+    Vector3f<ad> wo(_wo);
+
+    if (m_twoSide) {
+        wo.z() = drjit::mulsign(wo.z(), its.wi.z());
+        its.wi.z() = drjit::abs(its.wi.z());
+    }
+
+
+
+
     Float<ad> cos_theta_i = Frame<ad>::cos_theta(its.wi),
               cos_theta_o = Frame<ad>::cos_theta(wo);
     active &= cos_theta_i > 0.f && cos_theta_o > 0.f;
@@ -125,7 +145,15 @@ Float<ad> NormalMap::__pdf(const Intersection<ad> &its, const Vector3f<ad> &wo, 
 }
 
 template <bool ad>
-BSDFSample<ad> NormalMap::__sample(const Intersection<ad> &its, const Vector3f<ad> &sample, Mask<ad> active) const {
+BSDFSample<ad> NormalMap::__sample(const Intersection<ad> &_its, const Vector3f<ad> &sample, Mask<ad> active) const {
+
+    Intersection<ad> its(_its);
+
+    if (m_twoSide) {
+        its.wi.z() = drjit::abs(its.wi.z());
+    }
+
+    
     Vector3f<ad> wp = normalize(fmadd(m_nmap.eval<ad>(its.uv), 2, -1.f));    
     Frame<ad> p_frame(wp, normalize(fnmadd(wp, dot(wp, its.dp_du), its.dp_du)));
 

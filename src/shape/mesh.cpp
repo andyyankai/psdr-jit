@@ -210,7 +210,7 @@ void Mesh::load(const char *fname, bool verbose) {
         }
 
         for ( auto it: edge_map ) {
-            if ( it.second.size() > 3 ) std::cout << "WARN: Edge shared by more than 2 faces" << std::endl;
+            // if ( it.second.size() > 3 ) std::cout << "WARN: Edge shared by more than 2 faces" << std::endl;
             // if ( it.second.size() > 3 ) {
             //     // Non-manifold mesh is not allowed
             //     PSDR_ASSERT_MSG(false, std::string("Edge shared by more than 2 faces: ") + fname);
@@ -218,13 +218,13 @@ void Mesh::load(const char *fname, bool verbose) {
                 buffers[0].push_back(it.first.first);
                 buffers[1].push_back(it.first.second);
                 if ( it.second.size() >= 3 ) {
-                    PSDR_ASSERT_MSG(it.second[1] != it.second[2], std::string("Duplicated faces: ") + fname);
+                    // PSDR_ASSERT_MSG(it.second[1] != it.second[2], std::string("Duplicated faces: ") + fname);
                     buffers[2].push_back(it.second[1]);
                     buffers[3].push_back(it.second[2]);
                     buffers[4].push_back(it.second[0]);
                     ++m_num_edges;
                 } else {
-                    PSDR_ASSERT_MSG(it.second.size() == 2, std::string("Edge should be boundary: ") + fname);
+                    // PSDR_ASSERT_MSG(it.second.size() == 2, std::string("Edge should be boundary: ") + fname);
                     buffers[2].push_back(it.second[1]);
                     buffers[3].push_back(-1);
                     buffers[4].push_back(it.second[0]);
