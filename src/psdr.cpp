@@ -51,7 +51,6 @@
 #include <psdr/integrator/collocated.h>
 #include <psdr/integrator/path.h>
 
-#include <psdr/jit_optix_test.h>
 
 
 namespace py = pybind11;
@@ -60,58 +59,17 @@ using namespace psdr_jit;
 
 using namespace drjit;
 
-void optix_jit_test() {
-    jit_test aa;;
-    aa.trace_ray();
-}
-
-void drjit_test() {
-    jit_init((uint32_t)JitBackend::CUDA);
-
-    FloatD a = arange<FloatD>(10);
-    enable_grad(a);
-
-    FloatD b = a * 2.f;
-    std::cout << "val: " << b << std::endl;
-
-    backward(b);
-    std::cout << "grad: " << grad(a) << std::endl;
-
-
-    Matrix4fD           m_to_world_raw = identity<Matrix4fD>();
-    std::cout << m_to_world_raw << std::endl;
-
-}
-
-
-void drjit_memory() {
-    FloatC a(1.f, 2.f, 3.f, 4.f);
-    std::vector<float> b;
-    b.resize(a.size());
-    // std::cout << a.slices() << std::endl;
-
-
-    std::cout << slices<Vector3fC>(a) << std::endl;
-    drjit::store(b.data(), a);
-}
-
 PYBIND11_MODULE(psdr_jit, m) {
     py::module::import("drjit");
     py::module::import("drjit.cuda");
     py::module::import("drjit.cuda.ad");
 
-    jit_set_flag(JitFlag::LoopRecord, false);
-    // jit_set_flag(JitFlag::VCallRecord, false);
+    // jit_set_flag(JitFlag::LoopRecord, true);
+    // jit_set_flag(JitFlag::VCallRecord, true);
 
 
     m.doc() = "Path-space differentiable renderer";
     m.attr("__name__") = "psdr_jit";
-
-    m.def("optix_jit_test", &optix_jit_test);
-
-    m.def("drjit_test", &drjit_test);
-
-    m.def("drjit_memory", &drjit_memory);
 
     // Core classes
 

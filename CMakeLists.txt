@@ -168,8 +168,6 @@ set(PSDR_SOURCE_FILES
     ${PSDR_INCLUDE_DIR}/integrator/path.h
     ${PSDR_SOURCE_DIR}/integrator/path.cpp
 
-    ${PSDR_SOURCE_DIR}/jit_optix_test.cpp
-
     ${PSDR_SOURCE_DIR}/optix_stubs.cpp
 
     ${PSDR_SOURCE_DIR}/psdr.cpp
