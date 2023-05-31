@@ -37,6 +37,10 @@ public:
     Intersection<ad> ray_intersect(const Ray<ad> &ray, Mask<ad> active = true, TriangleInfoD *out_info = nullptr) const;
 
     template <bool ad, bool path_space = false>
+    std::pair<Intersection<ad>, TriangleInfoD> boundary_ray_intersect(const Ray<ad> &ray, Mask<ad> active = true) const;
+
+
+    template <bool ad, bool path_space = false>
     Intersection<ad> unit_ray_intersect(const Ray<ad> &ray, Mask<ad> active = true) const;
 
     template <bool ad>

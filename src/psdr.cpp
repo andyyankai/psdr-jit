@@ -396,6 +396,11 @@ PYBIND11_MODULE(psdr_jit, m) {
 
         .def_readonly("sensor", &Scene::m_sensors)
 
+        .def("boundary_ray_intersect", &Scene::boundary_ray_intersect<false>)
+        .def("boundary_ray_intersectAD", &Scene::boundary_ray_intersect<true>)
+        .def("boundary_ray_intersectADAD", &Scene::boundary_ray_intersect<true, true>)
+
+
         .def("unit_ray_intersect", &Scene::unit_ray_intersect<false>)
         .def("unit_ray_intersectAD", &Scene::unit_ray_intersect<true>)
         .def("unit_ray_intersectADAD", &Scene::unit_ray_intersect<true, true>)
