@@ -88,6 +88,7 @@ void PerspectiveCamera::configure(bool cache=true) {
                     MaskD skip = valid;
                     skip &= (dot(e0, n0) < Epsilon && dot(e1, n1) < Epsilon) ||
                             (dot(n0, n1) > 1.f - Epsilon);
+
                     if (mesh->m_has_uv) {
                         info = compressD<Vectori<5, true>>(mesh->m_edge_indices, ~skip || uv_mask);
                     } else {
@@ -96,6 +97,7 @@ void PerspectiveCamera::configure(bool cache=true) {
                 } else {
                     MaskD active = ~valid;
                     active |= (dot(e0, n0) > Epsilon)^(dot(e1, n1) > Epsilon);
+
                     if (mesh->m_has_uv) {
                         info = compressD<Vectori<5, true>>(mesh->m_edge_indices, active || uv_mask);
                     } else {
