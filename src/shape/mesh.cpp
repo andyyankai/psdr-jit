@@ -301,9 +301,14 @@ void Mesh::configure() {
 
         MaskD keep = (dot(secEdgeInfo.n0, secEdgeInfo.n1) < 1.f - EdgeEpsilon);
         // *m_sec_edge_info = compressD<SecondaryEdgeInfo>(secEdgeInfo, keep);
+        IntD keep_id = compress(keep);
+        m_sec_edge_info->is_boundary = gather<MaskD>(secEdgeInfo.is_boundary, keep_id);
+        m_sec_edge_info->p0 = gather<Vector3fD>(secEdgeInfo.p0, keep_id);
+        m_sec_edge_info->e1 = gather<Vector3fD>(secEdgeInfo.e1, keep_id);
+        m_sec_edge_info->n0 = gather<Vector3fD>(secEdgeInfo.n0, keep_id);
+        m_sec_edge_info->n1 = gather<Vector3fD>(secEdgeInfo.n1, keep_id);
+        m_sec_edge_info->p2 = gather<Vector3fD>(secEdgeInfo.p2, keep_id);
 
-        // TODO
-        *m_sec_edge_info = secEdgeInfo;
     } else {
         if ( m_sec_edge_info != nullptr ) {
             delete m_sec_edge_info;

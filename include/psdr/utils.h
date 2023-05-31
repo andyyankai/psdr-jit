@@ -7,18 +7,9 @@ NAMESPACE_BEGIN(psdr_jit)
 
 template <typename ArrayD>
 DRJIT_INLINE ArrayD compressD(const ArrayD &array, const MaskD &active) {
-    // PSDR_ASSERT((array.size()) == (active.size()));
     int temp_size = array_depth_v<ArrayD>;
-    // IntD idx = zeros<IntD>(temp_size);
-    // std::cout<<"compress: "<<compress(detach(active))<<std::endl;
     IntD idx = compress(detach(active));
-
-    // gather<ArrayD>(array[0], idx);
-
-    // std::cout<<"idx: "<< idx <<std::endl;
     return gather<ArrayD>(array, idx);
-
-    return array;
 }
 
 

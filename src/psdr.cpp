@@ -142,7 +142,15 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def(py::init<>())
         .def("seed", &Sampler::seed)
         .def("next_1d", &Sampler::next_1d<false>)
-        .def("next_2d", &Sampler::next_2d<false>);
+        .def("next_2d", &Sampler::next_2d<false>)
+        .def("next_3d", &Sampler::next_3d<false>);
+
+    py::class_<BoundarySegSampleDirect>(m, "BoundarySegSampleDirect")
+        .def_readwrite("p0", &BoundarySegSampleDirect::p0)
+        .def_readwrite("edge", &BoundarySegSampleDirect::edge)
+        .def_readwrite("edge2", &BoundarySegSampleDirect::edge2)
+        .def_readwrite("p2", &BoundarySegSampleDirect::p2)
+        .def_readwrite("is_valid", &BoundarySegSampleDirect::is_valid);
 
     py::class_<DiscreteDistribution>(m, "DiscreteDistribution")
         .def(py::init<>())
@@ -378,7 +386,7 @@ PYBIND11_MODULE(psdr_jit, m) {
 
     py::class_<Scene, Object>(m, "Scene")
         .def(py::init<>())
-
+        .def("sample_boundary_segment_direct", &Scene::sample_boundary_segment_direct)
         .def("add_Sensor", &Scene::add_Sensor, "Add Sensor")
         .def("add_EnvironmentMap", &Scene::add_EnvironmentMap, "Add EnvironmentMap")
         .def("add_Mesh", &Scene::add_Mesh, "Add Mesh")
