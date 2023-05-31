@@ -9,6 +9,12 @@ NAMESPACE_BEGIN(psdr_jit)
 NormalMap::NormalMap(const Bitmap3fD &n_map) : m_nmap(n_map) {}
 
 
+SpectrumD NormalMap::eval_type(const IntersectionD &its, MaskD active) const {
+    SpectrumD value = m_bsdf->eval_type(its, active);
+    return value & active;
+}
+
+
 SpectrumC NormalMap::eval(const IntersectionC &its, const Vector3fC &wo, MaskC active) const {
     return __eval<false>(its, wo, active);
 }

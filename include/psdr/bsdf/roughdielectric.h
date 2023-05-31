@@ -24,6 +24,7 @@ public:
     RoughDielectric(const Bitmap1fD &alpha, float intIOR, float extIOR)
         : m_alpha_u(alpha), m_alpha_v(alpha), m_eta(intIOR / extIOR), m_inv_eta(extIOR/intIOR), m_specular_reflectance(1.0f) { m_anisotropic = false; }
 
+    SpectrumD eval_type(const IntersectionD &its, MaskD active = true) const override;
 
     SpectrumC eval(const IntersectionC &its, const Vector3fC &wo, MaskC active = true) const override;
     SpectrumD eval(const IntersectionD &its, const Vector3fD &wo, MaskD active = true) const override;

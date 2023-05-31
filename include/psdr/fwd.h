@@ -137,6 +137,7 @@ NAMESPACE_BEGIN(psdr_jit)
     using BSDFArrayC    = BSDFArray<false>;
     using BSDFArrayD    = BSDFArray<true>;
 
+
     class Diffuse;
     class RoughConductor;
     class NormalMap;
@@ -158,6 +159,11 @@ NAMESPACE_BEGIN(psdr_jit)
     using MeshArray     = Type<Mesh*, ad>;
     using MeshArrayC    = MeshArray<false>;
     using MeshArrayD    = MeshArray<true>;
+
+    using ShapePtr = drjit::replace_scalar_t<FloatD, const Mesh *>;
+
+
+
 
     class Integrator;
     class FieldExtractionIntegrator;

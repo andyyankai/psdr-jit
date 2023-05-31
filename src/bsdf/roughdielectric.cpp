@@ -4,6 +4,11 @@
 
 NAMESPACE_BEGIN(psdr_jit)
 
+SpectrumD RoughDielectric::eval_type(const IntersectionD &its, MaskD active) const {
+    SpectrumD value(1.0f);
+    return value & active;
+}
+
 SpectrumC RoughDielectric::eval(const IntersectionC& its, const Vector3fC& wo, MaskC active) const {
     return __eval<false>(its, wo, active);
 }

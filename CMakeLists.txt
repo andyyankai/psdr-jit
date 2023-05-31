@@ -157,17 +157,6 @@ set(PSDR_SOURCE_FILES
     ${PSDR_INCLUDE_DIR}/scene/scene_loader.h
     ${PSDR_SOURCE_DIR}/scene/scene_loader.cpp
 
-    ${PSDR_INCLUDE_DIR}/integrator/integrator.h
-    ${PSDR_SOURCE_DIR}/integrator/integrator.cpp
-    ${PSDR_INCLUDE_DIR}/integrator/field.h
-    ${PSDR_SOURCE_DIR}/integrator/field.cpp
-
-    ${PSDR_INCLUDE_DIR}/integrator/collocated.h
-    ${PSDR_SOURCE_DIR}/integrator/collocated.cpp
-
-    ${PSDR_INCLUDE_DIR}/integrator/path.h
-    ${PSDR_SOURCE_DIR}/integrator/path.cpp
-
     ${PSDR_SOURCE_DIR}/optix_stubs.cpp
 
     ${PSDR_SOURCE_DIR}/psdr.cpp

@@ -46,10 +46,10 @@
 #include <psdr/scene/scene_loader.h>
 
 
-#include <psdr/integrator/integrator.h>
-#include <psdr/integrator/field.h>
-#include <psdr/integrator/collocated.h>
-#include <psdr/integrator/path.h>
+// #include <psdr/integrator/integrator.h>
+// #include <psdr/integrator/field.h>
+// #include <psdr/integrator/collocated.h>
+// #include <psdr/integrator/path.h>
 
 
 
@@ -64,8 +64,8 @@ PYBIND11_MODULE(psdr_jit, m) {
     py::module::import("drjit.cuda");
     py::module::import("drjit.cuda.ad");
 
-    // jit_set_flag(JitFlag::LoopRecord, true);
-    // jit_set_flag(JitFlag::VCallRecord, true);
+    // jit_set_flag(JitFlag::LoopRecord, false);
+    // jit_set_flag(JitFlag::VCallRecord, false);
 
 
     m.doc() = "Path-space differentiable renderer";
@@ -77,6 +77,9 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("type_name", &Object::type_name)
         .def_readonly("id", &Object::m_id)
         .def("__repr__", &Object::to_string);
+
+    // py::class_<ref<Mesh>>(m, "Meshptr");
+
 
     py::class_<RenderOption>(m, "RenderOption")
         .def(py::init<>())
@@ -98,13 +101,6 @@ PYBIND11_MODULE(psdr_jit, m) {
                 return oss.str();
             }
         );
-    py::class_<EdgeSortOption>(m, "EdgeSortOption")
-        .def(py::init<>())
-        .def_readwrite("enable_sort", &EdgeSortOption::enable_sort)
-        .def_readwrite("local_angle", &EdgeSortOption::local_angle)
-        .def_readwrite("global_angle", &EdgeSortOption::global_angle)
-        .def_readwrite("min_global_step", &EdgeSortOption::min_global_step)
-        .def_readwrite("max_depth", &EdgeSortOption::max_depth);
 
     py::class_<RayC>(m, "RayC")
         .def(py::init<>())
@@ -196,6 +192,7 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readonly("J", &IntersectionC::J);
 
     py::class_<IntersectionD, InteractionD>(m, "IntersectionD")
+        .def("get_bsdf", &IntersectionD::get_bsdf)
         .def_readonly("shape", &IntersectionD::shape)
         .def_readonly("n", &IntersectionD::n)
         .def_readonly("sh_frame", &IntersectionD::sh_frame)
@@ -203,7 +200,18 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readonly("J", &IntersectionD::J);
 
  
-    // Records
+    // MeshArray
+    {
+        py::object dr       = py::module_::import("drjit"),
+                   dr_array = dr.attr("ArrayBase");
+        py::class_<MeshArrayD> cls(m, "MeshArray", dr_array);
+
+        cls.def("diffuse",
+                [](MeshArrayD shape, IntersectionD its, MaskD active) {
+                    return shape->bsdf()->eval_type(its, active);
+                });
+    };
+
 
     py::class_<SampleRecordC>(m, "SampleRecordC")
         .def_readonly("pdf", &SampleRecordC::pdf)
@@ -271,6 +279,7 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readonly("num_vertices", &Mesh::m_num_vertices)
         .def_readonly("num_faces", &Mesh::m_num_faces)
         .def_readonly("bsdf", &Mesh::m_bsdf)
+        .def("bsdf_array", &Mesh::bsdf)
         .def_readwrite("to_world", &Mesh::m_to_world_raw)
         .def_readwrite("to_world_right", &Mesh::m_to_world_right)
         .def_readwrite("to_world_left", &Mesh::m_to_world_left)
@@ -304,6 +313,7 @@ PYBIND11_MODULE(psdr_jit, m) {
     py::class_<Sensor, Object>(m, "Sensor")
         .def("set_transform", &Sensor::set_transform, "mat"_a, "set_left"_a = true)
         .def("append_transform", &Sensor::append_transform, "mat"_a, "append_left"_a = true)
+        .def("sample_primary_ray", &Sensor::sample_primary_rayD)
         .def_readwrite("to_world", &Sensor::m_to_world_raw)
         .def_readwrite("to_world_left", &Sensor::m_to_world_left)
         .def_readwrite("to_world_right", &Sensor::m_to_world_right);
@@ -345,6 +355,9 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("add_BSDF", &Scene::add_BSDF, "Add BSDf", "bsdf"_a, "name"_a, "twoSide"_a = false)
         .def("add_normalmap_BSDF", &Scene::add_normalmap_BSDF, "Add add_normalmap_BSDF", "bsdf1"_a, "bsdf2"_a, "name"_a, "twoSide"_a = false)
 
+
+        .def_readonly("sensor", &Scene::m_sensors)
+
         .def("unit_ray_intersect", &Scene::unit_ray_intersect<false>)
         .def("unit_ray_intersectAD", &Scene::unit_ray_intersect<true>)
 
@@ -359,21 +372,21 @@ PYBIND11_MODULE(psdr_jit, m) {
 
 
 
-    py::class_<Integrator, Object>(m, "Integrator")
-        .def("renderC", &Integrator::renderC, "scene"_a, "sensor_id"_a = 0, "npass"_a = 1)
-        .def("renderD", &Integrator::renderD, "scene"_a, "sensor_id"_a = 0);
+    // py::class_<Integrator, Object>(m, "Integrator")
+    //     .def("renderC", &Integrator::renderC, "scene"_a, "sensor_id"_a = 0, "npass"_a = 1)
+    //     .def("renderD", &Integrator::renderD, "scene"_a, "sensor_id"_a = 0);
 
-    py::class_<FieldExtractionIntegrator, Integrator>(m, "FieldExtractionIntegrator")
-        .def(py::init<char*>());
+    // py::class_<FieldExtractionIntegrator, Integrator>(m, "FieldExtractionIntegrator")
+    //     .def(py::init<char*>());
 
 
-    py::class_<CollocatedIntegrator, Integrator>(m, "CollocatedIntegrator")
-        .def_readwrite("m_intensity", &CollocatedIntegrator::m_intensity)
-        .def(py::init<const FloatD &>());
+    // py::class_<CollocatedIntegrator, Integrator>(m, "CollocatedIntegrator")
+    //     .def_readwrite("m_intensity", &CollocatedIntegrator::m_intensity)
+    //     .def(py::init<const FloatD &>());
 
-    py::class_<PathTracer, Integrator>(m, "PathTracer")
-        .def(py::init<int>(), "max_depth"_a = 1)
-        .def_readwrite("hide_emitters", &PathTracer::m_hide_emitters);
+    // py::class_<PathTracer, Integrator>(m, "PathTracer")
+    //     .def(py::init<int>(), "max_depth"_a = 1)
+    //     .def_readwrite("hide_emitters", &PathTracer::m_hide_emitters);
 
 
 }

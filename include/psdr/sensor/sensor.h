@@ -27,6 +27,13 @@ public:
     virtual RayC sample_primary_ray(const Vector2fC &samples) const = 0;
     virtual RayD sample_primary_ray(const Vector2fD &samples) const = 0;
 
+    RayC sample_primary_rayC(const Vector2fC &samples) const {
+        return sample_primary_ray(samples);
+    };
+    RayD sample_primary_rayD(const Vector2fD &samples) const {
+        return sample_primary_ray(samples);
+    };
+
     virtual SensorDirectSampleC sample_direct(const Vector3fC &p) const = 0;
 
     virtual PrimaryEdgeSample sample_primary_edge(const FloatC &sample1) const = 0;
@@ -68,5 +75,7 @@ NAMESPACE_END(psdr_jit)
 
 DRJIT_VCALL_BEGIN(psdr_jit::Sensor)
     DRJIT_VCALL_METHOD(sample_primary_ray)
+    DRJIT_VCALL_METHOD(sample_primary_rayD)
+    DRJIT_VCALL_METHOD(sample_primary_rayC)
     DRJIT_VCALL_METHOD(sample_primary_edge)
 DRJIT_VCALL_END(psdr_jit::Sensor)

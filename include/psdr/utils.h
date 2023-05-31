@@ -4,7 +4,7 @@
 #include <psdr/psdr.h>
 
 NAMESPACE_BEGIN(psdr_jit)
-	
+
 template <typename ArrayD>
 DRJIT_INLINE ArrayD compressD(const ArrayD &array, const MaskD &active) {
     // PSDR_ASSERT((array.size()) == (active.size()));

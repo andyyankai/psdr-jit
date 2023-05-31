@@ -26,6 +26,8 @@ public:
     virtual SpectrumC eval(const IntersectionC &its, const Vector3fC &wo, MaskC active = true) const = 0;
     virtual SpectrumD eval(const IntersectionD &its, const Vector3fD &wo, MaskD active = true) const = 0;
 
+    virtual SpectrumD eval_type(const IntersectionD &its, MaskD active = true) const = 0;
+
     SpectrumC evalC(const IntersectionC &its, const Vector3fC &wo, MaskC active = true) const {
         return eval(its, wo, active);
     };
@@ -65,6 +67,7 @@ NAMESPACE_END(psdr_jit)
 
 DRJIT_VCALL_BEGIN(psdr_jit::BSDF)
     DRJIT_VCALL_METHOD(eval)
+    DRJIT_VCALL_METHOD(eval_type)
     DRJIT_VCALL_METHOD(evalC)
     DRJIT_VCALL_METHOD(evalD)
     DRJIT_VCALL_METHOD(sample)

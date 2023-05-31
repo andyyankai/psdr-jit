@@ -15,6 +15,7 @@ public:
     Microfacet(const char *spec_refl_file, const char *diff_refl_file, const char *roughness_file);
 
     Microfacet(const Bitmap3fD &spec_refl, const Bitmap3fD &diff_refl, const Bitmap1fD &roughness);
+    SpectrumD eval_type(const IntersectionD &its, MaskD active = true) const override;
 
     SpectrumC eval(const IntersectionC &its, const Vector3fC &wo, MaskC active = true) const override;
     SpectrumD eval(const IntersectionD &its, const Vector3fD &wo, MaskD active = true) const override;

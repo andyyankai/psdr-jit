@@ -38,7 +38,10 @@ struct Intersection_ : public Interaction_<Float_> {
         } else {
             return shape->emitter()->evalC(*this, active);
         }
-        
+    }
+
+    inline SpectrumD get_bsdf(Mask<ad> active) const {
+        return shape->bsdf()->eval_type(*this, active);
     }
 
     MeshArray<ad>       shape;

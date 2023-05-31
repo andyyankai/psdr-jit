@@ -11,6 +11,11 @@ Microfacet::Microfacet(const char *spec_refl_file, const char *diff_refl_file, c
 Microfacet::Microfacet(const Bitmap3fD &spec_refl, const Bitmap3fD &diff_refl, const Bitmap1fD &roughness) :
     m_specularReflectance(spec_refl), m_diffuseReflectance(diff_refl), m_roughness(roughness) {}
 
+SpectrumD Microfacet::eval_type(const IntersectionD &its, MaskD active) const {
+    SpectrumD value = m_diffuseReflectance.eval<true>(its.uv);
+    return value & active;
+}
+
 SpectrumC Microfacet::eval(const IntersectionC &its, const Vector3fC &wo, MaskC active) const {
     return __eval<false>(its, wo, active);
 }

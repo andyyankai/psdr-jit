@@ -184,26 +184,6 @@ using TriangleUV = Array<Vector2f<ad>, 3>;
 using TriangleUVC   = TriangleUV<false>;
 using TriangleUVD   = TriangleUV<true>;
 
-/********************************************
- * Others
- ********************************************/
-
-template <typename Float_>
-struct AQLeaf_ {
-    Vectorf<8, false>       poly;
-    Vector3f<false>         p0, p1;
-    DRJIT_STRUCT(AQLeaf_, p0, p1, poly)
-};
-
-template <typename Float_>
-struct Tree_ {
-    Float_         p0, p1;
-    DRJIT_STRUCT(Tree_, p0, p1)
-};
-
-
-using AQLeaf  = AQLeaf_<FloatC>;
-using tree3D  = Tree_<Vector3fC>;
 
 // For samplers
 
@@ -224,48 +204,5 @@ struct RenderOption {
     int sppse;          // Spp for secondary edge integral
     int log_level;
 };
-
-struct EdgeSortOption {
-    EdgeSortOption() : enable_sort(false), local_angle(180), global_angle(180), min_global_step(1), max_depth(1) {}
-    bool enable_sort;
-    float local_angle;
-    float global_angle;
-    int   min_global_step;
-    int   max_depth;
-};
-
-
-struct AQ_Option {
-    AQ_Option() {};
-    AQ_Option(const std::vector<float> &config, int option) {
-        num_x = config[0];
-        num_y = config[1];
-        num_z = config[2];
-        thold = config[3];
-        wt1 = config[4];
-        max_memory = static_cast<int>(config[5]);
-        max_depth = static_cast<int>(config[6]);
-        final_spp = static_cast<int>(config[7]);
-        RMSE_wt   = config[8];
-        eps       = config[9];
-
-        guiding_option = option;
-    }
-    float num_x;
-    float num_y;
-    float num_z;
-    float thold;
-    float wt1;
-    int max_memory;
-    int max_depth;
-    int final_spp;
-
-    float RMSE_wt;
-    float eps;
-    int guiding_option;
-};
-
-
-
 
 NAMESPACE_END(psdr_jit)

@@ -13,6 +13,10 @@ SpectrumC RoughConductor::eval(const IntersectionC& its, const Vector3fC& wo, Ma
 SpectrumD RoughConductor::eval(const IntersectionD& its, const Vector3fD& wo, MaskD active) const {
     return __eval<true>(its, wo, active);
 }
+SpectrumD RoughConductor::eval_type(const IntersectionD &its, MaskD active) const {
+    SpectrumD value(1.0f);
+    return value & active;
+}
 
 
 BSDFSampleC RoughConductor::sample(const IntersectionC& its, const Vector3fC& sample, MaskC active) const {

@@ -9,6 +9,7 @@ PSDR_CLASS_DECL_BEGIN(NormalMap, final, BSDF)
 public:
     NormalMap() {}
     NormalMap(const Bitmap3fD &n_map);
+    SpectrumD eval_type(const IntersectionD &its, MaskD active = true) const override;
 
     SpectrumC eval(const IntersectionC &its, const Vector3fC &wo, MaskC active = true) const override;
     SpectrumD eval(const IntersectionD &its, const Vector3fD &wo, MaskD active = true) const override;

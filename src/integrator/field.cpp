@@ -77,11 +77,11 @@ Spectrum<ad> FieldExtractionIntegrator::__Li(const Scene &scene, const Ray<ad> &
             active &= its.is_valid();
             if ( scene.m_bsdfs.size() == 1U || scene.m_meshes.size() == 1U ) {
                 const BSDF *bsdf = scene.m_meshes[0]->m_bsdf;
-                result = bsdf->evalD(its, its.wi, active);
+                result = bsdf->eval_type(its, active);
             } else {
                 BSDFArray<ad> bsdf_array = its.shape->bsdf();
                 
-                result = bsdf_array->evalD(its, its.wi, active);
+                result = bsdf_array->eval_type(its, active);
             }
         } else {
             active &= its.is_valid();

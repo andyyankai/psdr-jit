@@ -17,7 +17,7 @@
 // #include <drjit-core/array.h>
 #include <cstdio>
 #include <cstring>
-#include <psdr/jit_optix_test.h>
+// #include <psdr/jit_optix_test.h>
 #include <iostream>
 
 NAMESPACE_BEGIN(psdr_jit)

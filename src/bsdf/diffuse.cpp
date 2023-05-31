@@ -9,6 +9,11 @@ Diffuse::Diffuse(const char *refl_file) : m_reflectance(refl_file) {}
 
 Diffuse::Diffuse(const Bitmap3fD &reflectance) : m_reflectance(reflectance) {}
 
+SpectrumD Diffuse::eval_type(const IntersectionD &its, MaskD active) const {
+    SpectrumD value = m_reflectance.eval<true>(its.uv);
+    return value & active;
+}
+
 
 SpectrumC Diffuse::eval(const IntersectionC &its, const Vector3fC &wo, MaskC active) const {
     return __eval<false>(its, wo, active);
