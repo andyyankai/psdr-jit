@@ -102,6 +102,13 @@ PYBIND11_MODULE(psdr_jit, m) {
             }
         );
 
+    py::class_<PrimaryEdgeSample>(m, "PrimaryEdgeSample")
+        .def_readwrite("x_dot_n", &PrimaryEdgeSample::x_dot_n)
+        .def_readwrite("ray_n", &PrimaryEdgeSample::ray_n)
+        .def_readwrite("ray_p", &PrimaryEdgeSample::ray_p)
+        .def_readwrite("pdf", &PrimaryEdgeSample::pdf)
+        .def_readwrite("idx", &PrimaryEdgeSample::idx);
+
     py::class_<RayC>(m, "RayC")
         .def(py::init<>())
         .def(py::init<const Vector3fC &, const Vector3fC &>())
@@ -126,6 +133,7 @@ PYBIND11_MODULE(psdr_jit, m) {
     py::class_<FrameD>(m, "FrameD")
         .def(py::init<>())
         .def(py::init<const Vector3fD &>())
+        .def("to_local", &FrameD::to_local)
         .def_readwrite("s", &FrameD::s)
         .def_readwrite("t", &FrameD::t)
         .def_readwrite("n", &FrameD::n);
@@ -192,6 +200,8 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readonly("J", &IntersectionC::J);
 
     py::class_<IntersectionD, InteractionD>(m, "IntersectionD")
+        .def("is_emitter", &IntersectionD::is_emitter)
+        .def("Le", &IntersectionD::Le)
         .def("get_bsdf", &IntersectionD::get_bsdf)
         .def_readonly("shape", &IntersectionD::shape)
         .def_readonly("n", &IntersectionD::n)
@@ -200,6 +210,17 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readonly("J", &IntersectionD::J);
 
  
+    {
+        py::object dr       = py::module_::import("drjit"),
+                   dr_array = dr.attr("ArrayBase");
+        py::class_<BSDFArrayD> cls(m, "BSDFArray", dr_array);
+
+        cls.def("eval",
+                [](BSDFArrayD bsdf, IntersectionD its, Vector3fD wi, MaskD active) {
+                    return bsdf->evalD(its, wi, active);
+                });
+    };
+
     // MeshArray
     {
         py::object dr       = py::module_::import("drjit"),
@@ -209,6 +230,11 @@ PYBIND11_MODULE(psdr_jit, m) {
         cls.def("diffuse",
                 [](MeshArrayD shape, IntersectionD its, MaskD active) {
                     return shape->bsdf()->eval_type(its, active);
+                });
+
+        cls.def("bsdf_eval",
+                [](MeshArrayD shape, IntersectionD its, Vector3fD wi, MaskD active) {
+                    return shape->bsdf()->evalD(its, wi, active);
                 });
     };
 
@@ -311,12 +337,16 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readwrite("scale", &EnvironmentMap::m_scale);
         
     py::class_<Sensor, Object>(m, "Sensor")
+        .def("sample_primary_edge", &Sensor::sample_primary_edge)
         .def("set_transform", &Sensor::set_transform, "mat"_a, "set_left"_a = true)
         .def("append_transform", &Sensor::append_transform, "mat"_a, "append_left"_a = true)
         .def("sample_primary_ray", &Sensor::sample_primary_rayD)
+        .def_readwrite("enable_edges", &Sensor::m_enable_edges)
         .def_readwrite("to_world", &Sensor::m_to_world_raw)
         .def_readwrite("to_world_left", &Sensor::m_to_world_left)
         .def_readwrite("to_world_right", &Sensor::m_to_world_right);
+
+
 
     py::class_<PerspectiveCamera, Sensor>(m, "PerspectiveCamera")
         .def(py::init<float, float, float>())
@@ -354,12 +384,13 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("add_Mesh", &Scene::add_Mesh, "Add Mesh")
         .def("add_BSDF", &Scene::add_BSDF, "Add BSDf", "bsdf"_a, "name"_a, "twoSide"_a = false)
         .def("add_normalmap_BSDF", &Scene::add_normalmap_BSDF, "Add add_normalmap_BSDF", "bsdf1"_a, "bsdf2"_a, "name"_a, "twoSide"_a = false)
-
+        .def("sample_emitter_position", &Scene::sample_emitter_position<true>)
 
         .def_readonly("sensor", &Scene::m_sensors)
 
         .def("unit_ray_intersect", &Scene::unit_ray_intersect<false>)
         .def("unit_ray_intersectAD", &Scene::unit_ray_intersect<true>)
+        .def("unit_ray_intersectADAD", &Scene::unit_ray_intersect<true, true>)
 
         .def("load_file", &Scene::load_file, "file_name"_a, "auto_configure"_a = true)
         .def("load_string", &Scene::load_string, "scene_xml"_a, "auto_configure"_a = true)

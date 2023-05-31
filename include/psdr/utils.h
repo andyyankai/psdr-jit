@@ -9,6 +9,7 @@ template <typename ArrayD>
 DRJIT_INLINE ArrayD compressD(const ArrayD &array, const MaskD &active) {
     // PSDR_ASSERT((array.size()) == (active.size()));
     // int temp_size = array.size();
+    // std::cout << temp_size << std::endl;
     // IntD idx = IntD(compress(arange<IntC>((temp_size)), detach(active)));
     // return gather<ArrayD>(array, idx);
 
