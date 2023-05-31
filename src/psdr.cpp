@@ -123,6 +123,8 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readwrite("o", &RayD::o)
         .def_readwrite("d", &RayD::d);
 
+    py::class_<TriangleInfoD>(m, "TriangleInfoD");
+
     py::class_<FrameC>(m, "FrameC")
         .def(py::init<>())
         .def(py::init<const Vector3fC &>())
