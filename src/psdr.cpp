@@ -473,9 +473,9 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("emitter_position_pdfD", &Scene::emitter_position_pdf<true>)
 
 
-        .def("unit_ray_intersect", &Scene::unit_ray_intersect<false>)
-        .def("unit_ray_intersectAD", &Scene::unit_ray_intersect<true>)
-        .def("unit_ray_intersectADAD", &Scene::unit_ray_intersect<true, true>)
+        .def("ray_intersect", &Scene::ray_intersect<false>)
+        .def("ray_intersectAD", &Scene::ray_intersect<true>)
+        .def("ray_intersectADAD", &Scene::ray_intersect<true, true>)
 
         .def("load_file", &Scene::load_file, "file_name"_a, "auto_configure"_a = true)
         .def("load_string", &Scene::load_string, "scene_xml"_a, "auto_configure"_a = true)

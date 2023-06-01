@@ -504,195 +504,6 @@ bool Scene::is_ready() const {
     return m_optix->is_ready();
 }
 
-
-template <bool ad, bool path_space>
-Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active, TriangleInfoD *out_info) const {
-    static_assert(ad || !path_space);
-    Intersection<ad> its;
-
-    Intersection_OptiX optix_its = m_optix->ray_intersect<ad>(ray, active);
-
-
-
-    Vector2i<ad> idx(optix_its.triangle_id, optix_its.shape_id);
-    // its.t = idx[1];
-    // return its;
-
-    TriangleUV<ad>      tri_uv_info;
-    Mask<ad>            face_normal_mask;
-
-
-
-    // TODO: FIX
-    Vector3f<ad> tri_info_p0;
-    Vector3f<ad> tri_info_e1; 
-    Vector3f<ad> tri_info_e2; 
-    Vector3f<ad> tri_info_n0; 
-    Vector3f<ad> tri_info_n1; 
-    Vector3f<ad> tri_info_n2; 
-    Vector3f<ad> tri_info_face_normal; 
-    Float<ad> tri_info_face_area; 
-
-
-    // std::cout << m_triangle_info.face_normal << std::endl;
-    // std::cout << idx[1] << std::endl;
-
-    // its.p = idx[1];
-    // return its;
-
-    if constexpr ( ad ) {
-        its.n = gather<Vector3f<ad>>(m_triangle_info.face_normal, idx[1], active);
-        tri_uv_info = gather<TriangleUVD>(m_triangle_uv, idx[1], active);
-        face_normal_mask = gather<MaskD>(m_triangle_face_normals, idx[1], active);
-
-        tri_info_p0 = gather<Vector3f<ad>>(m_triangle_info.p0, idx[1], active);
-        tri_info_e1 = gather<Vector3f<ad>>(m_triangle_info.e1, idx[1], active);
-        tri_info_e2 = gather<Vector3f<ad>>(m_triangle_info.e2, idx[1], active);
-        tri_info_n0 = gather<Vector3f<ad>>(m_triangle_info.n0, idx[1], active);
-        tri_info_n1 = gather<Vector3f<ad>>(m_triangle_info.n1, idx[1], active);
-        tri_info_n2 = gather<Vector3f<ad>>(m_triangle_info.n2, idx[1], active);
-
-        tri_info_face_normal = gather<Vector3f<ad>>(m_triangle_info.face_normal, idx[1], active);
-        tri_info_face_area = gather<Float<ad>>(m_triangle_info.face_area, idx[1], active);
-
-
-
-
-        TriangleInfo<ad>    tri_info = empty<TriangleInfo<ad>>(slices<Vector3f<ad>>(tri_info_p0));
-        tri_info.p0 = tri_info_p0;
-        tri_info.e1 = tri_info_e1;
-        tri_info.e2 = tri_info_e2;
-        tri_info.n0 = tri_info_n0;
-        tri_info.n1 = tri_info_n1;
-        tri_info.n2 = tri_info_n2;
-        tri_info.face_normal = tri_info_face_normal;
-        tri_info.face_area = tri_info_face_area;
-
-
-        if ( out_info != nullptr ) *out_info = tri_info;
-
-        if constexpr ( path_space ) {
-            its.J = tri_info.face_area/detach(tri_info.face_area);
-        } else {
-            its.J = 1.f;
-        }
-
-    } else {
-        its.n = gather<Vector3f<ad>>(detach(m_triangle_info.face_normal), idx[1], active);
-        tri_uv_info = gather<TriangleUVC>(detach(m_triangle_uv), idx[1], active);
-        face_normal_mask = gather<MaskC>(detach(m_triangle_face_normals), idx[1], active);
-
-        tri_info_p0 = gather<Vector3f<ad>>(detach(m_triangle_info.p0), idx[1], active);
-        tri_info_e1 = gather<Vector3f<ad>>(detach(m_triangle_info.e1), idx[1], active);
-        tri_info_e2 = gather<Vector3f<ad>>(detach(m_triangle_info.e2), idx[1], active);
-        tri_info_n0 = gather<Vector3f<ad>>(detach(m_triangle_info.n0), idx[1], active);
-        tri_info_n1 = gather<Vector3f<ad>>(detach(m_triangle_info.n1), idx[1], active);
-        tri_info_n2 = gather<Vector3f<ad>>(detach(m_triangle_info.n2), idx[1], active);
-        tri_info_face_normal = gather<Vector3f<ad>>(detach(m_triangle_info.face_normal), idx[1], active);
-        tri_info_face_area = gather<Float<ad>>(detach(m_triangle_info.face_area), idx[1], active);
-
-        TriangleInfoD   tri_info = empty<TriangleInfoD>(slices<Vector3fC>(tri_info_p0));
-        tri_info.p0 = gather<Vector3fD>((m_triangle_info.p0), idx[1], active);;
-        tri_info.e1 = gather<Vector3fD>((m_triangle_info.e1), idx[1], active);
-        tri_info.e2 = gather<Vector3fD>((m_triangle_info.e2), idx[1], active);
-        tri_info.n0 = gather<Vector3fD>((m_triangle_info.n0), idx[1], active);
-        tri_info.n1 = gather<Vector3fD>((m_triangle_info.n1), idx[1], active);
-        tri_info.n2 = gather<Vector3fD>((m_triangle_info.n2), idx[1], active);
-        tri_info.face_normal = gather<Vector3fD>(m_triangle_info.face_normal, idx[1], active);
-        tri_info.face_area = gather<FloatD>(m_triangle_info.face_area, IntD(idx[1]), active);
-
-
-        if ( out_info != nullptr ) {
-            *out_info = tri_info;
-        }
-
-        its.J = 1.f;
-
-    }
-
-    
-    const Vector3f<ad> &vertex0 = tri_info_p0, &edge1 = tri_info_e1, &edge2 = tri_info_e2;
-
-    // calculate dudp
-    Vector3f<ad> dp0 = edge1,
-                 dp1 = edge2;
-    Vector2f<ad> uv0 = tri_uv_info[0],
-                 uv1 = tri_uv_info[1],
-                 uv2 = tri_uv_info[2];
-    Vector2f<ad> duv0 = uv1 - uv0,
-                 duv1 = uv2 - uv0;
-    Float<ad> det     = fmsub(duv0.x(), duv1.y(), duv0.y() * duv1.x()),
-              inv_det = rcp(det);
-    Mask<ad>  valid_dp = neq(det, 0.f);
-
-    if constexpr ( !ad || path_space ) {
-        // Path-space formulation
-        Vector2fC uv = optix_its.uv;
-        Vector3f<ad> sh_n = normalize(bilinear<ad>(tri_info_n0,
-                                                   tri_info_n1 - tri_info_n0,
-                                                   tri_info_n2 - tri_info_n0,
-                                                   uv));
-        masked(sh_n, face_normal_mask) = its.n;
-
-        if constexpr ( ad ) {
-            its.shape = gather<MeshArrayD>(m_meshes_cuda, idx[0], active);
-        } else {
-            its.shape = gather<MeshArrayC>(detach(m_meshes_cuda), idx[0], active);
-        }
-        its.p = bilinear<ad>(vertex0, edge1, edge2, uv);
-
-        Vector3f<ad> dir = its.p - ray.o;
-        its.t = norm(dir);
-        dir /= its.t;
-        its.uv = bilinear2<ad>(tri_uv_info[0],
-                               tri_uv_info[1] - tri_uv_info[0],
-                               tri_uv_info[2] - tri_uv_info[0],
-                               uv);
-
-        its.dp_du = zeros<Vector3f<ad>>(slices(sh_n));
-        its.dp_dv = zeros<Vector3f<ad>>(slices(sh_n));
-        its.dp_du[valid_dp] = fmsub( duv1.y(), dp0, duv0.y() * dp1) * inv_det;
-        its.dp_dv[valid_dp] = fnmadd(duv1.x(), dp0, duv0.x() * dp1) * inv_det;
-        its.sh_frame = Frame<ad>(sh_n);
-        its.sh_frame.s[valid_dp] = normalize(fnmadd(its.sh_frame.n, dot(its.sh_frame.n, its.dp_du), its.dp_du));
-        its.sh_frame.t[valid_dp] = cross(its.sh_frame.n, its.sh_frame.s);
-        its.wi = its.sh_frame.to_local(-dir);
-
-
-    } else {
-        // Standard (solid-angle) formulation
-        auto [uv, t] = ray_intersect_triangle<true>(vertex0, edge1, edge2, ray);
-        Vector3fD sh_n = normalize(bilinear<true>(tri_info_n0,
-                                                  tri_info_n1 - tri_info_n0,
-                                                  tri_info_n2 - tri_info_n0,
-                                                  uv));
-
-        masked(sh_n, face_normal_mask) = its.n;
-
-        its.shape = gather<MeshArrayD>(m_meshes_cuda, idx[0], active);
-        its.p = ray(t);        
-        its.t = t;
-        its.uv = bilinear2<true>(tri_uv_info[0],
-                                 tri_uv_info[1] - tri_uv_info[0],
-                                 tri_uv_info[2] - tri_uv_info[0],
-                                 uv);
-        // calculate dudp
-        its.dp_du = zeros<Vector3f<ad>>(slices(sh_n));
-        its.dp_dv = zeros<Vector3f<ad>>(slices(sh_n));
-        its.dp_du[valid_dp] = fmsub( duv1.y(), dp0, duv0.y() * dp1) * inv_det;
-        its.dp_dv[valid_dp] = fnmadd(duv1.x(), dp0, duv0.x() * dp1) * inv_det;
-        its.sh_frame = Frame<ad>(sh_n);
-        its.sh_frame.s[valid_dp] = normalize(fnmadd(its.sh_frame.n, dot(its.sh_frame.n, its.dp_du), its.dp_du));
-        its.sh_frame.t[valid_dp] = cross(its.sh_frame.n, its.sh_frame.s);
-        its.wi = its.sh_frame.to_local(-ray.d);
-
-    }
-
-
-    // drjit::eval(its);
-    return its;
-}
-
 template <bool ad, bool path_space>
 std::pair<Intersection<ad>, TriangleInfoD> Scene::boundary_ray_intersect(const Ray<ad> &ray, Mask<ad> active) const {
     static_assert(ad || !path_space);
@@ -881,7 +692,7 @@ std::pair<Intersection<ad>, TriangleInfoD> Scene::boundary_ray_intersect(const R
 
 
 template <bool ad, bool path_space>
-Intersection<ad> Scene::unit_ray_intersect(const Ray<ad> &ray, Mask<ad> active) const {
+Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active) const {
     static_assert(ad || !path_space);
     Intersection<ad> its;
 
@@ -1137,17 +948,13 @@ BoundarySegSampleDirect Scene::sample_boundary_segment_direct(const Vector3fC &s
 
 
 // Explicit instantiations
-template IntersectionC Scene::ray_intersect<false, false>(const RayC&, MaskC, TriangleInfoD*) const;
-template IntersectionD Scene::ray_intersect<true , false>(const RayD&, MaskD, TriangleInfoD*) const;
-template IntersectionD Scene::ray_intersect<true , true >(const RayD&, MaskD, TriangleInfoD*) const;
-
 template std::pair<IntersectionC, TriangleInfoD> Scene::boundary_ray_intersect<false, false>(const RayC&, MaskC) const;
 template std::pair<IntersectionD, TriangleInfoD> Scene::boundary_ray_intersect<true , false>(const RayD&, MaskD) const;
 template std::pair<IntersectionD, TriangleInfoD> Scene::boundary_ray_intersect<true , true >(const RayD&, MaskD) const;
 
-template IntersectionC Scene::unit_ray_intersect<false, false>(const RayC&, MaskC) const;
-template IntersectionD Scene::unit_ray_intersect<true , false>(const RayD&, MaskD) const;
-template IntersectionD Scene::unit_ray_intersect<true , true >(const RayD&, MaskD) const;
+template IntersectionC Scene::ray_intersect<false, false>(const RayC&, MaskC) const;
+template IntersectionD Scene::ray_intersect<true , false>(const RayD&, MaskD) const;
+template IntersectionD Scene::ray_intersect<true , true >(const RayD&, MaskD) const;
 
 template PositionSampleC Scene::sample_emitter_position<false>(const Vector3fC&, const Vector2fC&, MaskC) const;
 template PositionSampleD Scene::sample_emitter_position<true >(const Vector3fD&, const Vector2fD&, MaskD) const;
