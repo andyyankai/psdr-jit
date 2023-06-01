@@ -164,9 +164,7 @@ set(PSDR_SOURCE_FILES
 
 
 set(CUDA_SOURCE_FILES
-    # ./cuda/kernel/knn.cu
     ./cuda/kernel/util.cu
-    # ./cuda/kernel/NEE.cu
 )
 
 
