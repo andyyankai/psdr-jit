@@ -21,7 +21,9 @@ public:
     FloatD pdf(const IntersectionD &its, const Vector3fD &wo, MaskD active) const override;
 
     bool anisotropic() const override { return false; }
-
+    int test_vir() override {
+        return 0;
+    };
     std::string to_string() const override { return std::string("NormalMap[id=") + m_id + "]"; }
 
     Bitmap3fD m_nmap;

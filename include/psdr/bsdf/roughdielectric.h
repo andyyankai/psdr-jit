@@ -20,7 +20,9 @@ public:
     RoughDielectric(float intIOR, float extIOR)
         : m_alpha_u(0.1f), m_alpha_v(0.1f), m_eta(intIOR / extIOR), m_inv_eta(extIOR/intIOR), m_specular_reflectance(1.0f) { m_anisotropic = false; }
 
-
+    int test_vir() override {
+        return 0;
+    };
     RoughDielectric(const Bitmap1fD &alpha, float intIOR, float extIOR)
         : m_alpha_u(alpha), m_alpha_v(alpha), m_eta(intIOR / extIOR), m_inv_eta(extIOR/intIOR), m_specular_reflectance(1.0f) { m_anisotropic = false; }
 

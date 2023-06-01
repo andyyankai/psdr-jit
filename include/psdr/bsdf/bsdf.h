@@ -3,6 +3,10 @@
 #include <psdr/psdr.h>
 #include <psdr/core/intersection.h>
 #include <psdr/core/records.h>
+#include <pybind11/pybind11.h>
+#include <pybind11/stl.h>
+#include <pybind11/complex.h>
+#include <pybind11/functional.h>
 
 NAMESPACE_BEGIN(psdr_jit)
 
@@ -57,11 +61,64 @@ public:
 
     virtual bool anisotropic() const = 0;
 
+    virtual int test_vir() = 0;
+
     bool m_twoSide = false;
 
     DRJIT_VCALL_REGISTER(FloatD, BSDF);
                     
 PSDR_CLASS_DECL_END(BSDF)
+
+
+    class PyBSDF : public BSDF {
+    public:
+        PyBSDF() : BSDF() { }
+
+        SpectrumC eval(const IntersectionC &its, const Vector3fC &wo, MaskC active = true) const override {
+            // PYBIND11_OVERRIDE_PURE(SpectrumC, BSDF, eval, its, wo, active);
+            return SpectrumC(0.1f,0.1f,0.9f);
+        }
+        SpectrumD eval(const IntersectionD &its, const Vector3fD &wo, MaskD active = true) const override {
+            // PYBIND11_OVERRIDE_PURE(SpectrumD, BSDF, eval, its, wo, active);
+            return SpectrumD(0.1f,0.1f,0.9f);
+        }
+
+        SpectrumD eval_type(const IntersectionD &its, MaskD active = true) const override {
+            // PYBIND11_OVERRIDE_PURE(SpectrumD, BSDF, eval_type, its, active);
+            return SpectrumD(0.1f,0.1f,0.9f);
+        }
+
+        BSDFSampleC sample(const IntersectionC &its, const Vector3fC &sample, MaskC active = true) const override {
+            // PYBIND11_OVERRIDE_PURE(BSDFSampleC, BSDF, sample, sample, active);
+            BSDFSampleC bss;
+            return bss;
+        }
+        BSDFSampleD sample(const IntersectionD &its, const Vector3fD &sample, MaskD active = true) const override {
+            // PYBIND11_OVERRIDE_PURE(BSDFSampleD, BSDF, sample, sample, active);
+            BSDFSampleD bss;
+            return bss;
+        }
+
+        FloatC pdf(const IntersectionC &its, const Vector3fC &wo, MaskC active) const override {
+            // PYBIND11_OVERRIDE_PURE(FloatC, BSDF, pdf, its, wo, active);
+            return FloatC(1.0f);
+        }
+        FloatD pdf(const IntersectionD &its, const Vector3fD &wo, MaskD active) const override {
+            // PYBIND11_OVERRIDE_PURE(FloatD, BSDF, pdf, its, wo, active);
+            return FloatD(1.0f);
+        }
+
+        bool anisotropic() const override {
+            // PYBIND11_OVERRIDE_PURE(bool, BSDF, anisotropic);
+            return false;
+        } ;
+
+        int test_vir() override {
+            PYBIND11_OVERRIDE_PURE(int, BSDF, test_vir);
+            // return 1;
+        };
+
+    };
 
 NAMESPACE_END(psdr_jit)
 

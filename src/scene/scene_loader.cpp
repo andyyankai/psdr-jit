@@ -188,7 +188,7 @@ void SceneLoader::load_from_string(const char *scene_xml, Scene &scene) {
 template <typename T>
 void build_param_map(Scene::ParamMap &param_map, const std::vector<T*> arr, const char *name) {
     for ( size_t i = 0; i < arr.size(); ++i ) {
-        const T *obj = arr[i];
+        T *obj = arr[i];
 
         std::stringstream oss1;
         oss1 << name << "[" << i << "]";
@@ -478,7 +478,7 @@ void SceneLoader::load_shape(const pugi::xml_node &node, Scene &scene, int shape
     oss << "BSDF[id=" << bsdf_id << "]";
     auto bsdf_info = scene.m_param_map.find(oss.str());
     PSDR_ASSERT_MSG(bsdf_info != scene.m_param_map.end(), std::string("Unknown BSDF id: ") + bsdf_id);
-    mesh->m_bsdf = dynamic_cast<const BSDF*>(&bsdf_info->second);
+    mesh->m_bsdf = dynamic_cast< BSDF*>(&bsdf_info->second);
 
     PSDR_ASSERT_MSG(!node.child("bsdf"), "BSDFs declared under shapes are not supported.");
 

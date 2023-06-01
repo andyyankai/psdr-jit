@@ -256,7 +256,10 @@ PYBIND11_MODULE(psdr_jit, m) {
                 [](MeshArrayD shape, IntersectionD its, MaskD active) {
                     return shape->bsdf()->eval_type(its, active);
                 });
-
+        cls.def("bsdf",
+                [](MeshArrayD shape) {
+                    return shape->bsdf();
+                });
         cls.def("bsdf_eval",
                 [](MeshArrayD shape, IntersectionD its, Vector3fD wi, MaskD active) {
                     return shape->bsdf()->evalD(its, wi, active);
@@ -283,7 +286,10 @@ PYBIND11_MODULE(psdr_jit, m) {
                 [](MeshArrayC shape, IntersectionC its, MaskC active) {
                     return shape->bsdf()->eval_type(its, active);
                 });
-
+        cls.def("bsdf",
+                [](MeshArrayC shape) {
+                    return shape->bsdf();
+                });
         cls.def("bsdf_eval",
                 [](MeshArrayC shape, IntersectionC its, Vector3fC wi, MaskC active) {
                     return shape->bsdf()->evalC(its, wi, active);
@@ -319,55 +325,25 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readonly("J", &PositionSampleD::J);
 
 
-    py::class_<BSDF, Object>(m, "BSDF")
-        .def("evalC", &BSDF::evalC)
-        .def("evalD", &BSDF::evalD)
-        .def("sampleC", &BSDF::sampleC)
-        .def("sampleD", &BSDF::sampleD)
-        .def("pdfC", &BSDF::pdfC)
-        .def("pdfD", &BSDF::pdfD)
-        .def("to_string", &BSDF::to_string)
-        .def("anisotropic", &BSDF::anisotropic)
-        .def_readwrite("twoSide", &BSDF::m_twoSide);
+    // py::class_<BSDF, Object>(m, "BSDF")
+    //     .def("evalC", &BSDF::evalC)
+    //     .def("evalD", &BSDF::evalD)
+    //     .def("sampleC", &BSDF::sampleC)
+    //     .def("sampleD", &BSDF::sampleD)
+    //     .def("pdfC", &BSDF::pdfC)
+    //     .def("pdfD", &BSDF::pdfD)
+    //     .def("to_string", &BSDF::to_string)
+    //     .def("anisotropic", &BSDF::anisotropic)
+    //     .def_readwrite("twoSide", &BSDF::m_twoSide);
 
 
-    class PyBSDF : public BSDF {
-    public:
-        PyBSDF() : BSDF() { }
 
-        SpectrumC eval(const IntersectionC &its, const Vector3fC &wo, MaskC active = true) const override {
-            PYBIND11_OVERRIDE_PURE(SpectrumC, BSDF, eval, its, wo, active);
-        }
-        SpectrumD eval(const IntersectionD &its, const Vector3fD &wo, MaskD active = true) const override {
-            PYBIND11_OVERRIDE_PURE(SpectrumD, BSDF, eval, its, wo, active);
-        }
+    // py::class_<PyBSDF, BSDF>(m, "PyBSDF")
+    //     .def(py::init<>());
 
-        SpectrumD eval_type(const IntersectionD &its, MaskD active = true) const override {
-            PYBIND11_OVERRIDE_PURE(SpectrumD, BSDF, eval_type, its, active);
-        }
-
-        BSDFSampleC sample(const IntersectionC &its, const Vector3fC &sample, MaskC active = true) const override {
-            PYBIND11_OVERRIDE_PURE(BSDFSampleC, BSDF, sample, sample, active);
-        }
-        BSDFSampleD sample(const IntersectionD &its, const Vector3fD &sample, MaskD active = true) const override {
-            PYBIND11_OVERRIDE_PURE(BSDFSampleD, BSDF, sample, sample, active);
-        }
-
-        FloatC pdf(const IntersectionC &its, const Vector3fC &wo, MaskC active) const override {
-            PYBIND11_OVERRIDE_PURE(FloatC, BSDF, pdf, its, wo, active);
-        }
-        FloatD pdf(const IntersectionD &its, const Vector3fD &wo, MaskD active) const override {
-            PYBIND11_OVERRIDE_PURE(FloatD, BSDF, pdf, its, wo, active);
-        }
-
-        bool anisotropic() const override {
-            PYBIND11_OVERRIDE_PURE(bool, BSDF, anisotropic);
-        } ;
-
-    };
-
-    py::class_<PyBSDF, BSDF>(m, "PyBSDF")
-        .def(py::init<>());
+    py::class_<BSDF, PyBSDF /* <--- trampoline*/>(m, "BSDF")
+        .def(py::init<>())
+        .def("test_vir", &BSDF::test_vir);
 
     py::class_<NormalMap, BSDF>(m, "NormalMapBSDF")
         .def(py::init<>())

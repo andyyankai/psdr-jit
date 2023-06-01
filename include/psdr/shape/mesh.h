@@ -69,11 +69,11 @@ public:
         return IntD(m_mesh_id+1);
     };
 
-    const BSDF* bsdf() const {
+    BSDF* bsdf() const {
         return m_bsdf;
     }
 
-    const Emitter* emitter() const {
+    Emitter* emitter() const {
         return m_emitter;
     }
 
@@ -97,8 +97,8 @@ public:
                         m_to_world_left  = identity<Matrix4fD>(),
                         m_to_world_right = identity<Matrix4fD>();
 
-    const BSDF*         m_bsdf = nullptr;
-    const Emitter*      m_emitter = nullptr;
+    BSDF*         m_bsdf = nullptr;
+    Emitter*      m_emitter = nullptr;
 
     // ref<BSDF> mm_bsdr;
 

@@ -25,7 +25,7 @@ NAMESPACE_BEGIN(psdr_jit)
 template <typename T>
 void build_param_map(Scene::ParamMap &param_map, const std::vector<T*> arr, const char *name) {
     for ( size_t i = 0; i < arr.size(); ++i ) {
-        const T *obj = arr[i];
+        T *obj = arr[i];
 
         std::stringstream oss1;
         oss1 << name << "[" << i << "]";
@@ -184,6 +184,31 @@ void Scene::add_BSDF(BSDF* bsdf, const char *bsdf_id, bool twoSide) {
         std::tie(std::ignore, is_new) = param_map.insert(Scene::ParamMap::value_type(oss2.str(), *bsdf_temp));
         PSDR_ASSERT_MSG(is_new, std::string("Duplicate BSDF id: ") + bsdf_id);
 
+    } else if (PyBSDF *bsdf_buff = dynamic_cast<PyBSDF *>(bsdf)) {
+        std::cout << "add_custom_BSDF: " << bsdf_id << std::endl;
+        // PyBSDF *bsdf_buff = dynamic_cast<PyBSDF *>(bsdf);
+        // bsdf_buff->eval();
+        PyBSDF *bsdf_temp = new PyBSDF();
+        std::cout<<bsdf_buff->test_vir()<<std::endl;
+        std::cout<<bsdf_temp->test_vir()<<std::endl;
+        PSDR_ASSERT_MSG(0, "Unknown BSDF type!");
+
+        bsdf_temp->m_twoSide = twoSide;
+        bsdf_temp->m_id = bsdf_id;
+
+        m_bsdfs.push_back(bsdf_temp);
+        Scene::ParamMap &param_map = m_param_map;
+        std::stringstream oss1, oss2;
+        oss1 << "BSDF[" << m_bsdfs.size() - 1 << "]";
+        oss2 << "BSDF[id=" << bsdf_id << "]";
+        param_map.insert(Scene::ParamMap::value_type(oss1.str(), *bsdf_temp));
+        // std::cout << "hereaa" << oss1.str() << std::endl;
+        // std::cout << "herebb" << oss2.str() << std::endl;
+
+        bool is_new;
+        std::tie(std::ignore, is_new) = param_map.insert(Scene::ParamMap::value_type(oss2.str(), *bsdf_temp));
+        PSDR_ASSERT_MSG(is_new, std::string("Duplicate BSDF id: ") + bsdf_id);
+
     } else {
         PSDR_ASSERT_MSG(0, "Unknown BSDF type!");
     }
@@ -198,7 +223,7 @@ void Scene::add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id
 
     Mesh *mesh = new Mesh();
     mesh->load(fname, false);
-    mesh->m_bsdf = dynamic_cast<const BSDF*>(&bsdf_info->second);
+    mesh->m_bsdf = dynamic_cast<BSDF*>(&bsdf_info->second);
 
 
     mesh->m_to_world_raw = Matrix4fD(transform);

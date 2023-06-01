@@ -22,7 +22,9 @@ public:
     RoughConductor(const Bitmap1fD &alpha_u, const Bitmap1fD &alpha_v, const Bitmap3fD &eta, const Bitmap3fD &k, const Bitmap3fD &sr)
         : m_alpha_u(alpha_u), m_alpha_v(alpha_v), m_eta(eta), m_k(k), m_specular_reflectance(sr) { m_anisotropic = true; }
     SpectrumD eval_type(const IntersectionD &its, MaskD active = true) const override;
-
+    int test_vir() override {
+        return 0;
+    };
     SpectrumC eval(const IntersectionC &its, const Vector3fC &wo, MaskC active = true) const override;
     SpectrumD eval(const IntersectionD &its, const Vector3fD &wo, MaskD active = true) const override;
 

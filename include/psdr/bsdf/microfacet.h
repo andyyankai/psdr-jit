@@ -23,7 +23,9 @@ public:
     BSDFSampleC sample(const IntersectionC &its, const Vector3fC &sample, MaskC active = true) const override;
     BSDFSampleD sample(const IntersectionD &its, const Vector3fD &sample, MaskD active = true) const override;
 
-
+    int test_vir() override {
+        return 0;
+    };
     FloatC pdf(const IntersectionC &its, const Vector3fC &wo, MaskC active) const override;
     FloatD pdf(const IntersectionD &its, const Vector3fD &wo, MaskD active) const override;
 

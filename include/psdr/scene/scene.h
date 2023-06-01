@@ -14,7 +14,7 @@ PSDR_CLASS_DECL_BEGIN(Scene, final, Object)
     friend class SceneLoader;
 
 public:
-    using ParamMap = std::unordered_map<std::string, const Object&>;
+    using ParamMap = std::unordered_map<std::string, Object&>;
 
     Scene();
     ~Scene() override;

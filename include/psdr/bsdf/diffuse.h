@@ -28,6 +28,10 @@ public:
 
     std::string to_string() const override { return std::string("Diffuse[id=") + m_id + "]"; }
 
+    int test_vir() override {
+        return 0;
+    };
+
     Bitmap3fD m_reflectance;
 
 protected:
