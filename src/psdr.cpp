@@ -269,6 +269,10 @@ PYBIND11_MODULE(psdr_jit, m) {
                 [](MeshArrayD shape, IntersectionD its, Vector3fD rnd, MaskD active) {
                     return shape->bsdf()->pdfD(its, rnd, active);
                 });
+        cls.def("bsdf_valid",
+                [](MeshArrayD shape) {
+                    return neq(shape->bsdf(), nullptr);
+                });
     };
     {
         py::object dr       = py::module_::import("drjit"),
@@ -291,6 +295,10 @@ PYBIND11_MODULE(psdr_jit, m) {
         cls.def("bsdf_pdf",
                 [](MeshArrayC shape, IntersectionC its, Vector3fC rnd, MaskC active) {
                     return shape->bsdf()->pdfC(its, rnd, active);
+                });
+        cls.def("bsdf_valid",
+                [](MeshArrayC shape) {
+                    return neq(shape->bsdf(), nullptr);
                 });
     };
 
