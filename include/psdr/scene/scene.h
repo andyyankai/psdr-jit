@@ -81,7 +81,6 @@ public:
     ParamMap                m_param_map;
 
     RenderOption            m_opts;
-    mutable Sampler         *m_samplers;
 
 // protected:
     TriangleInfoD           m_triangle_info;

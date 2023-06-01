@@ -3,7 +3,6 @@
 
 #include <psdr/core/ray.h>
 #include <psdr/core/intersection.h>
-#include <psdr/core/sampler.h>
 #include <psdr/core/pmf.h>
 #include <psdr/bsdf/bsdf.h>
 #include <psdr/bsdf/diffuse.h>
@@ -46,7 +45,6 @@ void build_param_map(Scene::ParamMap &param_map, const std::vector<T*> arr, cons
 Scene::Scene() {
     m_has_bound_mesh = false;
     m_loaded = true;
-    m_samplers = new Sampler[3];
     m_optix = new Scene_OptiX();
     m_emitter_env = nullptr;
     m_emitters_distrb = new DiscreteDistribution();
@@ -60,7 +58,6 @@ Scene::~Scene() {
     for ( BSDF*    b : m_bsdfs    ) delete b;
     for ( Mesh*    m : m_meshes   ) delete m;
 
-    delete[]    m_samplers;
     delete      m_optix;
     delete      m_emitters_distrb;
     delete      m_sec_edge_distrb;
@@ -246,24 +243,6 @@ void Scene::configure(std::vector<int> active_sensor) {
     auto start_time = high_resolution_clock::now();
 
 
-
-    // Seed samplers
-    if ( m_opts.spp  > 0 ) {
-        int64_t sample_count = static_cast<int64_t>(m_opts.height)*m_opts.width*m_opts.spp;
-        if ( m_samplers[0].m_sample_count != sample_count )
-            m_samplers[0].seed(arange<UInt64C>(sample_count)+seed);
-    }
-    if ( m_opts.sppe > 0 ) {
-        int64_t sample_count = static_cast<int64_t>(m_opts.height)*m_opts.width*m_opts.sppe;
-        if ( m_samplers[1].m_sample_count != sample_count )
-            m_samplers[1].seed(arange<UInt64C>(sample_count)+seed);
-    }
-    if ( m_opts.sppse > 0 ) {
-        int64_t sample_count = static_cast<int64_t>(m_opts.height)*m_opts.width*m_opts.sppse;
-        if ( m_samplers[2].m_sample_count != sample_count )
-            m_samplers[2].seed(arange<UInt64C>(sample_count)+seed);
-    }
-
     // Preprocess meshes
     PSDR_ASSERT_MSG(!m_meshes.empty(), "Missing meshes!");
     std::vector<int> face_offset, edge_offset;
@@ -279,7 +258,6 @@ void Scene::configure(std::vector<int> active_sensor) {
         mesh->configure();
         face_offset.push_back(face_offset.back() + mesh->m_num_faces);
         if ( m_opts.sppse > 0 && mesh->m_enable_edges ) {
-            // std::cout << (mesh->m_sec_edge_info)->size() << std::endl;
             edge_offset.push_back(edge_offset.back() + static_cast<int>((mesh->m_sec_edge_info)->size()));
         } else {
             edge_offset.push_back(edge_offset.back());
@@ -523,10 +501,7 @@ void Scene::configure(std::vector<int> active_sensor) {
 
 
 bool Scene::is_ready() const {
-    return (m_opts.spp   == 0 || m_samplers[0].is_ready()) &&
-           (m_opts.sppe  == 0 || m_samplers[1].is_ready()) &&
-           (m_opts.sppse == 0 || m_samplers[2].is_ready()) &&
-           m_optix->is_ready();
+    return m_optix->is_ready();
 }
 
 
