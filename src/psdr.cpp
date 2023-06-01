@@ -46,13 +46,6 @@
 #include <psdr/scene/scene_loader.h>
 
 
-// #include <psdr/integrator/integrator.h>
-// #include <psdr/integrator/field.h>
-// #include <psdr/integrator/collocated.h>
-// #include <psdr/integrator/path.h>
-
-
-
 namespace py = pybind11;
 using namespace py::literals;
 using namespace psdr_jit;
@@ -71,13 +64,17 @@ PYBIND11_MODULE(psdr_jit, m) {
     m.doc() = "Path-space differentiable renderer";
     m.attr("__name__") = "psdr_jit";
 
-    m.attr("ShadowEpsilon") = ShadowEpsilon;
+    m.attr("ShadowEpsilon") = psdr_jit::ShadowEpsilon;
+    m.attr("Epsilon") = psdr_jit::Epsilon;
 
     m.def("ray_intersect_triangleC", &ray_intersect_triangle<false>);
     m.def("ray_intersect_triangleD", &ray_intersect_triangle<true>);
 
     m.def("bilinearC", &bilinear<false>);
     m.def("bilinearD", &bilinear<true>);
+
+    m.def("mis_weightC", &mis_weight<false>);
+    m.def("mis_weightD", &mis_weight<true>);
 
     // Core classes
 
@@ -139,6 +136,7 @@ PYBIND11_MODULE(psdr_jit, m) {
     py::class_<FrameC>(m, "FrameC")
         .def(py::init<>())
         .def(py::init<const Vector3fC &>())
+        .def("to_world", &FrameC::to_world)
         .def("to_local", &FrameC::to_local)
         .def_readwrite("s", &FrameC::s)
         .def_readwrite("t", &FrameC::t)
@@ -147,6 +145,7 @@ PYBIND11_MODULE(psdr_jit, m) {
     py::class_<FrameD>(m, "FrameD")
         .def(py::init<>())
         .def(py::init<const Vector3fD &>())
+        .def("to_world", &FrameD::to_world)
         .def("to_local", &FrameD::to_local)
         .def_readwrite("s", &FrameD::s)
         .def_readwrite("t", &FrameD::t)
@@ -262,9 +261,13 @@ PYBIND11_MODULE(psdr_jit, m) {
                 [](MeshArrayD shape, IntersectionD its, Vector3fD wi, MaskD active) {
                     return shape->bsdf()->evalD(its, wi, active);
                 });
-        cls.def("bsdf",
-                [](MeshArrayD shape) {
-                    return shape->bsdf();
+        cls.def("bsdf_sample",
+                [](MeshArrayD shape, IntersectionD its, Vector3fD rnd, MaskD active) {
+                    return shape->bsdf()->sampleD(its, rnd, active);
+                });
+        cls.def("bsdf_pdf",
+                [](MeshArrayD shape, IntersectionD its, Vector3fD rnd, MaskD active) {
+                    return shape->bsdf()->pdfD(its, rnd, active);
                 });
     };
     {
@@ -279,11 +282,15 @@ PYBIND11_MODULE(psdr_jit, m) {
 
         cls.def("bsdf_eval",
                 [](MeshArrayC shape, IntersectionC its, Vector3fC wi, MaskC active) {
-                    return shape->bsdf()->evalD(its, wi, active);
+                    return shape->bsdf()->evalC(its, wi, active);
                 });
-        cls.def("bsdf",
-                [](MeshArrayC shape) {
-                    return shape->bsdf();
+        cls.def("bsdf_sample",
+                [](MeshArrayC shape, IntersectionC its, Vector3fC rnd, MaskC active) {
+                    return shape->bsdf()->sampleC(its, rnd, active);
+                });
+        cls.def("bsdf_pdf",
+                [](MeshArrayC shape, IntersectionC its, Vector3fC rnd, MaskC active) {
+                    return shape->bsdf()->pdfC(its, rnd, active);
                 });
     };
 
@@ -424,6 +431,19 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readwrite("sensor_val", &SensorDirectSample_<FloatC>::sensor_val)
         .def_readwrite("is_valid", &SensorDirectSample_<FloatC>::is_valid);
 
+    
+    py::class_<BSDFSampleC>(m, "BSDFSampleC")
+        .def_readwrite("pdf", &BSDFSampleC::pdf)
+        .def_readwrite("is_valid", &BSDFSampleC::is_valid)
+        .def_readwrite("eta", &BSDFSampleC::eta)
+        .def_readwrite("wo", &BSDFSampleC::wo);
+
+    py::class_<BSDFSampleD>(m, "BSDFSampleD")
+        .def_readwrite("pdf", &BSDFSampleD::pdf)
+        .def_readwrite("is_valid", &BSDFSampleD::is_valid)
+        .def_readwrite("eta", &BSDFSampleD::eta)
+        .def_readwrite("wo", &BSDFSampleD::wo);
+
     py::class_<Scene, Object>(m, "Scene")
         .def(py::init<>())
         .def("has_envmap", &Scene::has_envmap)
@@ -441,6 +461,9 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("boundary_ray_intersectAD", &Scene::boundary_ray_intersect<true>)
         .def("boundary_ray_intersectADAD", &Scene::boundary_ray_intersect<true, true>)
 
+        .def("emitter_position_pdfC", &Scene::emitter_position_pdf<false>)
+        .def("emitter_position_pdfD", &Scene::emitter_position_pdf<true>)
+
 
         .def("unit_ray_intersect", &Scene::unit_ray_intersect<false>)
         .def("unit_ray_intersectAD", &Scene::unit_ray_intersect<true>)
@@ -454,24 +477,4 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readonly("num_sensors", &Scene::m_num_sensors)
         .def_readonly("num_meshes", &Scene::m_num_meshes)
         .def_readonly("param_map", &Scene::m_param_map, "Parameter map");
-
-
-
-    // py::class_<Integrator, Object>(m, "Integrator")
-    //     .def("renderC", &Integrator::renderC, "scene"_a, "sensor_id"_a = 0, "npass"_a = 1)
-    //     .def("renderD", &Integrator::renderD, "scene"_a, "sensor_id"_a = 0);
-
-    // py::class_<FieldExtractionIntegrator, Integrator>(m, "FieldExtractionIntegrator")
-    //     .def(py::init<char*>());
-
-
-    // py::class_<CollocatedIntegrator, Integrator>(m, "CollocatedIntegrator")
-    //     .def_readwrite("m_intensity", &CollocatedIntegrator::m_intensity)
-    //     .def(py::init<const FloatD &>());
-
-    // py::class_<PathTracer, Integrator>(m, "PathTracer")
-    //     .def(py::init<int>(), "max_depth"_a = 1)
-    //     .def_readwrite("hide_emitters", &PathTracer::m_hide_emitters);
-
-
 }
