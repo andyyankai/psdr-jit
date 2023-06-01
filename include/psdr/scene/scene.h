@@ -51,6 +51,12 @@ public:
 
     BoundarySegSampleDirect sample_boundary_segment_direct(const Vector3fC &sample3, MaskC active = true) const;
 
+    bool has_envmap() {
+        if (m_emitter_env == nullptr)
+            return false;
+        return true;
+    }
+
     int seed = 0;
 
     // std::string to_string() const override;

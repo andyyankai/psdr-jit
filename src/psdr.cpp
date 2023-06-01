@@ -71,6 +71,14 @@ PYBIND11_MODULE(psdr_jit, m) {
     m.doc() = "Path-space differentiable renderer";
     m.attr("__name__") = "psdr_jit";
 
+    m.attr("ShadowEpsilon") = ShadowEpsilon;
+
+    m.def("ray_intersect_triangleC", &ray_intersect_triangle<false>);
+    m.def("ray_intersect_triangleD", &ray_intersect_triangle<true>);
+
+    m.def("bilinearC", &bilinear<false>);
+    m.def("bilinearD", &bilinear<true>);
+
     // Core classes
 
     py::class_<Object>(m, "Object")
@@ -123,11 +131,15 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readwrite("o", &RayD::o)
         .def_readwrite("d", &RayD::d);
 
-    py::class_<TriangleInfoD>(m, "TriangleInfoD");
+    py::class_<TriangleInfoD>(m, "TriangleInfoD")
+        .def_readwrite("p0", &TriangleInfoD::p0)
+        .def_readwrite("e1", &TriangleInfoD::e1)
+        .def_readwrite("e2", &TriangleInfoD::e2);
 
     py::class_<FrameC>(m, "FrameC")
         .def(py::init<>())
         .def(py::init<const Vector3fC &>())
+        .def("to_local", &FrameC::to_local)
         .def_readwrite("s", &FrameC::s)
         .def_readwrite("t", &FrameC::t)
         .def_readwrite("n", &FrameC::n);
@@ -148,6 +160,7 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("next_3d", &Sampler::next_3d<false>);
 
     py::class_<BoundarySegSampleDirect>(m, "BoundarySegSampleDirect")
+        .def_readwrite("pdf", &BoundarySegSampleDirect::pdf)
         .def_readwrite("p0", &BoundarySegSampleDirect::p0)
         .def_readwrite("edge", &BoundarySegSampleDirect::edge)
         .def_readwrite("edge2", &BoundarySegSampleDirect::edge2)
@@ -203,6 +216,9 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readonly("t", &InteractionD::t);
 
     py::class_<IntersectionC, InteractionC>(m, "IntersectionC")
+        .def("is_emitter", &IntersectionC::is_emitter)
+        .def("Le", &IntersectionC::Le)
+        .def("get_bsdf", &IntersectionC::get_bsdf)
         .def_readonly("shape", &IntersectionC::shape)
         .def_readonly("n", &IntersectionC::n)
         .def_readonly("sh_frame", &IntersectionC::sh_frame)
@@ -235,7 +251,7 @@ PYBIND11_MODULE(psdr_jit, m) {
     {
         py::object dr       = py::module_::import("drjit"),
                    dr_array = dr.attr("ArrayBase");
-        py::class_<MeshArrayD> cls(m, "MeshArray", dr_array);
+        py::class_<MeshArrayD> cls(m, "MeshArrayD", dr_array);
 
         cls.def("diffuse",
                 [](MeshArrayD shape, IntersectionD its, MaskD active) {
@@ -246,8 +262,30 @@ PYBIND11_MODULE(psdr_jit, m) {
                 [](MeshArrayD shape, IntersectionD its, Vector3fD wi, MaskD active) {
                     return shape->bsdf()->evalD(its, wi, active);
                 });
+        cls.def("bsdf",
+                [](MeshArrayD shape) {
+                    return shape->bsdf();
+                });
     };
+    {
+        py::object dr       = py::module_::import("drjit"),
+                   dr_array = dr.attr("ArrayBase");
+        py::class_<MeshArrayC> cls(m, "MeshArrayC", dr_array);
 
+        cls.def("diffuse",
+                [](MeshArrayC shape, IntersectionC its, MaskC active) {
+                    return shape->bsdf()->eval_type(its, active);
+                });
+
+        cls.def("bsdf_eval",
+                [](MeshArrayC shape, IntersectionC its, Vector3fC wi, MaskC active) {
+                    return shape->bsdf()->evalD(its, wi, active);
+                });
+        cls.def("bsdf",
+                [](MeshArrayC shape) {
+                    return shape->bsdf();
+                });
+    };
 
     py::class_<SampleRecordC>(m, "SampleRecordC")
         .def_readonly("pdf", &SampleRecordC::pdf)
@@ -388,6 +426,7 @@ PYBIND11_MODULE(psdr_jit, m) {
 
     py::class_<Scene, Object>(m, "Scene")
         .def(py::init<>())
+        .def("has_envmap", &Scene::has_envmap)
         .def("sample_boundary_segment_direct", &Scene::sample_boundary_segment_direct)
         .def("add_Sensor", &Scene::add_Sensor, "Add Sensor")
         .def("add_EnvironmentMap", &Scene::add_EnvironmentMap, "Add EnvironmentMap")
