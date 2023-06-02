@@ -5,8 +5,6 @@
 #include <psdr/edge/edge.h>
 #include <psdr/shape/mesh.h>
 #include <psdr/bsdf/bsdf.h>
-// #include <psdr/bsdf/microfacet.h>
-// #include <psdr/bsdf/normalmap.h>
 
 NAMESPACE_BEGIN(psdr_jit)
 

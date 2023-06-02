@@ -5,9 +5,6 @@
 #include <psdr/core/intersection.h>
 #include <psdr/core/pmf.h>
 #include <psdr/bsdf/bsdf.h>
-// #include <psdr/bsdf/diffuse.h>
-// #include <psdr/bsdf/microfacet.h>
-// #include <psdr/bsdf/normalmap.h>
 
 #include <psdr/emitter/area.h>
 
@@ -16,7 +13,6 @@
 #include <psdr/shape/mesh.h>
 
 #include <psdr/scene/scene_optix.h>
-#include <psdr/scene/scene_loader.h>
 #include <psdr/scene/scene.h>
 #include <psdr/core/bitmap.h>
 
