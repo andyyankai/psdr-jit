@@ -92,7 +92,7 @@ void Scene::add_Sensor(Sensor* sensor) {
 
 void Scene::add_BSDF(BSDF* bsdf, const char *bsdf_id, bool twoSide) {
     if (PyBSDF *bsdf_buff = dynamic_cast<PyBSDF *>(bsdf)) {
-        if ( m_opts.log_level > 0 ) std::cout << "add_custom_BSDF: " << "NormalMapBSDF" << " " << bsdf_id << std::endl;
+        if ( m_opts.log_level > 0 ) std::cout << "add_custom_BSDF: " << bsdf_id << std::endl;
         bsdf_buff->m_twoSide = twoSide;
         bsdf_buff->m_id = bsdf_id;
         m_bsdfs.push_back(bsdf_buff);
