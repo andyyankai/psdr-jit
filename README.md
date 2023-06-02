@@ -31,8 +31,4 @@ import drjit
 import psdr_jit
 ```
 
-### Example of Diff rendering
-
-```python
-import rua
-```
+### Check tutorials for more examples
