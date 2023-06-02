@@ -765,25 +765,21 @@ IntersectionD Scene::ray_intersect(const RayD &ray, MaskD active) const {
 }
 
 
-template <bool ad>
-PositionSample<ad> Scene::sample_emitter_position(const Vector3f<ad> &ref_p, const Vector2f<ad> &_sample2, Mask<ad> active) const {
+PositionSampleD Scene::sample_emitter_position(const Vector3fD &ref_p, const Vector2fD &_sample2, MaskD active) const {
     PSDR_ASSERT_MSG(!m_emitters.empty(), "No Emitter!");
 
     if ( m_emitters.size() == 1U ) {
         return m_emitters[0]->sample_position(ref_p, _sample2, active);
     } else {
-        PositionSample<ad> result;
-        Vector2f<ad> sample2 = _sample2;
-        auto [emitter_index, emitter_pdf] = m_emitters_distrb->sample_reuse<ad>(sample2.y());
+        PositionSampleD result;
+        Vector2fD sample2 = _sample2;
+        auto [emitter_index, emitter_pdf] = m_emitters_distrb->sample_reuse<true>(sample2.y());
 
-        EmitterArray<ad> emitter_arr;
-        if constexpr ( ad ) {
-            emitter_arr = gather<EmitterArrayD>(m_emitters_cuda, IntD(emitter_index), active);
-            result = emitter_arr->sample_positionD(ref_p, sample2, active);
-        } else {
-            emitter_arr = gather<EmitterArrayC>(detach(m_emitters_cuda), emitter_index, active);
-            result = emitter_arr->sample_positionC(ref_p, sample2, active);
-        }
+        EmitterArrayD emitter_arr;
+
+        emitter_arr = gather<EmitterArrayD>(m_emitters_cuda, IntD(emitter_index), active);
+        result = emitter_arr->sample_position(ref_p, sample2, active);
+
         result.pdf *= emitter_pdf;
 
         return result;
@@ -819,14 +815,15 @@ BoundarySegSampleDirect Scene::sample_boundary_segment_direct(const Vector3fC &s
     pdf0 /= norm(detach(info_e1));
 
     // Sample a point ps2 on a emitter
-    PositionSampleC ps2 = sample_emitter_position<false>(p0, tail<2>(sample3), active);
-    result.p2 = ps2.p;
+    PositionSampleD ps2 = sample_emitter_position(p0, tail<2>(sample3), active);
+
+    result.p2 = detach(ps2.p);
 
     // Construct the edge "ray" and check if it is valid
-    Vector3fC e = result.p2 - p0;
+    Vector3fC e = detach(result.p2 - p0);
     const FloatC distSqr = squared_norm(e);
     e /= safe_sqrt(distSqr);
-    const FloatC cosTheta = dot(ps2.n, -e);
+    const FloatC cosTheta = detach(dot(ps2.n, -e));
 
     IntC sgn0 = sign<false>(dot(detach(info_n0), e), EdgeEpsilon),
          sgn1 = sign<false>(dot(detach(info_n1), e), EdgeEpsilon);
@@ -834,7 +831,7 @@ BoundarySegSampleDirect Scene::sample_boundary_segment_direct(const Vector3fC &s
         (detach(info_is_boundary) && neq(sgn0, 0)) || (~detach(info_is_boundary) && (sgn0*sgn1 < 0))
     );
 
-    result.pdf = (pdf0*ps2.pdf*(distSqr/cosTheta)) & result.is_valid;
+    result.pdf = detach((pdf0*(ps2.pdf)*(distSqr/cosTheta)) & result.is_valid);
     return result;
 }
 
@@ -847,8 +844,5 @@ template std::pair<IntersectionD, TriangleInfoD> Scene::boundary_ray_intersect<t
 template IntersectionD Scene::ray_intersect<false, false>(const RayD&, MaskD) const;
 template IntersectionD Scene::ray_intersect<true , false>(const RayD&, MaskD) const;
 template IntersectionD Scene::ray_intersect<true , true >(const RayD&, MaskD) const;
-
-template PositionSampleC Scene::sample_emitter_position<false>(const Vector3fC&, const Vector2fC&, MaskC) const;
-template PositionSampleD Scene::sample_emitter_position<true >(const Vector3fD&, const Vector2fD&, MaskD) const;
 
 NAMESPACE_END(psdr_jit)

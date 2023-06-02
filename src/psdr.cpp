@@ -58,8 +58,7 @@ PYBIND11_MODULE(psdr_jit, m) {
     m.attr("InvPi") = psdr_jit::InvPi;
     
 
-    m.def("ray_intersect_triangleC", &ray_intersect_triangle<false>);
-    m.def("ray_intersect_triangleD", &ray_intersect_triangle<true>);
+    m.def("ray_intersect_triangle", &ray_intersect_triangle<true>);
 
     m.def("bilinear", &bilinear<true>);
 
@@ -106,6 +105,7 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readwrite("pdf", &PrimaryEdgeSample::pdf)
         .def_readwrite("idx", &PrimaryEdgeSample::idx);
 
+
     py::class_<RayC>(m, "RayC")
         .def(py::init<>())
         .def(py::init<const Vector3fC &, const Vector3fC &>())
@@ -113,30 +113,19 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readwrite("o", &RayC::o)
         .def_readwrite("d", &RayC::d);
 
-    py::class_<RayD>(m, "RayD")
+    py::class_<RayD>(m, "Ray")
         .def(py::init<>())
         .def(py::init<const Vector3fD &, const Vector3fD &>())
         .def("reversed", &RayD::reversed)
         .def_readwrite("o", &RayD::o)
         .def_readwrite("d", &RayD::d);
 
-    py::class_<TriangleInfoD>(m, "TriangleInfoD")
+    py::class_<TriangleInfoD>(m, "TriangleInfo")
         .def_readwrite("p0", &TriangleInfoD::p0)
         .def_readwrite("e1", &TriangleInfoD::e1)
         .def_readwrite("e2", &TriangleInfoD::e2);
 
-    py::class_<FrameC>(m, "FrameC")
-        .def(py::init<>())
-        .def(py::init<const Vector3fC &>())
-        .def("cos_theta", &FrameC::cos_theta)
-        
-        .def("to_world", &FrameC::to_world)
-        .def("to_local", &FrameC::to_local)
-        .def_readwrite("s", &FrameC::s)
-        .def_readwrite("t", &FrameC::t)
-        .def_readwrite("n", &FrameC::n);
-
-    py::class_<FrameD>(m, "FrameD")
+    py::class_<FrameD>(m, "Frame")
         .def(py::init<>())
         .def(py::init<const Vector3fD &>())
         .def("cos_theta", &FrameD::cos_theta)
@@ -255,50 +244,13 @@ PYBIND11_MODULE(psdr_jit, m) {
                     return neq(shape->bsdf(), nullptr);
                 });
     };
-    {
-        py::object dr       = py::module_::import("drjit"),
-                   dr_array = dr.attr("ArrayBase");
-        py::class_<MeshArrayC> cls(m, "MeshArrayC", dr_array);
 
-        cls.def("diffuse",
-                [](MeshArrayC shape, IntersectionC its, MaskC active) {
-                    return shape->bsdf()->eval_type(its, active);
-                });
-        cls.def("bsdf",
-                [](MeshArrayC shape) {
-                    return shape->bsdf();
-                });
-        cls.def("bsdf_eval",
-                [](MeshArrayC shape, IntersectionC its, Vector3fC wi, MaskC active) {
-                    return shape->bsdf()->eval(its, wi, active);
-                });
-        cls.def("bsdf_sample",
-                [](MeshArrayC shape, IntersectionC its, Vector3fC rnd, MaskC active) {
-                    return shape->bsdf()->sample(its, rnd, active);
-                });
-        cls.def("bsdf_pdf",
-                [](MeshArrayC shape, IntersectionC its, Vector3fC rnd, MaskC active) {
-                    return shape->bsdf()->pdf(its, rnd, active);
-                });
-        cls.def("bsdf_valid",
-                [](MeshArrayC shape) {
-                    return neq(shape->bsdf(), nullptr);
-                });
-    };
-
-    py::class_<SampleRecordC>(m, "SampleRecordC")
-        .def_readonly("pdf", &SampleRecordC::pdf)
-        .def_readonly("is_valid", &SampleRecordC::is_valid);
-
-    py::class_<SampleRecordD>(m, "SampleRecordD")
+    py::class_<SampleRecordD>(m, "SampleRecord")
         .def_readonly("pdf", &SampleRecordD::pdf)
         .def_readonly("is_valid", &SampleRecordD::is_valid);
 
-    py::class_<PositionSampleC, SampleRecordC>(m, "PositionSampleC")
-        .def_readonly("p", &PositionSampleC::p)
-        .def_readonly("J", &PositionSampleC::J);
 
-    py::class_<PositionSampleD, SampleRecordD>(m, "PositionSampleD")
+    py::class_<PositionSampleD, SampleRecordD>(m, "PositionSample")
         .def_readonly("p", &PositionSampleD::p)
         .def_readonly("J", &PositionSampleD::J);
 
@@ -408,7 +360,7 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("add_EnvironmentMap", &Scene::add_EnvironmentMap, "Add EnvironmentMap")
         .def("add_Mesh", &Scene::add_Mesh, "Add Mesh")
         .def("add_BSDF", &Scene::add_BSDF, "Add BSDf", "bsdf"_a, "name"_a, "twoSide"_a = false)
-        .def("sample_emitter_position", &Scene::sample_emitter_position<true>)
+        .def("sample_emitter_position", &Scene::sample_emitter_position)
 
         .def_readonly("sensor", &Scene::m_sensors)
 

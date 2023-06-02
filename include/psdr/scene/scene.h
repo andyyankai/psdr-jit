@@ -38,8 +38,7 @@ public:
     template <bool ad, bool path_space = false>
     IntersectionD ray_intersect(const RayD &ray, MaskD active = true) const;
 
-    template <bool ad>
-    PositionSample<ad> sample_emitter_position(const Vector3f<ad> &ref_p, const Vector2f<ad> &sample, Mask<ad> active = true) const;
+    PositionSampleD sample_emitter_position(const Vector3fD &ref_p, const Vector2fD &sample, MaskD active = true) const;
 
     FloatD emitter_position_pdf(const Vector3fD &ref_p, const IntersectionD &its, MaskD active = true) const;
 

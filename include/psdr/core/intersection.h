@@ -33,11 +33,7 @@ struct Intersection_ : public Interaction_<Float_> {
     }
 
     inline Spectrum<ad> Le(Mask<ad> active) const {
-        if constexpr (ad) {
-            return shape->emitter()->evalD(*this, active);
-        } else {
-            return shape->emitter()->evalC(*this, active);
-        }
+        return shape->emitter()->eval(*this, active);
     }
 
     inline SpectrumD get_bsdf(Mask<ad> active) const {

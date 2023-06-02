@@ -41,12 +41,6 @@ void EnvironmentMap::configure() {
 }
 
 
-SpectrumC EnvironmentMap::eval(const IntersectionC &its, MaskC active) const {
-    Vector3fC wi_world = its.sh_frame.to_world(its.wi);
-    return eval_direction<false>(-wi_world, active);
-}
-
-
 SpectrumD EnvironmentMap::eval(const IntersectionD &its, MaskD active) const {
     Vector3fD wi_world = its.sh_frame.to_world(its.wi);
     return eval_direction<true>(-wi_world, active);
@@ -73,32 +67,16 @@ Spectrum<ad> EnvironmentMap::eval_direction(const Vector3f<ad> &wi, Mask<ad> act
 }
 
 
-PositionSampleC EnvironmentMap::sample_position(const Vector3fC &ref_p, const Vector2fC &sample2, MaskC active) const {
-    return __sample_position<false>(ref_p, sample2, active);
-}
-
-
-PositionSampleD EnvironmentMap::sample_position(const Vector3fD &ref_p, const Vector2fD &sample2, MaskD active) const {
-    return __sample_position<true>(ref_p, sample2, active);
-}
-
-
-template <bool ad>
-PositionSample<ad> EnvironmentMap::__sample_position(const Vector3f<ad> &ref_p, const Vector2f<ad> &_sample2, Mask<ad> active) const {
+PositionSampleD EnvironmentMap::sample_position(const Vector3fD &ref_p, const Vector2fD &_sample2, MaskD active) const {
     PSDR_ASSERT(m_ready);
 
-    PositionSample<ad> result;
+    PositionSample<true> result;
 
     RayC ray;
     Vector2fC sample2;
     FloatC pdf;
-    if constexpr ( ad ) {
-        ray.o = detach(ref_p);
-        sample2 = detach(_sample2);
-    } else {
-        ray.o = ref_p;
-        sample2 = _sample2;
-    }
+    ray.o = detach(ref_p);
+    sample2 = detach(_sample2);
     std::tie(ray.d, pdf) = sample_direction(sample2);
 
     auto [t, n, G] = ray_intersect_scene_aabb<false>(ray, m_lower, m_upper);

@@ -60,14 +60,6 @@ public:
         }
     };
 
-    IntC get_obj_idC() const{
-        return IntC(m_mesh_id+1);
-    };
-
-    IntD get_obj_idD() const{
-        return IntD(m_mesh_id+1);
-    };
-
     BSDF* bsdf() const {
         return m_bsdf;
     }
@@ -154,8 +146,6 @@ DRJIT_VCALL_BEGIN(psdr_jit::Mesh)
     DRJIT_VCALL_METHOD(bsdf)
     DRJIT_VCALL_METHOD(emitter)
     DRJIT_VCALL_METHOD(get_obj_mask)
-    DRJIT_VCALL_METHOD(get_obj_idC)
-    DRJIT_VCALL_METHOD(get_obj_idD)
     DRJIT_VCALL_METHOD(sample_position)
     DRJIT_VCALL_METHOD(sample_position_pdf)
 DRJIT_VCALL_END(psdr_jit::Mesh)
