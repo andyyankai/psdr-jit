@@ -3,13 +3,13 @@
 *.log
 *.exe
 __pycache__
+.ipynb_checkpoints
+
 build/
 ext_win64/
 local/
 examples/
 dist/
 tmp/
+
 **/*.log
-unit_test/*.exr
-unit_test/inv_test/
-unit_test/result/
