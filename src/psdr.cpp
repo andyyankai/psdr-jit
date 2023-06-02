@@ -26,13 +26,13 @@
 
 
 #include <psdr/bsdf/bsdf.h>
-#include <psdr/bsdf/diffuse.h>
-#include <psdr/bsdf/ggx.h>
-#include <psdr/bsdf/roughconductor.h>
-#include <psdr/bsdf/roughdielectric.h>
-#include <psdr/bsdf/microfacet.h>
+// #include <psdr/bsdf/diffuse.h>
+// #include <psdr/bsdf/ggx.h>
+// #include <psdr/bsdf/roughconductor.h>
+// #include <psdr/bsdf/roughdielectric.h>
+// #include <psdr/bsdf/microfacet.h>
 
-#include <psdr/bsdf/normalmap.h>
+// #include <psdr/bsdf/normalmap.h>
 
 #include <psdr/core/pmf.h>
 
@@ -43,7 +43,7 @@
 
 #include <psdr/shape/mesh.h>
 #include <psdr/scene/scene.h>
-#include <psdr/scene/scene_loader.h>
+// #include <psdr/scene/scene_loader.h>
 
 
 namespace py = pybind11;
@@ -352,35 +352,35 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("anisotropic", &BSDF::anisotropic)
         .def("test_vir", &BSDF::test_vir);
 
-    py::class_<NormalMap, BSDF>(m, "NormalMapBSDF")
-        .def(py::init<>())
-        .def(py::init<const ScalarVector3f&>())
-        .def_readwrite("nested_bsdf", &NormalMap::m_bsdf)
-        .def_readwrite("normal_map", &NormalMap::m_nmap);
+    // py::class_<NormalMap, BSDF>(m, "NormalMapBSDF")
+    //     .def(py::init<>())
+    //     .def(py::init<const ScalarVector3f&>())
+    //     .def_readwrite("nested_bsdf", &NormalMap::m_bsdf)
+    //     .def_readwrite("normal_map", &NormalMap::m_nmap);
 
-    py::class_<Diffuse, BSDF>(m, "DiffuseBSDF")
-        .def(py::init<>())
-        .def(py::init<const ScalarVector3f&>())
-        .def(py::init<const char*>())
-        .def(py::init<const Bitmap3fD&>())
-        .def_readwrite("reflectance", &Diffuse::m_reflectance);
+    // py::class_<Diffuse, BSDF>(m, "DiffuseBSDF")
+    //     .def(py::init<>())
+    //     .def(py::init<const ScalarVector3f&>())
+    //     .def(py::init<const char*>())
+    //     .def(py::init<const Bitmap3fD&>())
+    //     .def_readwrite("reflectance", &Diffuse::m_reflectance);
 
-    py::class_<RoughConductor, BSDF>(m, "RoughConductorBSDF")
-        .def_readwrite("alpha_u", &RoughConductor::m_alpha_u)
-        .def_readwrite("alpha_v", &RoughConductor::m_alpha_v)
-        .def_readwrite("eta", &RoughConductor::m_eta)
-        .def_readwrite("k", &RoughConductor::m_k)
-        .def_readwrite("specular_reflectance", &RoughConductor::m_specular_reflectance);
+    // py::class_<RoughConductor, BSDF>(m, "RoughConductorBSDF")
+    //     .def_readwrite("alpha_u", &RoughConductor::m_alpha_u)
+    //     .def_readwrite("alpha_v", &RoughConductor::m_alpha_v)
+    //     .def_readwrite("eta", &RoughConductor::m_eta)
+    //     .def_readwrite("k", &RoughConductor::m_k)
+    //     .def_readwrite("specular_reflectance", &RoughConductor::m_specular_reflectance);
 
-    py::class_<RoughDielectric, BSDF>(m, "RoughDielectricBSDF");
-    // Sensors
+    // py::class_<RoughDielectric, BSDF>(m, "RoughDielectricBSDF");
+    // // Sensors
 
-    py::class_<Microfacet, BSDF>(m, "MicrofacetBSDF")
-        .def(py::init<>())
-        .def(py::init<const ScalarVector3f&, const ScalarVector3f&, float>())
-        .def_readwrite("roughness", &Microfacet::m_roughness)
-        .def_readwrite("diffuseReflectance", &Microfacet::m_diffuseReflectance)
-        .def_readwrite("specularReflectance", &Microfacet::m_specularReflectance);
+    // py::class_<Microfacet, BSDF>(m, "MicrofacetBSDF")
+    //     .def(py::init<>())
+    //     .def(py::init<const ScalarVector3f&, const ScalarVector3f&, float>())
+    //     .def_readwrite("roughness", &Microfacet::m_roughness)
+    //     .def_readwrite("diffuseReflectance", &Microfacet::m_diffuseReflectance)
+    //     .def_readwrite("specularReflectance", &Microfacet::m_specularReflectance);
 
 
     // Shapes
@@ -489,7 +489,7 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("add_EnvironmentMap", &Scene::add_EnvironmentMap, "Add EnvironmentMap")
         .def("add_Mesh", &Scene::add_Mesh, "Add Mesh")
         .def("add_BSDF", &Scene::add_BSDF, "Add BSDf", "bsdf"_a, "name"_a, "twoSide"_a = false)
-        .def("add_normalmap_BSDF", &Scene::add_normalmap_BSDF, "Add add_normalmap_BSDF", "bsdf1"_a, "bsdf2"_a, "name"_a, "twoSide"_a = false)
+        // .def("add_normalmap_BSDF", &Scene::add_normalmap_BSDF, "Add add_normalmap_BSDF", "bsdf1"_a, "bsdf2"_a, "name"_a, "twoSide"_a = false)
         .def("sample_emitter_position", &Scene::sample_emitter_position<true>)
 
         .def_readonly("sensor", &Scene::m_sensors)
@@ -506,8 +506,8 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("ray_intersectAD", &Scene::ray_intersect<true>)
         .def("ray_intersectADAD", &Scene::ray_intersect<true, true>)
 
-        .def("load_file", &Scene::load_file, "file_name"_a, "auto_configure"_a = true)
-        .def("load_string", &Scene::load_string, "scene_xml"_a, "auto_configure"_a = true)
+        // .def("load_file", &Scene::load_file, "file_name"_a, "auto_configure"_a = true)
+        // .def("load_string", &Scene::load_string, "scene_xml"_a, "auto_configure"_a = true)
         .def("configure", &Scene::configure, "active_sensor"_a=std::vector<int>())
         .def_readwrite("opts", &Scene::m_opts, "Render options")
         .def_readwrite("seed", &Scene::seed, "Sample seed")

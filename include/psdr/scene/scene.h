@@ -5,13 +5,13 @@
 #include <psdr/edge/edge.h>
 #include <psdr/shape/mesh.h>
 #include <psdr/bsdf/bsdf.h>
-#include <psdr/bsdf/microfacet.h>
-#include <psdr/bsdf/normalmap.h>
+// #include <psdr/bsdf/microfacet.h>
+// #include <psdr/bsdf/normalmap.h>
 
 NAMESPACE_BEGIN(psdr_jit)
 
 PSDR_CLASS_DECL_BEGIN(Scene, final, Object)
-    friend class SceneLoader;
+    // friend class SceneLoader;
 
 public:
     using ParamMap = std::unordered_map<std::string, Object&>;
@@ -19,15 +19,15 @@ public:
     Scene();
     ~Scene() override;
 
-    void load_file(const char *file_name, bool auto_configure = true);
-    void load_string(const char *scene_xml, bool auto_configure = true);
+    // void load_file(const char *file_name, bool auto_configure = true);
+    // void load_string(const char *scene_xml, bool auto_configure = true);
 
     void configure(std::vector<int> active_sensor=std::vector<int>());
 
     void add_Sensor(Sensor* sensor);
     void add_EnvironmentMap(const char *fname, ScalarMatrix4f to_world, float scale);
     void add_BSDF(BSDF* bsdf, const char *bsdf_id, bool twoSide = false);
-    void add_normalmap_BSDF(NormalMap* bsdf1, Microfacet* bsdf2, const char *bsdf_id, bool twoSide = false);
+    // void add_normalmap_BSDF(NormalMap* bsdf1, Microfacet* bsdf2, const char *bsdf_id, bool twoSide = false);
 
     void add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id, Emitter* emitter);
 

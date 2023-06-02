@@ -103,25 +103,8 @@ set(PSDR_SOURCE_FILES
 
 
     ${PSDR_INCLUDE_DIR}/bsdf/bsdf.h
-    ${PSDR_INCLUDE_DIR}/bsdf/diffuse.h
-    ${PSDR_SOURCE_DIR}/bsdf/diffuse.cpp
-
-    ${PSDR_INCLUDE_DIR}/bsdf/microfacet.h
-    ${PSDR_SOURCE_DIR}/bsdf/microfacet.cpp
 
 
-    ${PSDR_INCLUDE_DIR}/bsdf/roughconductor.h
-    ${PSDR_SOURCE_DIR}/bsdf/roughconductor.cpp
-    ${PSDR_INCLUDE_DIR}/bsdf/roughdielectric.h
-    ${PSDR_SOURCE_DIR}/bsdf/roughdielectric.cpp
-
-    ${PSDR_INCLUDE_DIR}/bsdf/normalmap.h
-    ${PSDR_SOURCE_DIR}/bsdf/normalmap.cpp
-
-
-
-    ${PSDR_INCLUDE_DIR}/bsdf/ggx.h
-    ${PSDR_SOURCE_DIR}/bsdf/ggx.cpp
 
 
     ${PSDR_INCLUDE_DIR}/edge/edge.h
@@ -153,9 +136,6 @@ set(PSDR_SOURCE_FILES
 
     ${PSDR_INCLUDE_DIR}/scene/scene.h
     ${PSDR_SOURCE_DIR}/scene/scene.cpp
-
-    ${PSDR_INCLUDE_DIR}/scene/scene_loader.h
-    ${PSDR_SOURCE_DIR}/scene/scene_loader.cpp
 
     ${PSDR_SOURCE_DIR}/optix_stubs.cpp
 
