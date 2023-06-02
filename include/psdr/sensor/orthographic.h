@@ -11,7 +11,6 @@ public:
 
     void configure(bool cache) override;
 
-    RayC sample_primary_ray(const Vector2fC &samples) const override;
     RayD sample_primary_ray(const Vector2fD &samples) const override;
 
     SensorDirectSampleD sample_direct(const Vector3fD &p) const override;

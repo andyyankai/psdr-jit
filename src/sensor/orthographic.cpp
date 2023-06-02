@@ -151,18 +151,6 @@ std::string OrthographicCamera::to_string() const {
 }
 
 
-RayC OrthographicCamera::sample_primary_ray(const Vector2fC &samples) const {
-    // Vector3fC d = normalize(transform_pos<FloatC>(detach(m_sample_to_camera), concat(samples, Vectorf<1, false>(0.f))));
-    Matrix4fD m_to_world = m_to_world_left * m_to_world_raw * m_to_world_right;
-    Matrix4fC to_world = detach(m_to_world);
-    Vector3fC near_p = transform_pos<FloatC>(detach(m_sample_to_camera), Vector3fC(samples.x(), samples.y(), 0.f));
-    return RayC(
-        transform_pos<FloatC>(to_world, near_p),
-        transform_dir<FloatC>(to_world, Vector3fC(0.f,0.f,1.f))
-    );
-}
-
-
 RayD OrthographicCamera::sample_primary_ray(const Vector2fD &samples) const {
     Matrix4fD m_to_world = m_to_world_left * m_to_world_raw * m_to_world_right;
     Vector3fD near_p = transform_pos<FloatD>(m_sample_to_camera, Vector3fD(samples.x(), samples.y(), 0.f));
@@ -214,8 +202,8 @@ PrimaryEdgeSample OrthographicCamera::sample_primary_edge(const FloatC &_sample1
     result.idx      = full<IntC>(-1, m);
     masked(result.idx, valid) = ip.y()*m_resolution.x() + ip.x();
 
-    result.ray_p    = sample_primary_ray(p + EdgeEpsilon*edge_normal);
-    result.ray_n    = sample_primary_ray(p - EdgeEpsilon*edge_normal);
+    result.ray_p    = detach(sample_primary_ray(p + EdgeEpsilon*edge_normal));
+    result.ray_n    = detach(sample_primary_ray(p - EdgeEpsilon*edge_normal));
 
     return result;
 }

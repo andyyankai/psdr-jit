@@ -361,7 +361,7 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("sample_primary_edge", &Sensor::sample_primary_edge)
         .def("set_transform", &Sensor::set_transform, "mat"_a, "set_left"_a = true)
         .def("append_transform", &Sensor::append_transform, "mat"_a, "append_left"_a = true)
-        .def("sample_primary_ray", &Sensor::sample_primary_rayD)
+        .def("sample_primary_ray", &Sensor::sample_primary_ray)
         .def_readwrite("enable_edges", &Sensor::m_enable_edges)
         .def_readwrite("to_world", &Sensor::m_to_world_raw)
         .def_readwrite("to_world_left", &Sensor::m_to_world_left)

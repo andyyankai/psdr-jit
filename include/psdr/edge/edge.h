@@ -14,11 +14,6 @@ struct PrimaryEdgeSample {
     FloatD  x_dot_n;
     IntC    idx;
     RayC    ray_n, ray_p;
-
-#ifdef PSDR_PRIMARY_EDGE_VIS_CHECK
-    RayC    ray_c;
-#endif
-
     FloatC  pdf;
 };
 
@@ -26,12 +21,7 @@ struct PrimaryEdgeSample {
 template <typename Float_>
 struct PrimaryEdgeInfo_ {
     static constexpr bool ad = std::is_same_v<Float_, FloatD>;
-
-#ifdef PSDR_PRIMARY_EDGE_VIS_CHECK
-    Vector3f<ad>            p0, p1;
-#else
     Vector2f<ad>            p0, p1;
-#endif
     Vector2f<ad>            edge_normal;
     Float<ad>               edge_length;
 
