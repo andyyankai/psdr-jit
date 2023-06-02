@@ -27,7 +27,7 @@ public:
     void add_BSDF(BSDF* bsdf, const char *bsdf_id, bool twoSide = false);
     // void add_normalmap_BSDF(NormalMap* bsdf1, Microfacet* bsdf2, const char *bsdf_id, bool twoSide = false);
 
-    void add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id, Emitter* emitter);
+    void add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id, Emitter* emitter, bool face_normals);
 
     bool is_ready() const;
 

@@ -110,7 +110,7 @@ void Scene::add_BSDF(BSDF* bsdf, const char *bsdf_id, bool twoSide) {
     }
 }
 
-void Scene::add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id, Emitter* emitter) {
+void Scene::add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id, Emitter* emitter, bool face_normals) {
     if ( m_opts.log_level > 0 ) std::cout << "add_Mesh: " << m_meshes.size() << std::endl;
     std::stringstream oss;
     oss << "BSDF[id=" << bsdf_id << "]";
@@ -124,7 +124,7 @@ void Scene::add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id
 
     mesh->m_to_world_raw = Matrix4fD(transform);
     mesh->m_mesh_id = m_meshes.size();
-    mesh->m_use_face_normals = true;
+    mesh->m_use_face_normals = face_normals;
 
     if ( emitter ) {
         if (AreaLight *emitter_buff = dynamic_cast<AreaLight *>(emitter)) {
