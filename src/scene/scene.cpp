@@ -334,10 +334,6 @@ void Scene::configure(std::vector<int> active_sensor) {
         }
     }
 
-
-    // PSDR_ASSERT(0);
-
-
     // Initialize CUDA arrays
     if ( !m_emitters.empty() ) {
         m_emitters_cuda = load<EmitterArrayD>(m_emitters.data(), m_emitters.size());
@@ -429,21 +425,12 @@ template <bool ad, bool path_space>
 std::pair<Intersection<ad>, TriangleInfoD> Scene::boundary_ray_intersect(const Ray<ad> &ray, Mask<ad> active) const {
     static_assert(ad || !path_space);
     Intersection<ad> its;
-
     TriangleInfoD out_info;
-
     Intersection_OptiX optix_its = m_optix->ray_intersect<ad>(ray, active);
-
-
-
     Vector2i<ad> idx(optix_its.triangle_id, optix_its.shape_id);
-    // its.t = idx[1];
-    // return its;
 
     TriangleUV<ad>      tri_uv_info;
     Mask<ad>            face_normal_mask;
-
-
 
     // TODO: FIX
     Vector3f<ad> tri_info_p0;
@@ -454,13 +441,6 @@ std::pair<Intersection<ad>, TriangleInfoD> Scene::boundary_ray_intersect(const R
     Vector3f<ad> tri_info_n2; 
     Vector3f<ad> tri_info_face_normal; 
     Float<ad> tri_info_face_area; 
-
-
-    // std::cout << m_triangle_info.face_normal << std::endl;
-    // std::cout << idx[1] << std::endl;
-
-    // its.p = idx[1];
-    // return its;
 
     if constexpr ( ad ) {
         its.n = gather<Vector3f<ad>>(m_triangle_info.face_normal, idx[1], active);
