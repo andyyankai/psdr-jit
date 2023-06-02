@@ -15,12 +15,12 @@ SpectrumD Diffuse::eval_type(const IntersectionD &its, MaskD active) const {
 }
 
 
-SpectrumC Diffuse::eval(const IntersectionC &its, const Vector3fC &wo, MaskC active) const {
+SpectrumC Diffuse::evalC(const IntersectionC &its, const Vector3fC &wo, MaskC active) const {
     return __eval<false>(its, wo, active);
 }
 
 
-SpectrumD Diffuse::eval(const IntersectionD &its, const Vector3fD &wo, MaskD active) const {
+SpectrumD Diffuse::evalD(const IntersectionD &its, const Vector3fD &wo, MaskD active) const {
     return __eval<true>(its, wo, active);
 }
 

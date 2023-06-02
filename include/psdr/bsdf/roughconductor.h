@@ -25,8 +25,8 @@ public:
     int test_vir() override {
         return 0;
     };
-    SpectrumC eval(const IntersectionC &its, const Vector3fC &wo, MaskC active = true) const override;
-    SpectrumD eval(const IntersectionD &its, const Vector3fD &wo, MaskD active = true) const override;
+    SpectrumC evalC(const IntersectionC &its, const Vector3fC &wo, MaskC active = true) const override;
+    SpectrumD evalD(const IntersectionD &its, const Vector3fD &wo, MaskD active = true) const override;
 
     BSDFSampleC sample(const IntersectionC &its, const Vector3fC &sample, MaskC active = true) const override;
     BSDFSampleD sample(const IntersectionD &its, const Vector3fD &sample, MaskD active = true) const override;

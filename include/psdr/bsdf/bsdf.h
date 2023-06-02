@@ -27,17 +27,10 @@ PSDR_CLASS_DECL_BEGIN(BSDF,, Object)
 public:
     BSDF() {}
     virtual ~BSDF() override {}
-    virtual SpectrumC eval(const IntersectionC &its, const Vector3fC &wo, MaskC active = true) const = 0;
-    virtual SpectrumD eval(const IntersectionD &its, const Vector3fD &wo, MaskD active = true) const = 0;
+    virtual SpectrumC evalC(const IntersectionC &its, const Vector3fC &wo, MaskC active = true) const = 0;
+    virtual SpectrumD evalD(const IntersectionD &its, const Vector3fD &wo, MaskD active = true) const = 0;
 
     virtual SpectrumD eval_type(const IntersectionD &its, MaskD active = true) const = 0;
-
-    SpectrumC evalC(const IntersectionC &its, const Vector3fC &wo, MaskC active = true) const {
-        return eval(its, wo, active);
-    };
-    SpectrumD evalD(const IntersectionD &its, const Vector3fD &wo, MaskD active = true) const {
-        return eval(its, wo, active);
-    };
 
     virtual BSDFSampleC sample(const IntersectionC &its, const Vector3fC &sample, MaskC active = true) const = 0;
     virtual BSDFSampleD sample(const IntersectionD &its, const Vector3fD &sample, MaskD active = true) const = 0;
@@ -63,6 +56,13 @@ public:
 
     virtual int test_vir() = 0;
 
+    std::string to_string() const override{
+        std::stringstream oss;
+        oss << type_name();
+        if ( m_id != "" ) oss << "[id=" << m_id << "]";
+        return oss.str();
+    }
+
     bool m_twoSide = false;
 
     DRJIT_VCALL_REGISTER(FloatD, BSDF);
@@ -74,13 +74,14 @@ PSDR_CLASS_DECL_END(BSDF)
     public:
         PyBSDF() : BSDF() { }
 
-        SpectrumC eval(const IntersectionC &its, const Vector3fC &wo, MaskC active = true) const override {
-            // PYBIND11_OVERRIDE_PURE(SpectrumC, BSDF, eval, its, wo, active);
-            return SpectrumC(0.1f,0.1f,0.9f);
+        SpectrumC evalC(const IntersectionC &its, const Vector3fC &wo, MaskC active = true) const override {
+            PYBIND11_OVERRIDE_PURE(SpectrumC, BSDF, evalC, its, wo, active);
+            // return SpectrumC(0.1f,0.1f,0.9f);
         }
-        SpectrumD eval(const IntersectionD &its, const Vector3fD &wo, MaskD active = true) const override {
-            // PYBIND11_OVERRIDE_PURE(SpectrumD, BSDF, eval, its, wo, active);
-            return SpectrumD(0.1f,0.1f,0.9f);
+
+        SpectrumD evalD(const IntersectionD &its, const Vector3fD &wo, MaskD active = true) const override {
+            PYBIND11_OVERRIDE_PURE(SpectrumD, BSDF, evalD, its, wo, active);
+            // return SpectrumD(0.1f,0.1f,0.9f);
         }
 
         SpectrumD eval_type(const IntersectionD &its, MaskD active = true) const override {
@@ -108,9 +109,15 @@ PSDR_CLASS_DECL_END(BSDF)
             return FloatD(1.0f);
         }
 
+        std::string to_string() const override {
+            // PYBIND11_OVERRIDE_PURE(std::string, BSDF, to_string);
+            return std::string("CustomBSDF[id=") + m_id + "]";
+            // return false;
+        } ;
+
         bool anisotropic() const override {
-            // PYBIND11_OVERRIDE_PURE(bool, BSDF, anisotropic);
-            return false;
+            PYBIND11_OVERRIDE_PURE(bool, BSDF, anisotropic);
+            // return false;
         } ;
 
         int test_vir() override {
@@ -123,7 +130,6 @@ PSDR_CLASS_DECL_END(BSDF)
 NAMESPACE_END(psdr_jit)
 
 DRJIT_VCALL_BEGIN(psdr_jit::BSDF)
-    DRJIT_VCALL_METHOD(eval)
     DRJIT_VCALL_METHOD(eval_type)
     DRJIT_VCALL_METHOD(evalC)
     DRJIT_VCALL_METHOD(evalD)

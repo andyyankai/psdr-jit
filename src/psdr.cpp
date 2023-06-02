@@ -325,7 +325,7 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readonly("J", &PositionSampleD::J);
 
 
-    // py::class_<BSDF, Object>(m, "BSDF")
+    // py::class_<BSDF, Object>(m, "BSDF");
     //     .def("evalC", &BSDF::evalC)
     //     .def("evalD", &BSDF::evalD)
     //     .def("sampleC", &BSDF::sampleC)
@@ -337,12 +337,12 @@ PYBIND11_MODULE(psdr_jit, m) {
     //     .def_readwrite("twoSide", &BSDF::m_twoSide);
 
 
-
-    // py::class_<PyBSDF, BSDF>(m, "PyBSDF")
-    //     .def(py::init<>());
-
     py::class_<BSDF, PyBSDF /* <--- trampoline*/>(m, "BSDF")
         .def(py::init<>())
+        .def("__repr__", &BSDF::to_string)
+        .def("evalC", &BSDF::evalC)
+        .def("evalD", &BSDF::evalD)
+        .def("anisotropic", &BSDF::anisotropic)
         .def("test_vir", &BSDF::test_vir);
 
     py::class_<NormalMap, BSDF>(m, "NormalMapBSDF")

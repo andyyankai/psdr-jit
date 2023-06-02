@@ -16,11 +16,11 @@ SpectrumD Microfacet::eval_type(const IntersectionD &its, MaskD active) const {
     return value & active;
 }
 
-SpectrumC Microfacet::eval(const IntersectionC &its, const Vector3fC &wo, MaskC active) const {
+SpectrumC Microfacet::evalC(const IntersectionC &its, const Vector3fC &wo, MaskC active) const {
     return __eval<false>(its, wo, active);
 }
 
-SpectrumD Microfacet::eval(const IntersectionD &its, const Vector3fD &wo, MaskD active) const {
+SpectrumD Microfacet::evalD(const IntersectionD &its, const Vector3fD &wo, MaskD active) const {
     return __eval<true>(its, wo, active);
 }
 

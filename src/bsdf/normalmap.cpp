@@ -15,12 +15,12 @@ SpectrumD NormalMap::eval_type(const IntersectionD &its, MaskD active) const {
 }
 
 
-SpectrumC NormalMap::eval(const IntersectionC &its, const Vector3fC &wo, MaskC active) const {
+SpectrumC NormalMap::evalC(const IntersectionC &its, const Vector3fC &wo, MaskC active) const {
     return __eval<false>(its, wo, active);
 }
 
 
-SpectrumD NormalMap::eval(const IntersectionD &its, const Vector3fD &wo, MaskD active) const {
+SpectrumD NormalMap::evalD(const IntersectionD &its, const Vector3fD &wo, MaskD active) const {
     return __eval<true>(its, wo, active);
 }
 template <bool ad>
@@ -74,8 +74,13 @@ Spectrum<ad> NormalMap::__eval(const Intersection<ad> &_its, const Vector3f<ad> 
     Float<ad> lambda_p_ = lambda_p<ad>(wp, its.wi);
     Vector3f<ad> wt_ = wt<ad>(wp);
 
+    Spectrum<ad> value;
     // i -> p -> o
-    Spectrum<ad> value = m_bsdf->eval(perturbed_its, perturbed_wo, active) * lambda_p_ * shadowing;
+    if constexpr (ad) {
+        value = m_bsdf->evalD(perturbed_its, perturbed_wo, active) * lambda_p_ * shadowing;
+    } else {
+        value = m_bsdf->evalC(perturbed_its, perturbed_wo, active) * lambda_p_ * shadowing;
+    }
 
     // i -> p -> t -> o
     // Vector3f<ad> wo_reflected = normalize(wo - 2.0f * dot(wo, wt_) * wt_);
@@ -87,8 +92,12 @@ Spectrum<ad> NormalMap::__eval(const Intersection<ad> &_its, const Vector3f<ad> 
     Vector3f<ad> wi_reflected = normalize(its.wi - 2.0f * dot(its.wi, wt_) * wt_);
     Intersection<ad> reflected_perturbed_its = perturbed_its;
     reflected_perturbed_its.wi = p_frame.to_local(wi_reflected);
-    value[dot(its.wi, wt_) > 0] += m_bsdf->eval(reflected_perturbed_its, perturbed_wo, active) * (1.f - lambda_p_) * shadowing;
 
+    if constexpr (ad) {
+        value[dot(its.wi, wt_) > 0] += m_bsdf->evalD(reflected_perturbed_its, perturbed_wo, active) * (1.f - lambda_p_) * shadowing;
+    } else {
+        value[dot(its.wi, wt_) > 0] += m_bsdf->evalC(reflected_perturbed_its, perturbed_wo, active) * (1.f - lambda_p_) * shadowing;
+    }
     return value & active;
 }
 

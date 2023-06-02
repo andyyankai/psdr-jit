@@ -17,8 +17,8 @@ public:
     Microfacet(const Bitmap3fD &spec_refl, const Bitmap3fD &diff_refl, const Bitmap1fD &roughness);
     SpectrumD eval_type(const IntersectionD &its, MaskD active = true) const override;
 
-    SpectrumC eval(const IntersectionC &its, const Vector3fC &wo, MaskC active = true) const override;
-    SpectrumD eval(const IntersectionD &its, const Vector3fD &wo, MaskD active = true) const override;
+    SpectrumC evalC(const IntersectionC &its, const Vector3fC &wo, MaskC active = true) const override;
+    SpectrumD evalD(const IntersectionD &its, const Vector3fD &wo, MaskD active = true) const override;
 
     BSDFSampleC sample(const IntersectionC &its, const Vector3fC &sample, MaskC active = true) const override;
     BSDFSampleD sample(const IntersectionD &its, const Vector3fD &sample, MaskD active = true) const override;
