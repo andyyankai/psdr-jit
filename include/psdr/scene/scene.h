@@ -41,8 +41,7 @@ public:
     template <bool ad>
     PositionSample<ad> sample_emitter_position(const Vector3f<ad> &ref_p, const Vector2f<ad> &sample, Mask<ad> active = true) const;
 
-    template <bool ad>
-    Float<ad> emitter_position_pdf(const Vector3f<ad> &ref_p, const Intersection<ad> &its, Mask<ad> active = true) const;
+    FloatD emitter_position_pdf(const Vector3fD &ref_p, const IntersectionD &its, MaskD active = true) const;
 
     BoundarySegSampleDirect sample_boundary_segment_direct(const Vector3fC &sample3, MaskC active = true) const;
 

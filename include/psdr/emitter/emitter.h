@@ -33,17 +33,8 @@ public:
         return sample_position(ref_p, sample2, active);
     };
 
-
-    virtual FloatC sample_position_pdf(const Vector3fC &ref_p, const IntersectionC &its, MaskC active = true) const = 0;
     virtual FloatD sample_position_pdf(const Vector3fD &ref_p, const IntersectionD &its, MaskD active = true) const = 0;
-
-    FloatC sample_position_pdfC(const Vector3fC &ref_p, const IntersectionC &its, MaskC active = true) const {
-        return sample_position_pdf(ref_p, its, active);
-    };
-    FloatD sample_position_pdfD(const Vector3fD &ref_p, const IntersectionD &its, MaskD active = true) const {
-        return sample_position_pdf(ref_p, its, active);
-    };
-
+    
     bool m_ready = false;
     float m_sampling_weight = 1.f;
 
@@ -61,6 +52,4 @@ DRJIT_VCALL_BEGIN(psdr_jit::Emitter)
     DRJIT_VCALL_METHOD(sample_positionC)
     DRJIT_VCALL_METHOD(sample_positionD)
     DRJIT_VCALL_METHOD(sample_position_pdf)
-    DRJIT_VCALL_METHOD(sample_position_pdfC)
-    DRJIT_VCALL_METHOD(sample_position_pdfD)
 DRJIT_VCALL_END(psdr_jit::Emitter)

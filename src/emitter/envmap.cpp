@@ -128,39 +128,18 @@ std::pair<Vector3fC, FloatC> EnvironmentMap::sample_direction(Vector2fC &uv) con
     return { d, pdf };
 }
 
-
-FloatC EnvironmentMap::sample_position_pdf(const Vector3fC &ref_p, const IntersectionC &its, MaskC active) const {
-    return __sample_position_pdf<false>(ref_p, its, active);
-}
-
-
 FloatD EnvironmentMap::sample_position_pdf(const Vector3fD &ref_p, const IntersectionD &its, MaskD active) const {
-    return __sample_position_pdf<true>(ref_p, its, active);
-}
-
-
-template <bool ad>
-Float<ad> EnvironmentMap::__sample_position_pdf(const Vector3f<ad> &ref_p, const Intersection<ad> &its, Mask<ad> active) const {
     Vector3fC d;
     FloatC G, dist2;
-    if constexpr ( ad ) {
-        d = detach(its.p) - detach(ref_p);
-        dist2 = squared_norm(d); d /= safe_sqrt(dist2);
-        G = abs(dot(d, detach(its.n)))/dist2;
-    } else {
-        d = its.p - ref_p;
-        dist2 = squared_norm(d); d /= safe_sqrt(dist2);
-        G = abs(dot(d, its.n))/dist2;
-    }
-
+    d = detach(its.p) - detach(ref_p);
+    dist2 = squared_norm(d); d /= safe_sqrt(dist2);
+    G = abs(dot(d, detach(its.n)))/dist2;
     d = transform_dir<FloatC>(detach(m_from_world), d);
     FloatC factor = G*safe_rsqrt(maximum(sqr(d.x()) + sqr(d.z()), sqr(Epsilon)))*(.5f/sqr(Pi));
     Vector2fC uv(atan2(d.x(), -d.z())*InvTwoPi, safe_acos(d.y())*InvPi);
     uv -= floor(uv);
     return m_cell_distrb.pdf(uv)*factor;
-    // return m_cube_distrb.pdf(uv)*factor;
 }
-
 
 std::string EnvironmentMap::to_string() const {
     std::ostringstream oss;

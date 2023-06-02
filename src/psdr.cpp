@@ -61,11 +61,9 @@ PYBIND11_MODULE(psdr_jit, m) {
     m.def("ray_intersect_triangleC", &ray_intersect_triangle<false>);
     m.def("ray_intersect_triangleD", &ray_intersect_triangle<true>);
 
-    m.def("bilinearC", &bilinear<false>);
-    m.def("bilinearD", &bilinear<true>);
+    m.def("bilinear", &bilinear<true>);
 
-    m.def("mis_weightC", &mis_weight<false>);
-    m.def("mis_weightD", &mis_weight<true>);
+    m.def("mis_weight", &mis_weight<true>);
 
     m.def("square_to_cosine_hemisphere", &warp::square_to_cosine_hemisphere<true>);
     m.def("square_to_cosine_hemisphere_pdf", &warp::square_to_cosine_hemisphere_pdf<true>);
@@ -418,8 +416,7 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("boundary_ray_intersectAD", &Scene::boundary_ray_intersect<true>)
         .def("boundary_ray_intersectADAD", &Scene::boundary_ray_intersect<true, true>)
 
-        .def("emitter_position_pdfC", &Scene::emitter_position_pdf<false>)
-        .def("emitter_position_pdfD", &Scene::emitter_position_pdf<true>)
+        .def("emitter_position_pdf", &Scene::emitter_position_pdf)
 
         .def("ray_intersect", &Scene::ray_intersect<false>)
         .def("ray_intersectAD", &Scene::ray_intersect<true>)

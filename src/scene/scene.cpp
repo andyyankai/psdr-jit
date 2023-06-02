@@ -788,20 +788,11 @@ PositionSample<ad> Scene::sample_emitter_position(const Vector3f<ad> &ref_p, con
 
         return result;
     }
-
-    
-    
 }
 
 
-template <bool ad>
-Float<ad> Scene::emitter_position_pdf(const Vector3f<ad> &ref_p, const Intersection<ad> &its, Mask<ad> active) const {
-    if constexpr (ad) {
-        return its.shape->emitter()->sample_position_pdfD(ref_p, its, active);
-    } else {
-        return its.shape->emitter()->sample_position_pdfC(ref_p, its, active);
-    }
-    
+FloatD Scene::emitter_position_pdf(const Vector3fD &ref_p, const IntersectionD &its, MaskD active) const {
+    return its.shape->emitter()->sample_position_pdf(ref_p, its, active);    
 }
 
 
@@ -859,8 +850,5 @@ template IntersectionD Scene::ray_intersect<true , true >(const RayD&, MaskD) co
 
 template PositionSampleC Scene::sample_emitter_position<false>(const Vector3fC&, const Vector2fC&, MaskC) const;
 template PositionSampleD Scene::sample_emitter_position<true >(const Vector3fD&, const Vector2fD&, MaskD) const;
-
-template FloatC Scene::emitter_position_pdf<false>(const Vector3fC&, const IntersectionC&, MaskC) const;
-template FloatD Scene::emitter_position_pdf<true >(const Vector3fD&, const IntersectionD&, MaskD) const;
 
 NAMESPACE_END(psdr_jit)

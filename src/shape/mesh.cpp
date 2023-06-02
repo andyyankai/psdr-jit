@@ -396,13 +396,8 @@ PositionSample<ad> Mesh::__sample_position(const Vector2f<ad> &_sample2, Mask<ad
 }
 
 
-FloatC Mesh::sample_position_pdf(const IntersectionC &its, MaskC active) const {
-    active &= eq(its.shape, this);
-    return FloatC(m_inv_total_area) & active;
-}
 
-
-FloatD Mesh::sample_position_pdfD(const IntersectionD &its, MaskD active) const {
+FloatD Mesh::sample_position_pdf(const IntersectionD &its, MaskD active) const {
     active &= eq(its.shape, this);
     return FloatD(m_inv_total_area) & active;
 }

@@ -41,8 +41,7 @@ public:
     PositionSampleC sample_position(const Vector2fC &sample2, MaskC active = true) const;
     PositionSampleD sample_position(const Vector2fD &sample2, MaskD active = true) const;
 
-    FloatC sample_position_pdf(const IntersectionC &its, MaskC active = true) const;
-    FloatD sample_position_pdfD(const IntersectionD &its, MaskD active = true) const;
+    FloatD sample_position_pdf(const IntersectionD &its, MaskD active = true) const;
 
     MaskC get_obj_mask(std::string obj_name) const{
         if (m_id != "") {
@@ -159,5 +158,4 @@ DRJIT_VCALL_BEGIN(psdr_jit::Mesh)
     DRJIT_VCALL_METHOD(get_obj_idD)
     DRJIT_VCALL_METHOD(sample_position)
     DRJIT_VCALL_METHOD(sample_position_pdf)
-    DRJIT_VCALL_METHOD(sample_position_pdfD)
 DRJIT_VCALL_END(psdr_jit::Mesh)
