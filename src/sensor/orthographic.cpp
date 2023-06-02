@@ -173,20 +173,20 @@ RayD OrthographicCamera::sample_primary_ray(const Vector2fD &samples) const {
 }
 
 
-SensorDirectSampleC OrthographicCamera::sample_direct(const Vector3fC &p) const {
-    SensorDirectSampleC result;
-    result.q = head<2>(transform_pos<FloatC>(detach(m_world_to_sample), p));
+SensorDirectSampleD OrthographicCamera::sample_direct(const Vector3fD &p) const {
+    SensorDirectSampleD result;
+    result.q = head<2>(transform_pos<FloatD>(detach(m_world_to_sample), p));
 
-    Vector2iC iq = floor2int<Vector2iC, Vector2fC>(result.q*m_resolution);
+    Vector2iD iq = floor2int<Vector2iD, Vector2fD>(result.q*m_resolution);
     result.is_valid = iq.x() >= 0 && iq.x() < m_resolution.x() &&
                       iq.y() >= 0 && iq.y() < m_resolution.y();
     result.pixel_idx = select(result.is_valid, iq.y()*m_resolution.x() + iq.x(), -1);
 
-    Vector3fC dir = p - detach(m_camera_pos);
-    FloatC dist2 = squared_norm(dir);
+    Vector3fD dir = p - detach(m_camera_pos);
+    FloatD dist2 = squared_norm(dir);
     dir /= safe_sqrt(dist2);
 
-    FloatC cosTheta = dot(detach(m_camera_dir), dir);
+    FloatD cosTheta = dot(detach(m_camera_dir), dir);
     result.sensor_val = rcp(dist2)*pow(rcp(cosTheta), 3.f)*detach(m_inv_area);
     return result;
 }

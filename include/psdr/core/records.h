@@ -27,16 +27,6 @@ struct SampleRecord_ {
 };
 
 template <typename Float_>
-struct SampleRecordDual_ {
-    static constexpr bool ad = std::is_same_v<Float_, FloatD>;
-
-    Float<ad>       pdf1, pdf2;
-    Mask<ad>        is_valid1, is_valid2;
-
-    DRJIT_STRUCT(SampleRecordDual_, pdf1, pdf2, is_valid1, is_valid2)
-};
-
-template <typename Float_>
 struct PositionSample_ : public SampleRecord_<Float_> {
     PSDR_IMPORT_BASE(SampleRecord_<Float_>, ad, pdf, is_valid)
 
@@ -56,19 +46,6 @@ struct BoundarySegSampleDirect : public SampleRecord_<FloatC> {
 
     // Sample point on an emitter
     Vector3fC           p2; // for indirect, p2 is a direction
-};
-
-template <typename Float_>
-struct BoundaryMISRecord_ {
-    static constexpr bool ad = std::is_same_v<Float_, FloatD>;
-    Vector3fC       p0, dir;
-    BoundarySegSampleDirect bss;
-    IntC            idx;
-    Spectrum<ad>    value;
-    FloatC       pdf;
-    Mask<ad>        is_valid;
-
-    DRJIT_STRUCT(BoundaryMISRecord_, p0, dir, bss, idx, value, pdf, is_valid)
 };
 
 NAMESPACE_END(psdr_jit)

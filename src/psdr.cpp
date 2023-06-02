@@ -198,30 +198,13 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readwrite("scale", &Bitmap3fD::m_scale);
 
 
-    
-    py::class_<InteractionC>(m, "InteractionC")
-        .def("is_valid", &InteractionC::is_valid)
-        .def_readonly("wi", &InteractionC::wi)
-        .def_readonly("p", &InteractionC::p)
-        .def_readonly("t", &InteractionC::t);
-
-    py::class_<InteractionD>(m, "InteractionD")
+    py::class_<InteractionD>(m, "Interaction")
         .def("is_valid", &InteractionD::is_valid)
         .def_readonly("wi", &InteractionD::wi)
         .def_readonly("p", &InteractionD::p)
         .def_readonly("t", &InteractionD::t);
 
-    py::class_<IntersectionC, InteractionC>(m, "IntersectionC")
-        .def("is_emitter", &IntersectionC::is_emitter)
-        .def("Le", &IntersectionC::Le)
-        .def("get_bsdf", &IntersectionC::get_bsdf)
-        .def_readonly("shape", &IntersectionC::shape)
-        .def_readonly("n", &IntersectionC::n)
-        .def_readonly("sh_frame", &IntersectionC::sh_frame)
-        .def_readonly("uv", &IntersectionC::uv)
-        .def_readonly("J", &IntersectionC::J);
-
-    py::class_<IntersectionD, InteractionD>(m, "IntersectionD")
+    py::class_<IntersectionD, InteractionD>(m, "Intersection")
         .def("is_emitter", &IntersectionD::is_emitter)
         .def("Le", &IntersectionD::Le)
         .def("get_bsdf", &IntersectionD::get_bsdf)
@@ -406,11 +389,11 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readwrite("to_world_left", &Sensor::m_to_world_left)
         .def_readwrite("to_world_right", &Sensor::m_to_world_right);
 
-    py::class_<SensorDirectSample_<FloatC>, SampleRecord_<FloatC>>(m, "SensorDirectSample")
-        .def_readwrite("q", &SensorDirectSample_<FloatC>::q)
-        .def_readwrite("pixel_idx", &SensorDirectSample_<FloatC>::pixel_idx)
-        .def_readwrite("sensor_val", &SensorDirectSample_<FloatC>::sensor_val)
-        .def_readwrite("is_valid", &SensorDirectSample_<FloatC>::is_valid);
+    py::class_<SensorDirectSample_<FloatD>, SampleRecord_<FloatD>>(m, "SensorDirectSample")
+        .def_readwrite("q", &SensorDirectSample_<FloatD>::q)
+        .def_readwrite("pixel_idx", &SensorDirectSample_<FloatD>::pixel_idx)
+        .def_readwrite("sensor_val", &SensorDirectSample_<FloatD>::sensor_val)
+        .def_readwrite("is_valid", &SensorDirectSample_<FloatD>::is_valid);
 
     py::class_<BSDFSampleD>(m, "BSDFSample")
         .def(py::init<>())

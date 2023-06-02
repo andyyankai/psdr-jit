@@ -34,7 +34,7 @@ public:
         return sample_primary_ray(samples);
     };
 
-    virtual SensorDirectSampleC sample_direct(const Vector3fC &p) const = 0;
+    virtual SensorDirectSampleD sample_direct(const Vector3fD &p) const = 0;
 
     virtual PrimaryEdgeSample sample_primary_edge(const FloatC &sample1) const = 0;
 

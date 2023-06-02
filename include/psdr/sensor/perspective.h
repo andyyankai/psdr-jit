@@ -14,7 +14,7 @@ public:
     RayC sample_primary_ray(const Vector2fC &samples) const override;
     RayD sample_primary_ray(const Vector2fD &samples) const override;
 
-    SensorDirectSampleC sample_direct(const Vector3fC &p) const override;
+    SensorDirectSampleD sample_direct(const Vector3fD &p) const override;
 
     PrimaryEdgeSample sample_primary_edge(const FloatC &sample1) const override;
 
