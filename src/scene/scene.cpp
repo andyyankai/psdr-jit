@@ -55,13 +55,13 @@ Scene::Scene() {
 Scene::~Scene() {
     for ( Sensor*  s : m_sensors  ) delete s;
     for ( Emitter* e : m_emitters ) delete e;
-    for ( BSDF*    b : m_bsdfs    ) {
-        if (PyBSDF *bsdf_buff = dynamic_cast<PyBSDF *>(b)){
-            ;
-        } else {
-            delete b;
-        }        
-    };
+    // for ( BSDF*    b : m_bsdfs    ) {
+    //     if (PyBSDF *bsdf_buff = dynamic_cast<PyBSDF *>(b)){
+    //         ; // TODO: detect pointer from python to avoid double delete
+    //     } else {
+    //         delete b;
+    //     }        
+    // };
     for ( Mesh*    m : m_meshes   ) delete m;
 
     delete      m_optix;
@@ -129,6 +129,7 @@ void Scene::add_normalmap_BSDF(NormalMap* bsdf, Microfacet* bsdf_micro, const ch
 
 
 void Scene::add_BSDF(BSDF* bsdf, const char *bsdf_id, bool twoSide) {
+    std::cout << "Kai TODO: fix bsdf pointer force copy, and pointer delete" << std::endl;
     if (Diffuse *bsdf_buff = dynamic_cast<Diffuse *>(bsdf)) {
         if ( m_opts.log_level > 0 ) std::cout << "add_BSDF: " << "Diffuse" << " " << bsdf_id << std::endl;
         Diffuse *bsdf_temp = new Diffuse(bsdf_buff->m_reflectance);
