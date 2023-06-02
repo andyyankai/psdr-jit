@@ -66,6 +66,8 @@ PYBIND11_MODULE(psdr_jit, m) {
 
     m.attr("ShadowEpsilon") = psdr_jit::ShadowEpsilon;
     m.attr("Epsilon") = psdr_jit::Epsilon;
+    m.attr("InvPi") = psdr_jit::InvPi;
+    
 
     m.def("ray_intersect_triangleC", &ray_intersect_triangle<false>);
     m.def("ray_intersect_triangleD", &ray_intersect_triangle<true>);
@@ -136,6 +138,8 @@ PYBIND11_MODULE(psdr_jit, m) {
     py::class_<FrameC>(m, "FrameC")
         .def(py::init<>())
         .def(py::init<const Vector3fC &>())
+        .def("cos_theta", &FrameC::cos_theta)
+        
         .def("to_world", &FrameC::to_world)
         .def("to_local", &FrameC::to_local)
         .def_readwrite("s", &FrameC::s)
@@ -145,6 +149,7 @@ PYBIND11_MODULE(psdr_jit, m) {
     py::class_<FrameD>(m, "FrameD")
         .def(py::init<>())
         .def(py::init<const Vector3fD &>())
+        .def("cos_theta", &FrameD::cos_theta)
         .def("to_world", &FrameD::to_world)
         .def("to_local", &FrameD::to_local)
         .def_readwrite("s", &FrameD::s)
@@ -339,7 +344,9 @@ PYBIND11_MODULE(psdr_jit, m) {
 
     py::class_<BSDF, PyBSDF /* <--- trampoline*/>(m, "BSDF")
         .def(py::init<>())
+        .def_readwrite("id", &BSDF::m_id)
         .def("__repr__", &BSDF::to_string)
+        .def("to_string", &BSDF::to_string)
         .def("evalC", &BSDF::evalC)
         .def("evalD", &BSDF::evalD)
         .def("anisotropic", &BSDF::anisotropic)
