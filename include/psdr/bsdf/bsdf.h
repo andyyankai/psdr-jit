@@ -110,9 +110,7 @@ PSDR_CLASS_DECL_END(BSDF)
         }
 
         std::string to_string() const override {
-            // PYBIND11_OVERRIDE_PURE(std::string, BSDF, to_string);
             return std::string("CustomBSDF[id=") + m_id + "]";
-            // return false;
         } ;
 
         bool anisotropic() const override {
