@@ -55,13 +55,13 @@ Scene::Scene() {
 Scene::~Scene() {
     for ( Sensor*  s : m_sensors  ) delete s;
     for ( Emitter* e : m_emitters ) delete e;
-    // for ( BSDF*    b : m_bsdfs    ) {
-    //     if (PyBSDF *bsdf_buff = dynamic_cast<PyBSDF *>(b)){
-    //         ; // TODO: detect pointer from python to avoid double delete
-    //     } else {
-    //         delete b;
-    //     }        
-    // };
+    for ( BSDF*    b : m_bsdfs    ) {
+        if (PyBSDF *bsdf_buff = dynamic_cast<PyBSDF *>(b)){
+            ; // TODO: detect pointer from python to avoid double delete
+        } else {
+            delete b;
+        }        
+    };
     for ( Mesh*    m : m_meshes   ) delete m;
 
     delete      m_optix;
@@ -114,7 +114,6 @@ void Scene::add_normalmap_BSDF(NormalMap* bsdf, Microfacet* bsdf_micro, const ch
         bsdf_temp->m_twoSide = twoSide;
         bsdf_temp->m_id = bsdf_id;
         Microfacet *nmap_b = new Microfacet(bsdf_micro->m_specularReflectance, bsdf_micro->m_diffuseReflectance, bsdf_micro->m_roughness);
-        // std::cout << bsdf_micro->m_diffuseReflectance.m_data << std::endl;
         bsdf_temp->m_bsdf = nmap_b;
         m_bsdfs.push_back(bsdf_temp);
         Scene::ParamMap &param_map = m_param_map;
@@ -134,16 +133,13 @@ void Scene::add_BSDF(BSDF* bsdf, const char *bsdf_id, bool twoSide) {
         if ( m_opts.log_level > 0 ) std::cout << "add_BSDF: " << "Diffuse" << " " << bsdf_id << std::endl;
         Diffuse *bsdf_temp = new Diffuse(bsdf_buff->m_reflectance);
         bsdf_temp->m_twoSide = twoSide;
-
         bsdf_temp->m_id = bsdf_id;
         m_bsdfs.push_back(bsdf_temp);
-
         Scene::ParamMap &param_map = m_param_map;
         std::stringstream oss1, oss2;
         oss1 << "BSDF[" << m_bsdfs.size() - 1 << "]";
         oss2 << "BSDF[id=" << bsdf_id << "]";
         param_map.insert(Scene::ParamMap::value_type(oss1.str(), *bsdf_temp));
-
         bool is_new;
         std::tie(std::ignore, is_new) = param_map.insert(Scene::ParamMap::value_type(oss2.str(), *bsdf_temp));
         PSDR_ASSERT_MSG(is_new, std::string("Duplicate BSDF id: ") + bsdf_id);
@@ -154,13 +150,11 @@ void Scene::add_BSDF(BSDF* bsdf, const char *bsdf_id, bool twoSide) {
         bsdf_temp->m_twoSide = twoSide;
         bsdf_temp->m_id = bsdf_id;
         m_bsdfs.push_back(bsdf_temp);
-
         Scene::ParamMap &param_map = m_param_map;
         std::stringstream oss1, oss2;
         oss1 << "BSDF[" << m_bsdfs.size() - 1 << "]";
         oss2 << "BSDF[id=" << bsdf_id << "]";
         param_map.insert(Scene::ParamMap::value_type(oss1.str(), *bsdf_temp));
-
         bool is_new;
         std::tie(std::ignore, is_new) = param_map.insert(Scene::ParamMap::value_type(oss2.str(), *bsdf_temp));
         PSDR_ASSERT_MSG(is_new, std::string("Duplicate BSDF id: ") + bsdf_id);
@@ -171,16 +165,9 @@ void Scene::add_BSDF(BSDF* bsdf, const char *bsdf_id, bool twoSide) {
         NormalMap *bsdf_temp = new NormalMap(ScalarVector3f(.499999f,.499999f,1.f));
         bsdf_temp->m_twoSide = twoSide;
         bsdf_temp->m_id = bsdf_id;
-
         Microfacet *nmap_b = new Microfacet();
-
         bsdf_temp->m_bsdf = nmap_b;
-
-
         m_bsdfs.push_back(bsdf_temp);
-
-
-
         Scene::ParamMap &param_map = m_param_map;
         std::stringstream oss1, oss2;
         oss1 << "BSDF[" << m_bsdfs.size() - 1 << "]";
@@ -191,46 +178,18 @@ void Scene::add_BSDF(BSDF* bsdf, const char *bsdf_id, bool twoSide) {
         std::tie(std::ignore, is_new) = param_map.insert(Scene::ParamMap::value_type(oss2.str(), *bsdf_temp));
         PSDR_ASSERT_MSG(is_new, std::string("Duplicate BSDF id: ") + bsdf_id);
     } else if (PyBSDF *bsdf_buff = dynamic_cast<PyBSDF *>(bsdf)) {
-        std::cout << "add_custom_BSDF: " << bsdf_id << std::endl;
-        // PyBSDF *bsdf_buff = dynamic_cast<PyBSDF *>(bsdf);
-        // bsdf_buff->eval();
-        PyBSDF *bsdf_temp = bsdf_buff;
-        std::cout << bsdf_buff << std::endl;
-        std::cout << bsdf_temp << std::endl;
+        if ( m_opts.log_level > 0 ) std::cout << "add_custom_BSDF: " << "NormalMapBSDF" << " " << bsdf_id << std::endl;
 
-        // PyBSDF *bsdf_temp = std::unique_ptr<PyBSDF>(bsdf_buff);
-        // std::cout<<bsdf_buff->test_vir()<<std::endl;
-        // std::cout<<bsdf_buff->anisotropic()<<std::endl;
-        // std::cout<<bsdf_buff->to_string()<<std::endl;
-        // IntersectionD its;
-        // Vector3fD wo;
-        // std::cout<<bsdf_buff->evalD(its, wo, true)<<std::endl;
-
-        // std::cout<<bsdf_temp->test_vir()<<std::endl;
-        // std::cout<<bsdf_temp->anisotropic()<<std::endl;
-        // std::cout<<bsdf_temp->to_string()<<std::endl;
-        // std::cout<<bsdf_temp->evalD(its, wo, true)<<std::endl;
-
-        // std::cout<<bsdf_temp->test_vir()<<std::endl;
-        // PSDR_ASSERT_MSG(0, "Unknown BSDF type!");
-
-        bsdf_temp->m_twoSide = twoSide;
-        bsdf_temp->m_id = bsdf_id;
-
-        m_bsdfs.push_back(bsdf_temp);
+        bsdf_buff->m_twoSide = twoSide;
+        bsdf_buff->m_id = bsdf_id;
+        m_bsdfs.push_back(bsdf_buff);
         Scene::ParamMap &param_map = m_param_map;
         std::stringstream oss1, oss2;
         oss1 << "BSDF[" << m_bsdfs.size() - 1 << "]";
         oss2 << "BSDF[id=" << bsdf_id << "]";
-        std::cout << oss2.str() << std::endl;
-        std::cout << oss1.str() << std::endl;
-
-        param_map.insert(Scene::ParamMap::value_type(oss1.str(), *bsdf_temp));
-        // std::cout << "hereaa" << oss1.str() << std::endl;
-        // std::cout << "herebb" << oss2.str() << std::endl;
-
+        param_map.insert(Scene::ParamMap::value_type(oss1.str(), *bsdf_buff));
         bool is_new;
-        std::tie(std::ignore, is_new) = param_map.insert(Scene::ParamMap::value_type(oss2.str(), *bsdf_temp));
+        std::tie(std::ignore, is_new) = param_map.insert(Scene::ParamMap::value_type(oss2.str(), *bsdf_buff));
         PSDR_ASSERT_MSG(is_new, std::string("Duplicate BSDF id: ") + bsdf_id);
 
     } 
