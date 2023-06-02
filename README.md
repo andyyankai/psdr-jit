@@ -1,5 +1,3 @@
-# Do not use this branch for now, use the branch: main
-
 # psdr-jit
 Path-space differentiable renderer
 
