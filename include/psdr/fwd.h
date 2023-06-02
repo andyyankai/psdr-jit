@@ -92,12 +92,6 @@ NAMESPACE_BEGIN(psdr_jit)
     using BSDFSampleC           = BSDFSample<false>;
     using BSDFSampleD           = BSDFSample<true>;
 
-    template <typename> struct BSDFSampleDual_;
-    template <bool ad>
-    using BSDFSampleDual            = BSDFSampleDual_<Float<ad>>;
-    using BSDFSampleDualC           = BSDFSampleDual<false>;
-    using BSDFSampleDualD           = BSDFSampleDual<true>;
-
 
     template <typename> struct SensorDirectSample_;
     template <bool ad>

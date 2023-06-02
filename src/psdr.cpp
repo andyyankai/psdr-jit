@@ -67,6 +67,9 @@ PYBIND11_MODULE(psdr_jit, m) {
     m.def("mis_weightC", &mis_weight<false>);
     m.def("mis_weightD", &mis_weight<true>);
 
+    m.def("square_to_cosine_hemisphere", &warp::square_to_cosine_hemisphere<true>);
+    m.def("square_to_cosine_hemisphere_pdf", &warp::square_to_cosine_hemisphere_pdf<true>);
+
     // Core classes
 
     py::class_<Object>(m, "Object")
@@ -236,7 +239,7 @@ PYBIND11_MODULE(psdr_jit, m) {
 
         cls.def("eval",
                 [](BSDFArrayD bsdf, IntersectionD its, Vector3fD wi, MaskD active) {
-                    return bsdf->evalD(its, wi, active);
+                    return bsdf->eval(its, wi, active);
                 });
     };
 
@@ -256,15 +259,15 @@ PYBIND11_MODULE(psdr_jit, m) {
                 });
         cls.def("bsdf_eval",
                 [](MeshArrayD shape, IntersectionD its, Vector3fD wi, MaskD active) {
-                    return shape->bsdf()->evalD(its, wi, active);
+                    return shape->bsdf()->eval(its, wi, active);
                 });
         cls.def("bsdf_sample",
                 [](MeshArrayD shape, IntersectionD its, Vector3fD rnd, MaskD active) {
-                    return shape->bsdf()->sampleD(its, rnd, active);
+                    return shape->bsdf()->sample(its, rnd, active);
                 });
         cls.def("bsdf_pdf",
                 [](MeshArrayD shape, IntersectionD its, Vector3fD rnd, MaskD active) {
-                    return shape->bsdf()->pdfD(its, rnd, active);
+                    return shape->bsdf()->pdf(its, rnd, active);
                 });
         cls.def("bsdf_valid",
                 [](MeshArrayD shape) {
@@ -286,15 +289,15 @@ PYBIND11_MODULE(psdr_jit, m) {
                 });
         cls.def("bsdf_eval",
                 [](MeshArrayC shape, IntersectionC its, Vector3fC wi, MaskC active) {
-                    return shape->bsdf()->evalC(its, wi, active);
+                    return shape->bsdf()->eval(its, wi, active);
                 });
         cls.def("bsdf_sample",
                 [](MeshArrayC shape, IntersectionC its, Vector3fC rnd, MaskC active) {
-                    return shape->bsdf()->sampleC(its, rnd, active);
+                    return shape->bsdf()->sample(its, rnd, active);
                 });
         cls.def("bsdf_pdf",
                 [](MeshArrayC shape, IntersectionC its, Vector3fC rnd, MaskC active) {
-                    return shape->bsdf()->pdfC(its, rnd, active);
+                    return shape->bsdf()->pdf(its, rnd, active);
                 });
         cls.def("bsdf_valid",
                 [](MeshArrayC shape) {
@@ -323,8 +326,7 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readwrite("id", &BSDF::m_id)
         .def("__repr__", &BSDF::to_string)
         .def("to_string", &BSDF::to_string)
-        .def("evalC", &BSDF::evalC)
-        .def("evalD", &BSDF::evalD)
+        .def("eval", &BSDF::eval)
         .def("anisotropic", &BSDF::anisotropic)
         .def("test_vir", &BSDF::test_vir);
     // Shapes
@@ -404,22 +406,14 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readwrite("to_world_left", &Sensor::m_to_world_left)
         .def_readwrite("to_world_right", &Sensor::m_to_world_right);
 
-
-
     py::class_<SensorDirectSample_<FloatC>, SampleRecord_<FloatC>>(m, "SensorDirectSample")
         .def_readwrite("q", &SensorDirectSample_<FloatC>::q)
         .def_readwrite("pixel_idx", &SensorDirectSample_<FloatC>::pixel_idx)
         .def_readwrite("sensor_val", &SensorDirectSample_<FloatC>::sensor_val)
         .def_readwrite("is_valid", &SensorDirectSample_<FloatC>::is_valid);
 
-    
-    py::class_<BSDFSampleC>(m, "BSDFSampleC")
-        .def_readwrite("pdf", &BSDFSampleC::pdf)
-        .def_readwrite("is_valid", &BSDFSampleC::is_valid)
-        .def_readwrite("eta", &BSDFSampleC::eta)
-        .def_readwrite("wo", &BSDFSampleC::wo);
-
-    py::class_<BSDFSampleD>(m, "BSDFSampleD")
+    py::class_<BSDFSampleD>(m, "BSDFSample")
+        .def(py::init<>())
         .def_readwrite("pdf", &BSDFSampleD::pdf)
         .def_readwrite("is_valid", &BSDFSampleD::is_valid)
         .def_readwrite("eta", &BSDFSampleD::eta)
@@ -433,7 +427,6 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("add_EnvironmentMap", &Scene::add_EnvironmentMap, "Add EnvironmentMap")
         .def("add_Mesh", &Scene::add_Mesh, "Add Mesh")
         .def("add_BSDF", &Scene::add_BSDF, "Add BSDf", "bsdf"_a, "name"_a, "twoSide"_a = false)
-        // .def("add_normalmap_BSDF", &Scene::add_normalmap_BSDF, "Add add_normalmap_BSDF", "bsdf1"_a, "bsdf2"_a, "name"_a, "twoSide"_a = false)
         .def("sample_emitter_position", &Scene::sample_emitter_position<true>)
 
         .def_readonly("sensor", &Scene::m_sensors)
