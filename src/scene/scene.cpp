@@ -79,13 +79,25 @@ void Scene::load_string(const char *scene_xml, bool auto_configure) {
     if ( auto_configure ) configure();
 }
 
-
 void Scene::add_EnvironmentMap(const char *fname, ScalarMatrix4f to_world, float scale) {
     PSDR_ASSERT_MSG(m_emitter_env == nullptr, "A scene is only allowed to have one envmap!");
 
     EnvironmentMap *emitter = new EnvironmentMap(fname);
     emitter->m_scale = scale;
     emitter->m_to_world_raw = Matrix4fD(to_world);
+    m_emitters.push_back(emitter);
+    m_emitter_env = emitter;
+
+    build_param_map<Emitter>(m_param_map, m_emitters, "Emitter");
+}
+
+void Scene::add_EnvironmentMap(EnvironmentMap *emitter_) {
+    PSDR_ASSERT_MSG(m_emitter_env == nullptr, "A scene is only allowed to have one envmap!");
+
+    EnvironmentMap *emitter = new EnvironmentMap();
+    emitter->m_radiance = emitter_->m_radiance;
+    emitter->m_scale = emitter_->m_scale;
+    emitter->m_to_world_raw = emitter_->m_to_world_raw;
     m_emitters.push_back(emitter);
     m_emitter_env = emitter;
 
@@ -192,7 +204,7 @@ void Scene::add_BSDF(BSDF* bsdf, const char *bsdf_id, bool twoSide) {
     }
 }
 
-void Scene::add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id, Emitter* emitter) {
+void Scene::add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id, Emitter *emitter) {
     if ( m_opts.log_level > 0 ) std::cout << "add_Mesh: " << m_meshes.size() << std::endl;
     std::stringstream oss;
     oss << "BSDF[id=" << bsdf_id << "]";
@@ -203,10 +215,8 @@ void Scene::add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id
     mesh->load(fname, false);
     mesh->m_bsdf = dynamic_cast<const BSDF*>(&bsdf_info->second);
 
-
     mesh->m_to_world_raw = Matrix4fD(transform);
     mesh->m_mesh_id = m_meshes.size();
-    mesh->m_use_face_normals = true;
 
     if ( emitter ) {
         if (AreaLight *emitter_buff = dynamic_cast<AreaLight *>(emitter)) {
@@ -221,12 +231,39 @@ void Scene::add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id
         build_param_map<Emitter>(m_param_map, m_emitters, "Emitter");
     }
 
+    m_meshes.push_back(mesh);
+    build_param_map<Mesh>(m_param_map, m_meshes, "Mesh");
+    m_num_meshes = static_cast<int>(m_meshes.size());
+}
 
+void Scene::add_Mesh(Mesh *mesh_, const char *bsdf_id, Emitter *emitter) {
+    if ( m_opts.log_level > 0 ) std::cout << "add_Mesh: " << m_meshes.size() << std::endl;
+    Mesh *mesh = new Mesh();
+    mesh->load_raw(detach(mesh_->m_vertex_positions), detach(mesh_->m_face_indices));
+    mesh->m_mesh_id = m_meshes.size();
+
+    std::stringstream oss;
+    oss << "BSDF[id=" << bsdf_id << "]";
+    auto bsdf_info = m_param_map.find(oss.str());
+    PSDR_ASSERT_MSG(bsdf_info != m_param_map.end(), std::string("Unknown BSDF id: ") + bsdf_id);
+    mesh->m_bsdf = dynamic_cast<const BSDF*>(&bsdf_info->second);
+
+    if ( emitter ) {
+        if (AreaLight *emitter_buff = dynamic_cast<AreaLight *>(emitter)) {
+            if ( m_opts.log_level > 0 ) std::cout << "add Area light" << std::endl;
+            AreaLight *emitter_temp = new AreaLight(mesh);
+            emitter_temp->m_radiance = emitter_buff->m_radiance;
+            m_emitters.push_back(emitter_temp);
+            mesh->m_emitter = emitter_temp;
+        } else {
+            PSDR_ASSERT_MSG(0, "Unknown emitter type!");
+        }
+        build_param_map<Emitter>(m_param_map, m_emitters, "Emitter");
+    }
 
     m_meshes.push_back(mesh);
-    build_param_map<Mesh   >(m_param_map, m_meshes  , "Mesh"   );
+    build_param_map<Mesh>(m_param_map, m_meshes, "Mesh");
     m_num_meshes = static_cast<int>(m_meshes.size());
-
 }
 
 void Scene::configure(std::vector<int> active_sensor) {

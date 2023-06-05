@@ -206,7 +206,7 @@ PYBIND11_MODULE(psdr_jit, m) {
     py::class_<Bitmap3fD>(m, "Bitmap3fD")
         .def(py::init<>())
         .def(py::init<const ScalarVector3f&>())
-        .def(py::init<int, int, const SpectrumD&>())
+        .def(py::init<int, int, const Vector3fD&>())
         .def(py::init<const char*>())
         .def("load_openexr", &Bitmap3fD::load_openexr)
         .def("eval", &Bitmap3fD::eval<true>, "uv"_a, "flip_v"_a = true)
@@ -294,6 +294,7 @@ PYBIND11_MODULE(psdr_jit, m) {
     py::class_<Microfacet, BSDF>(m, "MicrofacetBSDF")
         .def(py::init<>())
         .def(py::init<const ScalarVector3f&, const ScalarVector3f&, float>())
+        .def(py::init<const Bitmap3fD&, const Bitmap3fD&, const Bitmap1fD&>())
         .def_readwrite("roughness", &Microfacet::m_roughness)
         .def_readwrite("diffuseReflectance", &Microfacet::m_diffuseReflectance)
         .def_readwrite("specularReflectance", &Microfacet::m_specularReflectance);
@@ -337,6 +338,7 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readwrite("radiance", &AreaLight::m_radiance);
 
     py::class_<EnvironmentMap, Emitter>(m, "EnvironmentMap")
+        .def(py::init<>())
         .def(py::init<const char *>())
         .def_readonly("to_world", &EnvironmentMap::m_to_world_raw)
         .def("set_transform", &EnvironmentMap::set_transform)
@@ -382,8 +384,10 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def(py::init<>())
 
         .def("add_Sensor", &Scene::add_Sensor, "Add Sensor")
-        .def("add_EnvironmentMap", &Scene::add_EnvironmentMap, "Add EnvironmentMap")
-        .def("add_Mesh", &Scene::add_Mesh, "Add Mesh")
+        .def("add_EnvironmentMap", py::overload_cast<const char *, ScalarMatrix4f, float>(&Scene::add_EnvironmentMap), "Add EnvironmentMap")
+        .def("add_EnvironmentMap", py::overload_cast<EnvironmentMap *>(&Scene::add_EnvironmentMap), "Add EnvironmentMap")
+        .def("add_Mesh", py::overload_cast<const char *, Matrix4fC, const char *, Emitter *>(&Scene::add_Mesh), "Add Mesh")
+        .def("add_Mesh", py::overload_cast<Mesh *, const char *, Emitter *>(&Scene::add_Mesh), "Add Mesh", "mesh"_a, "bsdf_id"_a, "emitter"_a = nullptr)
         .def("add_BSDF", &Scene::add_BSDF, "Add BSDf", "bsdf"_a, "name"_a, "twoSide"_a = false)
         .def("add_normalmap_BSDF", &Scene::add_normalmap_BSDF, "Add add_normalmap_BSDF", "bsdf1"_a, "bsdf2"_a, "name"_a, "twoSide"_a = false)
 
@@ -397,6 +401,7 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readwrite("seed", &Scene::seed, "Sample seed")
         .def_readonly("num_sensors", &Scene::m_num_sensors)
         .def_readonly("num_meshes", &Scene::m_num_meshes)
+        .def("get_num_emitters", [](const Scene &scene){ return scene.m_emitters.size(); })
         .def_readonly("param_map", &Scene::m_param_map, "Parameter map");
 
 

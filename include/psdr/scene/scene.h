@@ -5,6 +5,7 @@
 #include <psdr/edge/edge.h>
 #include <psdr/shape/mesh.h>
 #include <psdr/bsdf/bsdf.h>
+#include <psdr/emitter/emitter.h>
 #include <psdr/bsdf/microfacet.h>
 #include <psdr/bsdf/normalmap.h>
 
@@ -24,12 +25,13 @@ public:
 
     void configure(std::vector<int> active_sensor=std::vector<int>());
 
-    void add_Sensor(Sensor* sensor);
+    void add_Sensor(Sensor *sensor);
     void add_EnvironmentMap(const char *fname, ScalarMatrix4f to_world, float scale);
-    void add_BSDF(BSDF* bsdf, const char *bsdf_id, bool twoSide = false);
+    void add_EnvironmentMap(EnvironmentMap *emitter);
+    void add_BSDF(BSDF *bsdf, const char *bsdf_id, bool twoSide = false);
+    void add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id, Emitter *emitter);
+    void add_Mesh(Mesh *mesh, const char *bsdf_id, Emitter *emitter);
     void add_normalmap_BSDF(NormalMap* bsdf1, Microfacet* bsdf2, const char *bsdf_id, bool twoSide = false);
-
-    void add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id, Emitter* emitter);
 
     bool is_ready() const;
 
