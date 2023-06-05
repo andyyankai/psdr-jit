@@ -8,23 +8,25 @@ NAMESPACE_BEGIN(psdr_jit)
 
 template <int channels>
 Bitmap<channels>::Bitmap()
-    : m_resolution(1, 1), m_data(zeros<ValueD>()) {}
+    : m_resolution(1, 1), m_data(zeros<ValueD>()) {drjit::make_opaque(m_scale, m_rot, m_trans, m_data);}
 
 
 template <int channels>
 Bitmap<channels>::Bitmap(const char *file_name) {
     load_openexr(file_name);
+    drjit::make_opaque(m_scale, m_rot, m_trans, m_data);
 }
 
 
 template <int channels>
-Bitmap<channels>::Bitmap(ScalarValue value) : m_resolution(1, 1), m_data(value) {}
+Bitmap<channels>::Bitmap(ScalarValue value) : m_resolution(1, 1), m_data(value) {drjit::make_opaque(m_scale, m_rot, m_trans, m_data);}
 
 
 template <int channels>
 Bitmap<channels>::Bitmap(int width, int height, const ValueD &data) : m_resolution(width, height), m_data(data) {
     // TODO: fix this
     // PSDR_ASSERT(width*height*channels == static_cast<int>(data.size()));
+    drjit::make_opaque(m_scale, m_rot, m_trans, m_data);
 }
 
 

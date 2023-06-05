@@ -117,6 +117,26 @@ void Scene::add_Sensor(Sensor* sensor) {
     }
 }
 
+void Scene::add_normalmap_BSDF(NormalMap* bsdf, Microfacet* bsdf_micro, const char *bsdf_id, bool twoSide) {
+        if ( m_opts.log_level > 0 ) std::cout << "add_BSDF: " << "NormalMapBSDF" << " " << bsdf_id << std::endl;
+        NormalMap *bsdf_temp = new NormalMap(bsdf->m_nmap);
+        bsdf_temp->m_twoSide = twoSide;
+        bsdf_temp->m_id = bsdf_id;
+        Microfacet *nmap_b = new Microfacet(bsdf_micro->m_specularReflectance, bsdf_micro->m_diffuseReflectance, bsdf_micro->m_roughness);
+        // std::cout << bsdf_micro->m_diffuseReflectance.m_data << std::endl;
+        bsdf_temp->m_bsdf = nmap_b;
+        m_bsdfs.push_back(bsdf_temp);
+        Scene::ParamMap &param_map = m_param_map;
+        std::stringstream oss1, oss2;
+        oss1 << "BSDF[" << m_bsdfs.size() - 1 << "]";
+        oss2 << "BSDF[id=" << bsdf_id << "]";
+        param_map.insert(Scene::ParamMap::value_type(oss1.str(), *bsdf_temp));
+        bool is_new;
+        std::tie(std::ignore, is_new) = param_map.insert(Scene::ParamMap::value_type(oss2.str(), *bsdf_temp));
+        PSDR_ASSERT_MSG(is_new, std::string("Duplicate BSDF id: ") + bsdf_id);
+}
+
+
 void Scene::add_BSDF(BSDF* bsdf, const char *bsdf_id, bool twoSide) {
     if (Diffuse *bsdf_buff = dynamic_cast<Diffuse *>(bsdf)) {
         if ( m_opts.log_level > 0 ) std::cout << "add_BSDF: " << "Diffuse" << " " << bsdf_id << std::endl;

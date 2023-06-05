@@ -270,6 +270,7 @@ PYBIND11_MODULE(psdr_jit, m) {
 
     py::class_<NormalMap, BSDF>(m, "NormalMapBSDF")
         .def(py::init<>())
+        .def(py::init<const ScalarVector3f&>())
         .def_readwrite("nested_bsdf", &NormalMap::m_bsdf)
         .def_readwrite("normal_map", &NormalMap::m_nmap);
 
@@ -316,6 +317,7 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readwrite("to_world", &Mesh::m_to_world_raw)
         .def_readwrite("to_world_right", &Mesh::m_to_world_right)
         .def_readwrite("to_world_left", &Mesh::m_to_world_left)
+        .def_readwrite("vertex_positions_T", &Mesh::m_vertex_positions, "Object-space vertex positions")
         .def_readwrite("vertex_positions", &Mesh::m_vertex_positions_raw, "Object-space vertex positions")
         .def_readonly("vertex_normals", &Mesh::m_vertex_normals_raw, "Object-space vertex normals")
         .def_readwrite("vertex_uv", &Mesh::m_vertex_uv)
@@ -387,6 +389,7 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("add_Mesh", py::overload_cast<const char *, Matrix4fC, const char *, Emitter *>(&Scene::add_Mesh), "Add Mesh")
         .def("add_Mesh", py::overload_cast<Mesh *, const char *, Emitter *>(&Scene::add_Mesh), "Add Mesh", "mesh"_a, "bsdf_id"_a, "emitter"_a = nullptr)
         .def("add_BSDF", &Scene::add_BSDF, "Add BSDf", "bsdf"_a, "name"_a, "twoSide"_a = false)
+        .def("add_normalmap_BSDF", &Scene::add_normalmap_BSDF, "Add add_normalmap_BSDF", "bsdf1"_a, "bsdf2"_a, "name"_a, "twoSide"_a = false)
 
         .def("unit_ray_intersect", &Scene::unit_ray_intersect<false>)
         .def("unit_ray_intersectAD", &Scene::unit_ray_intersect<true>)

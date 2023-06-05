@@ -6,6 +6,8 @@
 #include <psdr/shape/mesh.h>
 #include <psdr/bsdf/bsdf.h>
 #include <psdr/emitter/emitter.h>
+#include <psdr/bsdf/microfacet.h>
+#include <psdr/bsdf/normalmap.h>
 
 NAMESPACE_BEGIN(psdr_jit)
 
@@ -29,6 +31,7 @@ public:
     void add_BSDF(BSDF *bsdf, const char *bsdf_id, bool twoSide = false);
     void add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id, Emitter *emitter);
     void add_Mesh(Mesh *mesh, const char *bsdf_id, Emitter *emitter);
+    void add_normalmap_BSDF(NormalMap* bsdf1, Microfacet* bsdf2, const char *bsdf_id, bool twoSide = false);
 
     bool is_ready() const;
 
