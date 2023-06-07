@@ -354,6 +354,7 @@ PYBIND11_MODULE(psdr_jit, m) {
 
     py::class_<PerspectiveCamera, Sensor>(m, "PerspectiveCamera")
         .def(py::init<float, float, float>())
+        .def(py::init<float, float, float, float, float, float>())
         .def("set_transform", &Sensor::set_transform, "mat"_a, "set_left"_a = true)
         .def("append_transform", &Sensor::append_transform, "mat"_a, "append_left"_a = true)
         .def("sample_direct", &Sensor::sample_direct, "vec"_a)

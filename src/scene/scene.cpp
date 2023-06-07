@@ -107,7 +107,7 @@ void Scene::add_EnvironmentMap(EnvironmentMap *emitter_) {
 void Scene::add_Sensor(Sensor* sensor) {
     if ( m_opts.log_level > 0 ) std::cout << "add_Sensor: " << sensor->to_string() << std::endl;
     if (PerspectiveCamera *sensor_buff = dynamic_cast<PerspectiveCamera *>(sensor)) {
-        Sensor *sensor_temp = new PerspectiveCamera(sensor_buff->m_fov_x, sensor_buff->m_near_clip, sensor_buff->m_far_clip);
+        Sensor *sensor_temp = new PerspectiveCamera(*sensor_buff);
         sensor_temp->m_to_world_raw = Matrix4fD(Matrix4fD(sensor_buff->m_to_world_raw));
         m_sensors.push_back(sensor_temp);
         build_param_map<Sensor >(m_param_map, m_sensors , "Sensor" );

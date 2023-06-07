@@ -60,6 +60,18 @@ static inline ScalarMatrix4f perspective(float fov, float near_, float far_) {
     return trafo;
 }
 
+static inline ScalarMatrix4f perspective_intrinsic(float fx, float fy, float cx, float cy, float near_, float far_) {
+    float recip = 1.f / (far_ - near_);
+
+    ScalarMatrix4f trafo = diag(ScalarVector4f(fx, fy, far_ * recip, 0.f));
+    trafo(0, 2) = cx;
+    trafo(1, 2) = cy;
+    trafo(2, 3) = -near_ * far_ * recip;
+    trafo(3, 2) = 1.f;
+
+    return trafo;
+}
+
 static inline ScalarMatrix4f orthographic(float near_, float far_) {
     return scale(Array<float, 3>(1.f, 1.f, 1.f / (far_ - near_))) *
             translate(Array<float, 3>( 0.f, 0.f, -near_ ));
