@@ -55,3 +55,49 @@ def write_jpg(jpg_path, image):
         image = np.repeat(image, 3, axis=2)
     rgb_im = im.fromarray(image).convert('RGB')
     rgb_im.save(jpg_path, format='JPEG', quality=95)
+    
+def read_image(image_path, is_srgb=None, remove_alpha=True):
+    image_path = Path(image_path)
+    image = iio.imread(image_path)
+    image = np.atleast_3d(image)
+    if remove_alpha and image.shape[2] == 4:
+        image = image[:, :, 0:3]
+
+    if image.dtype == np.uint8 or image.dtype == np.int16:
+        image = image.astype("float32") / 255.0
+    elif image.dtype == np.uint16 or image.dtype == np.int32:
+        image = image.astype("float32") / 65535.0
+
+    if is_srgb is None:
+        if image_path.suffix in ['.exr', '.hdr', '.rgbe']:
+            is_srgb = False
+        else:
+            is_srgb = True
+
+    if is_srgb:
+        image = to_linear(image)
+
+    return image
+
+def write_image(image_path, image, is_srgb=None):
+    image_path = Path(image_path)
+    image = to_numpy(image)
+    image = np.atleast_3d(image)
+    if image.shape[2] == 1:
+        image = np.repeat(image, 3, axis=2)
+
+    if is_srgb is None:
+        if image_path.suffix in ['.exr', '.hdr', '.rgbe']:
+            is_srgb = False
+        else:
+            is_srgb = True
+
+    if is_srgb:
+        image = to_srgb(image)
+
+    if image_path.suffix == '.exr':
+        image = image.astype(np.float32)
+    else:
+        image = (image * 255).astype(np.uint8)
+
+    iio.imwrite(image_path, image)

@@ -364,6 +364,8 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("sample_emitter_position", &Scene::sample_emitter_position)
 
         .def_readonly("sensor", &Scene::m_sensors)
+        .def_readonly("mesh", &Scene::m_meshes)
+        .def_readonly("bsdf", &Scene::m_bsdfs)
 
         .def("boundary_ray_intersect", &Scene::boundary_ray_intersect<false>)
         .def("boundary_ray_intersectAD", &Scene::boundary_ray_intersect<true>)
