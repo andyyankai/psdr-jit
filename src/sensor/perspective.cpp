@@ -10,24 +10,23 @@ NAMESPACE_BEGIN(psdr_jit)
 void PerspectiveCamera::configure(bool cache=true) {
     Sensor::configure(cache);
 
-    ScalarMatrix4f camera_to_sample = 
-        transform::scale(ScalarVector3f(-0.5f, -0.5f * m_aspect, 1.f)) *
-        transform::translate(ScalarVector3f(-1.f, -1.f / m_aspect, 0.f));
+    ScalarMatrix4f camera_to_sample;
 
     if (m_use_intrinsic) {
-        float fx = m_fx * 2 / m_resolution.x();
-        float fy = m_fy * 2 / m_resolution.y();
-        float cx = m_cx * 2 / m_resolution.x();
-        float cy = m_cy * 2 / m_resolution.y();
-
-        camera_to_sample *= transform::perspective_intrinsic(fx, fy, cx, cy, m_near_clip, m_far_clip);
-    }
+        camera_to_sample = 
+            transform::scale(ScalarVector3f(-0.5f, -0.5f, 1.f)) *
+            transform::translate(ScalarVector3f(-1.f, -1.f, 0.f)) *
+            transform::perspective_intrinsic(m_fx, m_fy, m_cx, m_cy, m_near_clip, m_far_clip);    }
     else {
-        camera_to_sample *= transform::perspective(m_fov_x, m_near_clip, m_far_clip);
+        camera_to_sample = 
+            transform::scale(ScalarVector3f(-0.5f, -0.5f * m_aspect, 1.f)) *
+            transform::translate(ScalarVector3f(-1.f, -1.f / m_aspect, 0.f)) *
+            transform::perspective(m_fov_x, m_near_clip, m_far_clip);
     }
+
     m_camera_to_sample = Matrix4fD(camera_to_sample);
     m_sample_to_camera = Matrix4fD(inverse(camera_to_sample));
-
+    
     Matrix4fD m_to_world = m_to_world_left * m_to_world_raw * m_to_world_right;
 
     m_world_to_sample = m_camera_to_sample*inverse(m_to_world);
