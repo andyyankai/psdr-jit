@@ -94,10 +94,7 @@ void Scene::add_EnvironmentMap(const char *fname, ScalarMatrix4f to_world, float
 void Scene::add_EnvironmentMap(EnvironmentMap *emitter_) {
     PSDR_ASSERT_MSG(m_emitter_env == nullptr, "A scene is only allowed to have one envmap!");
 
-    EnvironmentMap *emitter = new EnvironmentMap();
-    emitter->m_radiance = emitter_->m_radiance;
-    emitter->m_scale = emitter_->m_scale;
-    emitter->m_to_world_raw = emitter_->m_to_world_raw;
+    EnvironmentMap *emitter = new EnvironmentMap(*emitter_);
     m_emitters.push_back(emitter);
     m_emitter_env = emitter;
 
