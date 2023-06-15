@@ -76,6 +76,16 @@ void Scene::add_EnvironmentMap(const char *fname, ScalarMatrix4f to_world, float
     build_param_map<Emitter>(m_param_map, m_emitters, "Emitter");
 }
 
+void Scene::add_EnvironmentMap(EnvironmentMap *emitter_) {
+    PSDR_ASSERT_MSG(m_emitter_env == nullptr, "A scene is only allowed to have one envmap!");
+
+    EnvironmentMap *emitter = new EnvironmentMap(*emitter_);
+    m_emitters.push_back(emitter);
+    m_emitter_env = emitter;
+
+    build_param_map<Emitter>(m_param_map, m_emitters, "Emitter");
+}
+
 void Scene::add_Sensor(Sensor* sensor) {
     if ( m_opts.log_level > 0 ) std::cout << "add_Sensor: " << sensor->to_string() << std::endl;
     if (PerspectiveCamera *sensor_buff = dynamic_cast<PerspectiveCamera *>(sensor)) {
