@@ -1,6 +1,6 @@
-cmake_minimum_required(VERSION 3.15...3.26)
+cmake_minimum_required(VERSION 3.15...3.22)
 
-project(psdr_cuda VERSION 0.1.0)
+project(psdr_jit VERSION 0.1.0)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -18,7 +18,6 @@ option(DRJIT_ENABLE_PYTHON "" ON)
 set(DRJIT_DIR ${CMAKE_SOURCE_DIR}/ext/drjit)
 set(PYBIND11_ROOT ${DRJIT_DIR}/ext/pybind11)
 
-# add_subdirectory(${DRJIT_DIR})
 add_subdirectory(${PYBIND11_ROOT})
 
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
@@ -180,43 +179,15 @@ else()
     target_link_libraries(psdr_jit cu_library ${PYPSDR_LIBRARIES} ${CUDA_LIBRARIES})
 endif()
 
-set(PSDR_PACKAGE_DIR "${CMAKE_BINARY_DIR}/python/psdr_jit")
-install(TARGETS psdr_jit drjit-core drjit-autodiff nanothread
-        CONFIGURATIONS Release
-        RUNTIME DESTINATION ${PSDR_PACKAGE_DIR}
-        LIBRARY DESTINATION ${PSDR_PACKAGE_DIR}
-)
+install(TARGETS psdr_jit drjit-core drjit-autodiff nanothread DESTINATION psdr_jit)
 
-add_custom_command(
-    OUTPUT ${PSDR_PACKAGE_DIR}/__init__.py
-    COMMAND ${CMAKE_COMMAND} -E copy
-    ${CMAKE_SOURCE_DIR}/resources/__init__.py
-    ${PSDR_PACKAGE_DIR}/__init__.py
-)
-
-add_custom_target(
-    psdr-python-init-psdr_jit
-    ALL DEPENDS ${PSDR_PACKAGE_DIR}/__init__.py
-)
-
-set(DRJIT_PACKAGE_DIR "${CMAKE_BINARY_DIR}/python/drjit")
-install(TARGETS drjit-python drjit-core drjit-autodiff nanothread
-        RUNTIME DESTINATION ${DRJIT_PACKAGE_DIR}
-        LIBRARY DESTINATION ${DRJIT_PACKAGE_DIR}
-)
+install(TARGETS drjit-python drjit-core drjit-autodiff nanothread DESTINATION drjit)
 
 add_custom_command(
     TARGET psdr_jit POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_directory
     ${DRJIT_DIR}/drjit
-    ${DRJIT_PACKAGE_DIR}/
-)
-
-
-add_custom_target(
-    TARGET psdr_jit POST_BUILD
-    psdr-python-init-drjit
-    ALL DEPENDS ${DRJIT_PACKAGE_DIR}/__init__.py
+    ${SKBUILD_PLATLIB_DIR}/drjit
 )
 
 # target build
