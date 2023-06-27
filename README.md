@@ -1,27 +1,22 @@
 # psdr-jit
-Path-space differentiable renderer
+Path-space differentiable renderer with [`drjit`](https://drjit.readthedocs.io/en/latest/) as the numerical backend.
 
-Official documentation: https://psdr-jit.readthedocs.io/en/latest/
-
-To install project, you simply need to
-
-### On Windows:
+## Local Intallation
+To install `psdr-jit` locally, first clone the repository recursivly (to include the git submodules):
 ```bash
-git submodule update --init --recursive
-cmake -S . -B build -G "Visual Studio 16 2019" -A x64 -D PYTHON_ROOT=C:/ProgramData/Anaconda3
-cmake --build build --target install --config Release
+git clone --recursive https://github.com/andyyankai/psdr-jit.git
 ```
-then add /build/python/ to your PYTHONPATH
-
-### On Ubuntu:
+or 
 ```bash
+git clone https://github.com/andyyankai/psdr-jit.git
+cd psdr-jit
 git submodule update --init --recursive
-cmake -S . -B build -D PYTHON_ROOT=/usr/include/python3.8/ -DCMAKE_C_COMPILER=gcc-9 -DCMAKE_CXX_COMPILER=g++-9
-cmake --build build --target install --config Release -j
 ```
-then add /build/python/ to your PYTHONPATH
-add /build/python/drjit to your LD_LIBRARY_PATH
-add /build/python/psdr_jit to your LD_LIBRARY_PATH
+Then compile and install `psdr-jit` via
+```bash
+pip install .
+```
+Notice that it would also install `drjit` as `psdr-jit` depends on it.
 
 ## Getting Started
 ```python
