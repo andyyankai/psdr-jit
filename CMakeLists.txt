@@ -1,7 +1,4 @@
-cmake_minimum_required(VERSION 3.0.0 FATAL_ERROR)
-cmake_policy(SET CMP0048 NEW)
-cmake_policy(SET CMP0072 NEW)
-cmake_policy(SET CMP0074 NEW)
+cmake_minimum_required(VERSION 3.15...3.26)
 
 project(psdr_cuda VERSION 0.1.0)
 
@@ -14,8 +11,6 @@ else()
     set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -DNDEBUG -Wall -Wno-reorder -Wno-sign-compare -fPIC")
 endif()
 
-set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/CMake" ${CMAKE_MODULE_PATH})
-
 option(DRJIT_ENABLE_JIT "" ON)
 option(DRJIT_ENABLE_AUTODIFF "" ON)
 option(DRJIT_ENABLE_PYTHON "" ON)
@@ -25,9 +20,6 @@ set(PYBIND11_ROOT ${DRJIT_DIR}/ext/pybind11)
 
 # add_subdirectory(${DRJIT_DIR})
 add_subdirectory(${PYBIND11_ROOT})
-
-set(PSDR_CUDA_FILE psdr_jit)
-add_compile_definitions(PSDR_CUDA_FILE="${PSDR_CUDA_FILE}")
 
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
@@ -43,7 +35,6 @@ mark_as_advanced(CLEAR CUDA_64_BIT_DEVICE_CODE)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/bin")
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/lib")
-
 
 set(CUDA_GENERATED_OUTPUT_DIR "${CMAKE_BINARY_DIR}/lib/ptx")
 
@@ -64,8 +55,6 @@ include_directories(
 link_directories(
     ${PYTHON_ROOT}/libs
 )
-
-# set(PYPSDR_LIBRARIES drjit-core drjit-autodiff)
 
 set(PSDR_INCLUDE_DIR include/psdr)
 set(PSDR_SOURCE_DIR src)
@@ -94,13 +83,11 @@ set(PSDR_SOURCE_FILES
     ${PSDR_INCLUDE_DIR}/core/cube_distrb.h
     ${PSDR_SOURCE_DIR}/core/cube_distrb.cpp
 
-
     ${PSDR_INCLUDE_DIR}/core/pmf.h
     ${PSDR_SOURCE_DIR}/core/pmf.cpp
 
     ${PSDR_INCLUDE_DIR}/optix/ptx.h
     ${PSDR_SOURCE_DIR}/optix/ptx.cpp
-
 
     ${PSDR_INCLUDE_DIR}/bsdf/bsdf.h
     ${PSDR_INCLUDE_DIR}/bsdf/diffuse.h
@@ -108,7 +95,6 @@ set(PSDR_SOURCE_FILES
 
     ${PSDR_INCLUDE_DIR}/bsdf/microfacet.h
     ${PSDR_SOURCE_DIR}/bsdf/microfacet.cpp
-
 
     ${PSDR_INCLUDE_DIR}/bsdf/roughconductor.h
     ${PSDR_SOURCE_DIR}/bsdf/roughconductor.cpp
@@ -118,11 +104,8 @@ set(PSDR_SOURCE_FILES
     ${PSDR_INCLUDE_DIR}/bsdf/normalmap.h
     ${PSDR_SOURCE_DIR}/bsdf/normalmap.cpp
 
-
-
     ${PSDR_INCLUDE_DIR}/bsdf/ggx.h
     ${PSDR_SOURCE_DIR}/bsdf/ggx.cpp
-
 
     ${PSDR_INCLUDE_DIR}/edge/edge.h
 
@@ -147,7 +130,6 @@ set(PSDR_SOURCE_FILES
     ${PSDR_INCLUDE_DIR}/core/miniz.h
     ${PSDR_SOURCE_DIR}/core/miniz.cpp
 
-    # ${PSDR_INCLUDE_DIR}/scene/optix.h
     ${PSDR_INCLUDE_DIR}/scene/scene_optix.h
     ${PSDR_SOURCE_DIR}/scene/scene_optix.cpp
 
@@ -175,13 +157,11 @@ set(PSDR_SOURCE_FILES
     ${PSDR_SOURCE_DIR}/psdr.cpp
 )
 
-
 set(CUDA_SOURCE_FILES
     # ./cuda/kernel/knn.cu
     ./cuda/kernel/util.cu
     # ./cuda/kernel/NEE.cu
 )
-
 
 if( WIN32 )
     cuda_add_library(cu_library STATIC ${CUDA_SOURCE_FILES})
@@ -199,8 +179,6 @@ else()
     cuda_add_library(psdr_jit MODULE ${PSDR_SOURCE_FILES})
     target_link_libraries(psdr_jit cu_library ${PYPSDR_LIBRARIES} ${CUDA_LIBRARIES})
 endif()
-
-
 
 set(PSDR_PACKAGE_DIR "${CMAKE_BINARY_DIR}/python/psdr_jit")
 install(TARGETS psdr_jit drjit-core drjit-autodiff nanothread
