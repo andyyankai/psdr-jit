@@ -1,6 +1,12 @@
 # psdr-jit
 Path-space differentiable renderer with [`drjit`](https://drjit.readthedocs.io/en/latest/) as the numerical backend.
 
+## Installation
+We use [`OptiX 7`](https://developer.nvidia.com/rtx/ray-tracing/optix) to accelerate ray tracing. Make sure [`cudatoolkit`](https://developer.nvidia.com/cuda-toolkit) (you may install it using `conda`) and an appropriate NVIDIA display driver that support `OptiX 7` are installed. The latest version we tested was `cudatoolkit==11.7`. Then run
+```bash
+pip install psdr-jit
+```
+
 ## Local Intallation
 To install `psdr-jit` locally, first clone the repository recursivly (to include the git submodules):
 ```bash
@@ -16,7 +22,7 @@ Then compile and install `psdr-jit` via
 ```bash
 pip install .
 ```
-Notice that it would also install `drjit` as `psdr-jit` depends on it.
+Notice that it would also install `drjit` as `psdr-jit` depends on it. `cudatoolkit` is also required.
 
 ## Getting Started
 ```python
