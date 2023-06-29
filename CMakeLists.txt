@@ -22,9 +22,8 @@ add_subdirectory(${PYBIND11_ROOT})
 
 option(BUILD_SHARED_LIBS "Build shared libraries" ON)
 
-OPTION(CUDA_REMOVE_GLOBAL_MEMORY_SPACE_WARNING
+option(CUDA_REMOVE_GLOBAL_MEMORY_SPACE_WARNING
        "Suppress the \"Advisory: Cannot tell what pointer points to, assuming global memory space\" warning nvcc makes." ON)
-
 option(CUDA_GENERATE_DEPENDENCIES_DURING_CONFIGURE
        "Generate dependencies during configure time instead of only during build time." OFF)
 
@@ -50,14 +49,8 @@ include_directories(
     ${CUDA_INCLUDE_DIRS}
 )
 
-
-link_directories(
-    ${PYTHON_ROOT}/libs
-)
-
 set(PSDR_INCLUDE_DIR include/psdr)
 set(PSDR_SOURCE_DIR src)
-
 set(PSDR_SOURCE_FILES
     ${PSDR_INCLUDE_DIR}/psdr.h
     ${PSDR_INCLUDE_DIR}/constants.h
@@ -180,20 +173,14 @@ else()
 endif()
 
 install(TARGETS psdr_jit drjit-core drjit-autodiff nanothread DESTINATION psdr_jit)
-
 install(TARGETS drjit-python drjit-core drjit-autodiff nanothread DESTINATION drjit)
+install(DIRECTORY ${DRJIT_DIR}/drjit DESTINATION ${SKBUILD_PLATLIB_DIR})
 
-add_custom_command(
-    TARGET psdr_jit POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_directory
-    ${DRJIT_DIR}/drjit
-    ${SKBUILD_PLATLIB_DIR}/drjit
-)
-
-# target build
 target_compile_definitions(psdr_jit PRIVATE PTX_OUTPUT_DIR="${CUDA_GENERATED_OUTPUT_DIR}")
-
-set_target_properties(psdr_jit PROPERTIES SKIP_BUILD_RPATH FALSE)
-set_target_properties(psdr_jit PROPERTIES BUILD_WITH_INSTALL_RPATH TRUE)
+set_target_properties(psdr_jit drjit-python drjit-core drjit-autodiff nanothread PROPERTIES
+    SKIP_BUILD_RPATH FALSE
+    BUILD_WITH_INSTALL_RPATH FALSE
+    INSTALL_RPATH "$ORIGIN"
+    INSTALL_RPATH_USE_LINK_PATH TRUE)
 set_property(TARGET psdr_jit PROPERTY CXX_STANDARD 17)
 set_target_properties(psdr_jit PROPERTIES PREFIX "")
