@@ -64,7 +64,7 @@ public:
 
     std::vector<BSDF*>      m_bsdfs;
 
-    int                     m_num_meshes;
+    int                     m_num_meshes = 0;
     std::vector<Mesh*>      m_meshes;
     MeshArrayD              m_meshes_cuda;
 
