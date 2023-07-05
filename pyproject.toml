@@ -5,7 +5,7 @@ build-backend = "scikit_build_core.build"
 
 [project]
 name = "psdr_jit"
-version = "0.1.1"
+version = "0.1.2"
 description = "Path-space differentiable renderer with drjit as the numerical backend."
 readme = "README.md"
 
