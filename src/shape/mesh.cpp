@@ -300,7 +300,9 @@ void Mesh::configure() {
         secEdgeInfo.p2 = gather<Vector3fD>(m_vertex_positions, m_edge_indices[4]);
 
         MaskD keep = (dot(secEdgeInfo.n0, secEdgeInfo.n1) < 1.f - EdgeEpsilon);
-        *m_sec_edge_info = compressD<SecondaryEdgeInfo>(secEdgeInfo, keep);
+        // *m_sec_edge_info = compressD<SecondaryEdgeInfo>(secEdgeInfo, keep);
+        // TODO: secondary edge compression
+        *m_sec_edge_info = secEdgeInfo;
     } else {
         if ( m_sec_edge_info != nullptr ) {
             delete m_sec_edge_info;
