@@ -127,7 +127,7 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
 void PathTracer::render_secondary_edges(const Scene &scene, int sensor_id, SpectrumD &result) const {
     const RenderOption &opts = scene.m_opts;
     Vector3fC sample3 = scene.m_samplers[2].next_nd<3, false>();
-    std::cout << "render_secondary_edges" << std::endl;
+    // std::cout << "render_secondary_edges" << std::endl;
 
     BoundarySegSampleDirect bss = scene.sample_boundary_segment_direct(sample3);
     MaskC valid = bss.is_valid;
