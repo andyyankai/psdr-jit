@@ -235,8 +235,8 @@ void Scene::add_Mesh(const char *fname, Matrix4fC transform, const char *bsdf_id
 
 void Scene::add_Mesh(Mesh *mesh_, const char *bsdf_id, Emitter *emitter) {
     if ( m_opts.log_level > 0 ) std::cout << "add_Mesh: " << m_meshes.size() << std::endl;
-    Mesh *mesh = new Mesh();
-    mesh->load_raw(detach(mesh_->m_vertex_positions), detach(mesh_->m_face_indices));
+    Mesh *mesh = new Mesh(*mesh_);
+    
     mesh->m_mesh_id = m_meshes.size();
 
     std::stringstream oss;
