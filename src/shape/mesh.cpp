@@ -1,4 +1,5 @@
 #include <vector>
+#include <array>
 #include <map>
 
 #define TINYOBJLOADER_IMPLEMENTATION
@@ -71,6 +72,8 @@ Mesh::~Mesh() {
 
 
 void Mesh::load_raw(const Vector3fC &new_vertex_positions, const Vector3iC &new_face_indices, bool verbose) {
+    using namespace std::chrono;
+    
     m_num_vertices = slices(new_vertex_positions);
     // Loading vertex positions
     m_vertex_positions_raw = Vector3fD(new_vertex_positions);
@@ -81,6 +84,12 @@ void Mesh::load_raw(const Vector3fC &new_vertex_positions, const Vector3iC &new_
     m_num_faces = slices(new_face_indices);
     // Loading face indices
     m_face_indices = Vector3iD(new_face_indices);
+
+    std::array<std::vector<int>, 3> face_indices_cpu;
+    copy_cuda_array(new_face_indices, face_indices_cpu);
+    drjit::eval(); drjit::sync_thread();
+
+    auto start_time = high_resolution_clock::now();
 
     // Constructing edge list
     int m_num_edges = 0;
@@ -96,9 +105,9 @@ void Mesh::load_raw(const Vector3fC &new_vertex_positions, const Vector3iC &new_
         for ( size_t f = 0; f < m_num_faces; ++f ) {
             for ( int i = 0; i < 3; ++i ) {
                 int k1 = i, k2 = (i + 1) % 3, k3 = (i + 2) % 3;
-                int idx1 = m_face_indices[k1][f];
-                int idx2 = m_face_indices[k2][f];
-                int idx3 = m_face_indices[k3][f];
+                int idx1 = face_indices_cpu[k1][f];
+                int idx2 = face_indices_cpu[k2][f];
+                int idx3 = face_indices_cpu[k3][f];
                 auto key = idx1 < idx2 ?
                     std::make_pair(idx1, idx2) : std::make_pair(idx2, idx1);
                 if (edge_map.find(key) == edge_map.end()) {
@@ -132,10 +141,13 @@ void Mesh::load_raw(const Vector3fC &new_vertex_positions, const Vector3iC &new_
                                           drjit::load<IntD>(buffers[4].data(), m_num_edges));
     }
 
+    auto end_time = high_resolution_clock::now();
+    double seconds = duration_cast<duration<double>>(end_time - start_time).count();
+
     if ( verbose ) {
         std::cout << "Loaded " << m_num_vertices << " vertices, "
                                << m_num_faces    << " faces, "
-                               << m_num_edges    << " edges. " << std::endl;
+                               << m_num_edges    << " edges in " << seconds << " seconds. " << std::endl;
     }
     drjit::eval(); drjit::sync_thread();
     m_ready = false;
