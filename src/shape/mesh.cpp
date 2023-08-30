@@ -24,6 +24,7 @@ static std::pair<TriangleInfo<ad>, Vector3f<ad>> process_mesh(const Vector3f<ad>
     const int num_vertices = static_cast<int>(slices<Vector3f<ad>>(vertex_positions));
 
     TriangleInfo<ad> triangles;
+    triangles.face_indices = face_indices; 
     triangles.p0 = gather<Vector3f<ad>>(vertex_positions, face_indices[0]);
     triangles.e1 = gather<Vector3f<ad>>(vertex_positions, face_indices[1]) - triangles.p0;
     triangles.e2 = gather<Vector3f<ad>>(vertex_positions, face_indices[2]) - triangles.p0;
@@ -82,7 +83,6 @@ void Mesh::load_raw(const Vector3fC &new_vertex_positions, const Vector3iC &new_
     m_face_indices = Vector3iD(new_face_indices);
 
     // Constructing edge list
-
     int m_num_edges = 0;
     if ( m_enable_edges ) {
         std::vector<int> buffers[5];
@@ -258,7 +258,7 @@ void Mesh::load(const char *fname, bool verbose) {
         for ( auto it: edge_map ) {
             // if ( it.second.size() > 3 ) std::cout << "WARN: Edge shared by more than 2 faces" << std::endl;
             // if ( it.second.size() > 3 ) {
-            //     // Non-manifold mesh is not allowed
+            //     // Non-manifold mesh is not aled
             //     PSDR_ASSERT_MSG(false, std::string("Edge shared by more than 2 faces: ") + fname);
             // } else {
                 buffers[0].push_back(it.first.first);

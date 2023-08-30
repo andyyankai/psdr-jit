@@ -88,6 +88,9 @@ set(PSDR_SOURCE_FILES
     ${PSDR_INCLUDE_DIR}/bsdf/microfacet.h
     ${PSDR_SOURCE_DIR}/bsdf/microfacet.cpp
 
+    ${PSDR_INCLUDE_DIR}/bsdf/microfacet_pv.h
+    ${PSDR_SOURCE_DIR}/bsdf/microfacet_pv.cpp
+
     ${PSDR_INCLUDE_DIR}/bsdf/roughconductor.h
     ${PSDR_SOURCE_DIR}/bsdf/roughconductor.cpp
     ${PSDR_INCLUDE_DIR}/bsdf/roughdielectric.h

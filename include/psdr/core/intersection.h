@@ -53,7 +53,10 @@ struct Intersection_ : public Interaction_<Float_> {
     Vector2f<ad>        uv;
     Float<ad>           J;                  // Jacobian determinant for material-form reparam
 
-    DRJIT_STRUCT(Intersection_, wi, p, t, shape, n, dp_du, dp_dv, sh_frame, uv, J)
+    Vector2f<ad>        bc;                 // Barycentric coordinates (local uv)
+    Vector3i<ad>        face_indices;       // Face indices
+
+    DRJIT_STRUCT(Intersection_, wi, p, t, shape, n, dp_du, dp_dv, sh_frame, uv, J, bc, face_indices)
 };
 
 NAMESPACE_END(psdr_jit)
