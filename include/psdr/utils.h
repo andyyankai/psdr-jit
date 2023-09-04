@@ -5,16 +5,21 @@
 
 NAMESPACE_BEGIN(psdr_jit)
 	
+// template <typename ArrayD>
+// DRJIT_INLINE ArrayD compressD(const ArrayD &array, const MaskD &active) {
+//     // PSDR_ASSERT((array.size()) == (active.size()));
+//     // int temp_size = array.size();
+//     // IntD idx = IntD(compress(arange<IntC>((temp_size)), detach(active)));
+//     // return gather<ArrayD>(array, idx);
+
+//     return array;
+// }
+
 template <typename ArrayD>
 DRJIT_INLINE ArrayD compressD(const ArrayD &array, const MaskD &active) {
-    // PSDR_ASSERT((array.size()) == (active.size()));
-    // int temp_size = array.size();
-    // IntD idx = IntD(compress(arange<IntC>((temp_size)), detach(active)));
-    // return gather<ArrayD>(array, idx);
-
-    return array;
+    IntD idx = compress((active));
+    return gather<ArrayD>(array, idx);
 }
-
 
 template <typename ArrayD>
 DRJIT_INLINE size_t slices(const ArrayD &cuda_array) {

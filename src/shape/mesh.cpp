@@ -70,31 +70,77 @@ Mesh::~Mesh() {
 
 
 void Mesh::load_raw(const Vector3fC &new_vertex_positions, const Vector3iC &new_face_indices, bool verbose) {
+    m_num_vertices = slices(new_vertex_positions);
+    // Loading vertex positions
+    m_vertex_positions_raw = Vector3fD(new_vertex_positions);
+    // Loading vertex uv coordinates
+    m_has_uv = false;
+    m_vertex_uv = Vector2fD();
+    m_face_uv_indices = Vector3iD();
+    m_num_faces = slices(new_face_indices);
+    // Loading face indices
+    m_face_indices = Vector3iD(new_face_indices);
 
-    const char *fname = "psdr_jit_temp_update_mesh.obj";
-    std::array<std::vector<float>, 3> vertex_positions, vertex_normals;
-    {
-        const Vector3fC &vertex_positions_ = detach(m_vertex_positions_raw);
-        copy_cuda_array<float, 3>(new_vertex_positions, vertex_positions);
-    }
+    // Constructing edge list
 
-    FILE *fout = fopen(fname, "wt");
-    for ( int i = 0; i < vertex_positions[0].size(); ++i ) {
-        fprintf(fout, "v %.6e %.6e %.6e\n", vertex_positions[0][i], vertex_positions[1][i], vertex_positions[2][i]);
-    }
+    int m_num_edges = 0;
+    if ( m_enable_edges ) {
+        std::vector<int> buffers[5];
+        buffers[0].reserve(3*m_num_faces);
+        buffers[1].reserve(3*m_num_faces);
+        buffers[2].reserve(3*m_num_faces);
+        buffers[3].reserve(3*m_num_faces);
+        buffers[4].reserve(3*m_num_faces);
 
-    std::array<std::vector<int32_t>, 3> face_indices;
-    copy_cuda_array<int32_t, 3>(new_face_indices, face_indices);
-    for ( int i = 0; i < face_indices[0].size(); ++i ) {
-        int v0 = face_indices[0][i] + 1, v1 = face_indices[1][i] + 1, v2 = face_indices[2][i] + 1;
-        if ( m_use_face_normals ) {
-            fprintf(fout, "f %d %d %d\n", v0, v1, v2);
-        } else {
-            fprintf(fout, "f %d//%d %d//%d %d//%d\n", v0, v0, v1, v1, v2, v2);
+        std::map<std::pair<int, int>, std::vector<int>> edge_map;
+        for ( size_t f = 0; f < m_num_faces; ++f ) {
+            for ( int i = 0; i < 3; ++i ) {
+                int k1 = i, k2 = (i + 1) % 3, k3 = (i + 2) % 3;
+                int idx1 = m_face_indices[k1][f];
+                int idx2 = m_face_indices[k2][f];
+                int idx3 = m_face_indices[k3][f];
+                auto key = idx1 < idx2 ?
+                    std::make_pair(idx1, idx2) : std::make_pair(idx2, idx1);
+                if (edge_map.find(key) == edge_map.end()) {
+                    auto it = edge_map.insert(edge_map.end(), { key, std::vector<int>() });
+                    it->second.push_back(idx3);
+                }
+                edge_map[key].push_back(static_cast<int>(f));
+            }
         }
+
+        for ( auto it: edge_map ) {
+                buffers[0].push_back(it.first.first);
+                buffers[1].push_back(it.first.second);
+                if ( it.second.size() >= 3 ) {
+                    buffers[2].push_back(it.second[1]);
+                    buffers[3].push_back(it.second[2]);
+                    buffers[4].push_back(it.second[0]);
+                    ++m_num_edges;
+                } else {
+                    buffers[2].push_back(it.second[1]);
+                    buffers[3].push_back(-1);
+                    buffers[4].push_back(it.second[0]);
+                    ++m_num_edges;
+                }
+        }
+
+        m_edge_indices = Vectori<5, true>(drjit::load<IntD>(buffers[0].data(), m_num_edges),
+                                          drjit::load<IntD>(buffers[1].data(), m_num_edges),
+                                          drjit::load<IntD>(buffers[2].data(), m_num_edges),
+                                          drjit::load<IntD>(buffers[3].data(), m_num_edges),
+                                          drjit::load<IntD>(buffers[4].data(), m_num_edges));
     }
-    fclose(fout);
-    load(fname, verbose);
+
+    if ( verbose ) {
+        std::cout << "Loaded " << m_num_vertices << " vertices, "
+                               << m_num_faces    << " faces, "
+                               << m_num_edges    << " edges. " << std::endl;
+    }
+    drjit::eval(); drjit::sync_thread();
+    m_ready = false;
+
+
 }
 
 
@@ -300,7 +346,9 @@ void Mesh::configure() {
         secEdgeInfo.p2 = gather<Vector3fD>(m_vertex_positions, m_edge_indices[4]);
 
         MaskD keep = (dot(secEdgeInfo.n0, secEdgeInfo.n1) < 1.f - EdgeEpsilon);
-        *m_sec_edge_info = compressD<SecondaryEdgeInfo>(secEdgeInfo, keep);
+        // *m_sec_edge_info = compressD<SecondaryEdgeInfo>(secEdgeInfo, keep);
+        // TODO: secondary edge compression
+        *m_sec_edge_info = secEdgeInfo;
     } else {
         if ( m_sec_edge_info != nullptr ) {
             delete m_sec_edge_info;

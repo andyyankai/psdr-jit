@@ -1,27 +1,28 @@
 # psdr-jit
-Path-space differentiable renderer
+Path-space differentiable renderer with [`drjit`](https://drjit.readthedocs.io/en/latest/) as the numerical backend.
 
-Official documentation: https://psdr-jit.readthedocs.io/en/latest/
-
-To install project, you simply need to
-
-### On Windows:
+## Installation
+We use [`OptiX 7`](https://developer.nvidia.com/rtx/ray-tracing/optix) to accelerate ray tracing. Make sure [`cudatoolkit`](https://developer.nvidia.com/cuda-toolkit) (you may install it using `conda`) and an appropriate NVIDIA display driver that support `OptiX 7` are installed. The latest version we tested was `cudatoolkit==11.7`. Then run
 ```bash
-git submodule update --init --recursive
-cmake -S . -B build -G "Visual Studio 16 2019" -A x64 -D PYTHON_ROOT=C:/ProgramData/Anaconda3
-cmake --build build --target install --config Release
+pip install psdr-jit
 ```
-then add /build/python/ to your PYTHONPATH
 
-### On Ubuntu:
+## Local Intallation
+To install `psdr-jit` locally, first clone the repository recursivly (to include the git submodules):
 ```bash
-git submodule update --init --recursive
-cmake -S . -B build -D PYTHON_ROOT=/usr/include/python3.8/ -DCMAKE_C_COMPILER=gcc-9 -DCMAKE_CXX_COMPILER=g++-9
-cmake --build build --target install --config Release -j
+git clone --recursive https://github.com/andyyankai/psdr-jit.git
 ```
-then add /build/python/ to your PYTHONPATH
-add /build/python/drjit to your LD_LIBRARY_PATH
-add /build/python/psdr_jit to your LD_LIBRARY_PATH
+or 
+```bash
+git clone https://github.com/andyyankai/psdr-jit.git
+cd psdr-jit
+git submodule update --init --recursive
+```
+Then compile and install `psdr-jit` via
+```bash
+pip install .
+```
+Notice that it would also install `drjit` as `psdr-jit` depends on it. `cudatoolkit` is also required.
 
 ## Getting Started
 ```python
