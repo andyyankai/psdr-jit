@@ -8,6 +8,7 @@
 #include <psdr/bsdf/bsdf.h>
 #include <psdr/bsdf/diffuse.h>
 #include <psdr/bsdf/microfacet.h>
+#include <psdr/bsdf/microfacet_pv.h>
 #include <psdr/bsdf/normalmap.h>
 
 #include <psdr/emitter/area.h>
@@ -156,6 +157,23 @@ void Scene::add_BSDF(BSDF* bsdf, const char *bsdf_id, bool twoSide) {
     } else if (Microfacet *bsdf_buff = dynamic_cast<Microfacet *>(bsdf)) {
         if ( m_opts.log_level > 0 ) std::cout << "add_BSDF: " << "Microfacet" << " " << bsdf_id << std::endl;
         Microfacet *bsdf_temp = new Microfacet(bsdf_buff->m_specularReflectance, bsdf_buff->m_diffuseReflectance, bsdf_buff->m_roughness);
+        bsdf_temp->m_twoSide = twoSide;
+        bsdf_temp->m_id = bsdf_id;
+        m_bsdfs.push_back(bsdf_temp);
+
+        Scene::ParamMap &param_map = m_param_map;
+        std::stringstream oss1, oss2;
+        oss1 << "BSDF[" << m_bsdfs.size() - 1 << "]";
+        oss2 << "BSDF[id=" << bsdf_id << "]";
+        param_map.insert(Scene::ParamMap::value_type(oss1.str(), *bsdf_temp));
+
+        bool is_new;
+        std::tie(std::ignore, is_new) = param_map.insert(Scene::ParamMap::value_type(oss2.str(), *bsdf_temp));
+        PSDR_ASSERT_MSG(is_new, std::string("Duplicate BSDF id: ") + bsdf_id);
+
+    } else if (MicrofacetPerVertex *bsdf_buff = dynamic_cast<MicrofacetPerVertex *>(bsdf)) {
+        if ( m_opts.log_level > 0 ) std::cout << "add_BSDF: " << "MicrofacetPerVertex" << " " << bsdf_id << std::endl;
+        MicrofacetPerVertex *bsdf_temp = new MicrofacetPerVertex(bsdf_buff->m_specularReflectance, bsdf_buff->m_diffuseReflectance, bsdf_buff->m_roughness);
         bsdf_temp->m_twoSide = twoSide;
         bsdf_temp->m_id = bsdf_id;
         m_bsdfs.push_back(bsdf_temp);
@@ -591,6 +609,7 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active, Trian
     Vector3f<ad> tri_info_n2; 
     Vector3f<ad> tri_info_face_normal; 
     Float<ad> tri_info_face_area; 
+    Vector3i<ad> tri_info_face_indices;
 
 
     // std::cout << m_triangle_info.face_normal << std::endl;
@@ -614,8 +633,7 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active, Trian
         tri_info_face_normal = gather<Vector3f<ad>>(m_triangle_info.face_normal, idx[1], active);
         tri_info_face_area = gather<Float<ad>>(m_triangle_info.face_area, idx[1], active);
 
-
-
+        tri_info_face_indices = gather<Vector3i<ad>>(m_triangle_info.face_indices, idx[1], active);
 
         TriangleInfo<ad>    tri_info = empty<TriangleInfo<ad>>(slices<Vector3f<ad>>(tri_info_p0));
         tri_info.p0 = tri_info_p0;
@@ -626,6 +644,7 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active, Trian
         tri_info.n2 = tri_info_n2;
         tri_info.face_normal = tri_info_face_normal;
         tri_info.face_area = tri_info_face_area;
+        tri_info.face_indices = tri_info_face_indices;
 
 
         if ( out_info != nullptr ) *out_info = tri_info;
@@ -650,6 +669,8 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active, Trian
         tri_info_face_normal = gather<Vector3f<ad>>(detach(m_triangle_info.face_normal), idx[1], active);
         tri_info_face_area = gather<Float<ad>>(detach(m_triangle_info.face_area), idx[1], active);
 
+        tri_info_face_indices = gather<Vector3i<ad>>(detach(m_triangle_info.face_indices), idx[1], active);
+
         TriangleInfoD   tri_info = empty<TriangleInfoD>(slices<Vector3fC>(tri_info_p0));
         tri_info.p0 = gather<Vector3fD>((m_triangle_info.p0), idx[1], active);;
         tri_info.e1 = gather<Vector3fD>((m_triangle_info.e1), idx[1], active);
@@ -659,6 +680,7 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active, Trian
         tri_info.n2 = gather<Vector3fD>((m_triangle_info.n2), idx[1], active);
         tri_info.face_normal = gather<Vector3fD>(m_triangle_info.face_normal, idx[1], active);
         tri_info.face_area = gather<FloatD>(m_triangle_info.face_area, IntD(idx[1]), active);
+        tri_info.face_indices = gather<Vector3iD>(m_triangle_info.face_indices, idx[1], active);
 
 
         if ( out_info != nullptr ) {
@@ -717,6 +739,8 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active, Trian
         its.sh_frame.t[valid_dp] = cross(its.sh_frame.n, its.sh_frame.s);
         its.wi = its.sh_frame.to_local(-dir);
 
+        its.bc = uv;
+        its.face_indices = tri_info_face_indices;
 
     } else {
         // Standard (solid-angle) formulation
@@ -744,7 +768,9 @@ Intersection<ad> Scene::ray_intersect(const Ray<ad> &ray, Mask<ad> active, Trian
         its.sh_frame.s[valid_dp] = normalize(fnmadd(its.sh_frame.n, dot(its.sh_frame.n, its.dp_du), its.dp_du));
         its.sh_frame.t[valid_dp] = cross(its.sh_frame.n, its.sh_frame.s);
         its.wi = its.sh_frame.to_local(-ray.d);
-
+        
+        its.bc = uv;
+        its.face_indices = tri_info_face_indices;
     }
 
 
@@ -777,8 +803,7 @@ Intersection<ad> Scene::unit_ray_intersect(const Ray<ad> &ray, Mask<ad> active) 
     Vector3f<ad> tri_info_n2; 
     Vector3f<ad> tri_info_face_normal; 
     Float<ad> tri_info_face_area; 
-
-
+    Vector3i<ad> tri_info_face_indices; 
 
     if constexpr ( ad ) {
         its.n = gather<Vector3f<ad>>(m_triangle_info.face_normal, idx[1], active);
@@ -794,9 +819,7 @@ Intersection<ad> Scene::unit_ray_intersect(const Ray<ad> &ray, Mask<ad> active) 
 
         tri_info_face_normal = gather<Vector3f<ad>>(m_triangle_info.face_normal, idx[1], active);
         tri_info_face_area = gather<Float<ad>>(m_triangle_info.face_area, idx[1], active);
-
-
-
+        tri_info_face_indices = gather<Vector3i<ad>>(m_triangle_info.face_indices, idx[1], active);
 
         TriangleInfo<ad>    tri_info = empty<TriangleInfo<ad>>(slices<Vector3f<ad>>(tri_info_p0));
         tri_info.p0 = tri_info_p0;
@@ -807,6 +830,7 @@ Intersection<ad> Scene::unit_ray_intersect(const Ray<ad> &ray, Mask<ad> active) 
         tri_info.n2 = tri_info_n2;
         tri_info.face_normal = tri_info_face_normal;
         tri_info.face_area = tri_info_face_area;
+        tri_info.face_indices = tri_info_face_indices;
 
         if constexpr ( path_space ) {
             its.J = tri_info.face_area/detach(tri_info.face_area);
@@ -827,6 +851,8 @@ Intersection<ad> Scene::unit_ray_intersect(const Ray<ad> &ray, Mask<ad> active) 
         tri_info_n2 = gather<Vector3f<ad>>(detach(m_triangle_info.n2), idx[1], active);
         tri_info_face_normal = gather<Vector3f<ad>>(detach(m_triangle_info.face_normal), idx[1], active);
         tri_info_face_area = gather<Float<ad>>(detach(m_triangle_info.face_area), idx[1], active);
+        tri_info_face_indices = gather<Vector3i<ad>>(detach(m_triangle_info.face_indices), idx[1], active);
+
 
         TriangleInfoD   tri_info = empty<TriangleInfoD>(slices<Vector3fC>(tri_info_p0));
         tri_info.p0 = gather<Vector3fD>((m_triangle_info.p0), idx[1], active);;
@@ -837,6 +863,7 @@ Intersection<ad> Scene::unit_ray_intersect(const Ray<ad> &ray, Mask<ad> active) 
         tri_info.n2 = gather<Vector3fD>((m_triangle_info.n2), idx[1], active);
         tri_info.face_normal = gather<Vector3fD>(m_triangle_info.face_normal, idx[1], active);
         tri_info.face_area = gather<FloatD>(m_triangle_info.face_area, IntD(idx[1]), active);
+        tri_info.face_indices = gather<Vector3iD>(m_triangle_info.face_indices, IntD(idx[1]), active);
 
         its.J = 1.f;
 
@@ -890,6 +917,8 @@ Intersection<ad> Scene::unit_ray_intersect(const Ray<ad> &ray, Mask<ad> active) 
         its.sh_frame.t[valid_dp] = cross(its.sh_frame.n, its.sh_frame.s);
         its.wi = its.sh_frame.to_local(-dir);
 
+        its.bc = uv;
+        its.face_indices = tri_info_face_indices;
 
     } else {
         // Standard (solid-angle) formulation
@@ -918,6 +947,8 @@ Intersection<ad> Scene::unit_ray_intersect(const Ray<ad> &ray, Mask<ad> active) 
         its.sh_frame.t[valid_dp] = cross(its.sh_frame.n, its.sh_frame.s);
         its.wi = its.sh_frame.to_local(-ray.d);
 
+        its.bc = uv;
+        its.face_indices = tri_info_face_indices;
     }
 
 

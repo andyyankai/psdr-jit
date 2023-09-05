@@ -164,11 +164,13 @@ struct TriangleInfo_ {
     static constexpr bool ad = std::is_same_v<Float_, FloatD>;
 
     Vector3f<ad> p0, e1, e2, n0, n1, n2, face_normal;
+    Vector3i<ad> face_indices;
     Float<ad>    face_area;
 
     DRJIT_STRUCT(TriangleInfo_, p0, e1, e2,
                                 n0, n1, n2,
                                 face_normal,
+                                face_indices,
                                 face_area)
 };
 

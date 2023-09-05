@@ -31,6 +31,7 @@
 #include <psdr/bsdf/roughconductor.h>
 #include <psdr/bsdf/roughdielectric.h>
 #include <psdr/bsdf/microfacet.h>
+#include <psdr/bsdf/microfacet_pv.h>
 
 #include <psdr/bsdf/normalmap.h>
 
@@ -299,6 +300,11 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readwrite("diffuseReflectance", &Microfacet::m_diffuseReflectance)
         .def_readwrite("specularReflectance", &Microfacet::m_specularReflectance);
 
+    py::class_<MicrofacetPerVertex, BSDF>(m, "MicrofacetBSDFPerVertex")
+        .def(py::init<const Vector3fD&, const Vector3fD&, const Vector1fD&>())
+        .def_readwrite("roughness", &MicrofacetPerVertex::m_roughness)
+        .def_readwrite("diffuseReflectance", &MicrofacetPerVertex::m_diffuseReflectance)
+        .def_readwrite("specularReflectance", &MicrofacetPerVertex::m_specularReflectance);
 
     // Shapes
 

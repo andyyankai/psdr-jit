@@ -1,4 +1,5 @@
 #include <vector>
+#include <array>
 #include <map>
 
 #define TINYOBJLOADER_IMPLEMENTATION
@@ -24,6 +25,7 @@ static std::pair<TriangleInfo<ad>, Vector3f<ad>> process_mesh(const Vector3f<ad>
     const int num_vertices = static_cast<int>(slices<Vector3f<ad>>(vertex_positions));
 
     TriangleInfo<ad> triangles;
+    triangles.face_indices = face_indices; 
     triangles.p0 = gather<Vector3f<ad>>(vertex_positions, face_indices[0]);
     triangles.e1 = gather<Vector3f<ad>>(vertex_positions, face_indices[1]) - triangles.p0;
     triangles.e2 = gather<Vector3f<ad>>(vertex_positions, face_indices[2]) - triangles.p0;
@@ -70,6 +72,8 @@ Mesh::~Mesh() {
 
 
 void Mesh::load_raw(const Vector3fC &new_vertex_positions, const Vector3iC &new_face_indices, bool verbose) {
+    using namespace std::chrono;
+    
     m_num_vertices = slices(new_vertex_positions);
     // Loading vertex positions
     m_vertex_positions_raw = Vector3fD(new_vertex_positions);
@@ -81,8 +85,13 @@ void Mesh::load_raw(const Vector3fC &new_vertex_positions, const Vector3iC &new_
     // Loading face indices
     m_face_indices = Vector3iD(new_face_indices);
 
-    // Constructing edge list
+    std::array<std::vector<int>, 3> face_indices_cpu;
+    copy_cuda_array(new_face_indices, face_indices_cpu);
+    drjit::eval(); drjit::sync_thread();
 
+    auto start_time = high_resolution_clock::now();
+
+    // Constructing edge list
     int m_num_edges = 0;
     if ( m_enable_edges ) {
         std::vector<int> buffers[5];
@@ -96,9 +105,9 @@ void Mesh::load_raw(const Vector3fC &new_vertex_positions, const Vector3iC &new_
         for ( size_t f = 0; f < m_num_faces; ++f ) {
             for ( int i = 0; i < 3; ++i ) {
                 int k1 = i, k2 = (i + 1) % 3, k3 = (i + 2) % 3;
-                int idx1 = m_face_indices[k1][f];
-                int idx2 = m_face_indices[k2][f];
-                int idx3 = m_face_indices[k3][f];
+                int idx1 = face_indices_cpu[k1][f];
+                int idx2 = face_indices_cpu[k2][f];
+                int idx3 = face_indices_cpu[k3][f];
                 auto key = idx1 < idx2 ?
                     std::make_pair(idx1, idx2) : std::make_pair(idx2, idx1);
                 if (edge_map.find(key) == edge_map.end()) {
@@ -132,10 +141,13 @@ void Mesh::load_raw(const Vector3fC &new_vertex_positions, const Vector3iC &new_
                                           drjit::load<IntD>(buffers[4].data(), m_num_edges));
     }
 
+    auto end_time = high_resolution_clock::now();
+    double seconds = duration_cast<duration<double>>(end_time - start_time).count();
+
     if ( verbose ) {
         std::cout << "Loaded " << m_num_vertices << " vertices, "
                                << m_num_faces    << " faces, "
-                               << m_num_edges    << " edges. " << std::endl;
+                               << m_num_edges    << " edges in " << seconds << " seconds. " << std::endl;
     }
     drjit::eval(); drjit::sync_thread();
     m_ready = false;
@@ -258,7 +270,7 @@ void Mesh::load(const char *fname, bool verbose) {
         for ( auto it: edge_map ) {
             // if ( it.second.size() > 3 ) std::cout << "WARN: Edge shared by more than 2 faces" << std::endl;
             // if ( it.second.size() > 3 ) {
-            //     // Non-manifold mesh is not allowed
+            //     // Non-manifold mesh is not aled
             //     PSDR_ASSERT_MSG(false, std::string("Edge shared by more than 2 faces: ") + fname);
             // } else {
                 buffers[0].push_back(it.first.first);
