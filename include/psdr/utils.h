@@ -34,10 +34,10 @@ DRJIT_INLINE size_t slices(const ArrayD &cuda_array) {
 
 
 
-template <typename T, int n, bool async = false>
+template <typename T, size_t n, bool async = false>
 DRJIT_INLINE void copy_cuda_array(const Array<CUDAArray<T>, n> &cuda_array, std::array<std::vector<T>, n> &cpu_array) {
     size_t m = slices<Array<CUDAArray<T>, n>>(cuda_array);
-    for ( int i = 0; i < n; ++i ) {
+    for ( size_t i = 0; i < n; ++i ) {
         cpu_array[i].resize(m);
         drjit::store(cpu_array[i].data(), cuda_array[i]);
     }
