@@ -124,13 +124,50 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
     return result;
 }
 
-void PathTracer::render_secondary_edges(const Scene &scene, int sensor_id, SpectrumD &result) const {
-    const RenderOption &opts = scene.m_opts;
-    Vector3fC sample3 = scene.m_samplers[2].next_nd<3, false>();
-    if (scene.m_opts.log_level > 0) {
-        std::cout << "render_secondary_edges" << std::endl;
-    }
 
+void PathTracer::preprocess_secondary_edges(const Scene &scene, int sensor_id, const ScalarVector4i &reso, int nrounds) {
+    PSDR_ASSERT(nrounds > 0);
+    PSDR_ASSERT_MSG(scene.is_ready(), "Scene needs to be configured!");
+
+    if ( static_cast<int>(m_warpper.size()) != scene.m_num_sensors )
+        m_warpper.resize(scene.m_num_sensors, nullptr);
+
+    if ( m_warpper[sensor_id] == nullptr )
+        m_warpper[sensor_id] = new HyperCubeDistribution3f();
+    auto warpper = m_warpper[sensor_id];
+
+    warpper->set_resolution(head<3>(reso));
+    int num_cells = warpper->m_num_cells;
+    const int64_t num_samples = static_cast<int64_t>(num_cells)*reso[3];
+    PSDR_ASSERT(num_samples <= std::numeric_limits<int>::max());
+
+    IntC idx = divisor<int>(reso[3])(arange<IntC>(num_samples));
+    Vector3iC sample_base = gather<Vector3iC>(warpper->m_cells, idx);
+
+    Sampler sampler;
+    sampler.seed(arange<UInt64C>(num_samples));
+
+    FloatC result = zeros<FloatC>(num_cells);
+    // for ( int j = 0; j < nrounds; ++j ) {
+    //     SpectrumC value0;
+    //     std::tie(std::ignore, value0) = eval_secondary_edge<false>(scene, *scene.m_sensors[sensor_id],
+    //                                                                (sample_base + sampler.next_nd<3, false>())*warpper->m_unit);
+    //     masked(value0, ~drjit::isfinite<SpectrumC>(value0)) = 0.f;
+    //     if ( likely(reso[3] > 1) ) {
+    //         value0 /= static_cast<float>(reso[3]);
+    //     }
+    //     //PSDR_ASSERT(all(hmin(value0) > -Epsilon));
+    //     scatter_reduce(ReduceOp::Add, result, drjit::hmax(value0), idx);
+    // }
+    // if ( nrounds > 1 ) result /= static_cast<float>(nrounds);
+    // warpper->set_mass(result);
+
+    // cuda_eval(); cuda_sync();
+}
+
+
+template <bool ad>
+std::pair<IntC, Spectrum<ad>> PathTracer::eval_secondary_edge(const Scene &scene, const Sensor &sensor, const Vector3fC &sample3) const {
     BoundarySegSampleDirect bss = scene.sample_boundary_segment_direct(sample3);
     MaskC valid = bss.is_valid;
 
@@ -139,35 +176,38 @@ void PathTracer::render_secondary_edges(const Scene &scene, int sensor_id, Spect
     Vector3fC       _p2, _dir;
     _p2  = bss.p2;
     _dir = normalize(_p2 - _p0);
+
     // check visibility between _p0 and _p2
     IntersectionC _its2;
     TriangleInfoD tri_info;
-    _its2 = scene.ray_intersect<false>(RayC(_p0, _dir), valid, &tri_info);
 
-
+    if constexpr ( ad ) {
+        _its2 = scene.ray_intersect<false>(RayC(_p0, _dir), valid, &tri_info);
+    } else {
+        _its2 = scene.ray_intersect<false>(RayC(_p0, _dir), valid);
+    }
     valid &= _its2.is_emitter(valid) && _its2.is_valid() && norm(_its2.p - _p2) < ShadowEpsilon;
 
-
+    // trace another ray in the opposite direction to complete the boundary segment (_p1, _p2)
     IntersectionC _its1 = scene.ray_intersect<false>(RayC(_p0, -_dir), valid);
     valid &= _its1.is_valid();
     Vector3fC &_p1 = _its1.p;
 
     // project _p1 onto the image plane and compute the corresponding pixel id
-    SensorDirectSampleC sds = (*scene.m_sensors[sensor_id]).sample_direct(_p1);
+    SensorDirectSampleC sds = sensor.sample_direct(_p1);
     valid &= sds.is_valid;
 
     // trace a camera ray toward _p1 in a differentiable fashion
-    RayD camera_ray;
-    IntersectionD its1;
-
-    camera_ray = (*scene.m_sensors[sensor_id]).sample_primary_ray(Vector2fD(sds.q));
-    its1 = scene.ray_intersect<true, false>(camera_ray, valid);
-    valid &= detach(its1.is_valid() )&& norm(detach(its1.p) - _p1) < ShadowEpsilon;
-
-
-    BSDFArrayD bsdf_array = its1.shape->bsdf();
-    if ( scene.m_emitter_env != nullptr ) {
-        valid &= detach(neq(bsdf_array, nullptr));
+    Ray<ad> camera_ray;
+    Intersection<ad> its1;
+    if constexpr ( ad ) {
+        camera_ray = sensor.sample_primary_ray(Vector2fD(sds.q));
+        its1 = scene.ray_intersect<true, false>(camera_ray, valid);
+        valid &= detach(its1.is_valid() )&& norm(detach(its1.p) - _p1) < ShadowEpsilon;
+    } else {
+        camera_ray = sensor.sample_primary_ray(sds.q);
+        its1 = scene.ray_intersect<false>(camera_ray, valid);
+        valid &= its1.is_valid() && norm(its1.p - _p1) < ShadowEpsilon;
     }
 
     // calculate base_value
@@ -178,49 +218,68 @@ void PathTracer::render_secondary_edges(const Scene &scene, int sensor_id, Spect
     Vector3fC   proj    = normalize(cross(e, _its2.n));
     FloatC      sinphi2 = norm(cross(_dir, proj));
     FloatC      base_v  = (_its1.t/dist)*(sinphi/sinphi2)*cos2;
+    valid &= (sinphi > Epsilon) && (sinphi2 > Epsilon);
 
+    // evaluate BSDF at _p1
     SpectrumC bsdf_val;
-    Vector3fC d0 = -detach(camera_ray.d);
+    Vector3fC d0;
+    if constexpr ( ad ) {
+        d0 = -detach(camera_ray.d);
+    } else {
+        d0 = -camera_ray.d;
+    }
     Vector3fC d0_local = _its1.sh_frame.to_local(d0);
     if ( scene.m_bsdfs.size() == 1U || scene.m_meshes.size() == 1U ) {
         const BSDF *bsdf = scene.m_meshes[0]->m_bsdf;
         bsdf_val = bsdf->eval(_its1, d0_local, valid);
     } else {
         BSDFArrayC bsdf_array = _its1.shape->bsdf();
-        bsdf_val = bsdf_array->eval(_its1, d0_local, valid);
+        bsdf_val = bsdf_array->eval(_its1, d0_local, (valid));
     }
     // accounting for BSDF's asymmetry caused by shading normals
     FloatC correction = abs((_its1.wi.z()*dot(d0, _its1.n))/(d0_local.z()*dot(_dir, _its1.n)));
     masked(bsdf_val, valid) *= correction;
 
     SpectrumC value0 = (bsdf_val*_its2.Le(valid)*(base_v*sds.sensor_val/bss.pdf)) & valid;
+    if constexpr ( ad ) {
+        Vector3fC n = normalize(cross(_its2.n, proj));
+        value0 *= sign(dot(e, bss.edge2))*sign(dot(e, n));
+        const Vector3fD &v0 = tri_info.p0,
+                        &e1 = tri_info.e1,
+                        &e2 = tri_info.e2;
+
+        RayD shadow_ray(its1.p, normalize(bss.p0 - its1.p));
+        Vector2fD uv;
+        std::tie(uv, std::ignore) = ray_intersect_triangle<true>(v0, e1, e2, shadow_ray);
+        Vector3fD u2 = bilinear<true>(detach(v0), detach(e1), detach(e2), uv);
+        SpectrumD result = (SpectrumD(value0)*dot(Vector3fD(n), u2)) & valid;
+        return { select(valid, sds.pixel_idx, -1), result - detach(result) };
+    } else {
+        // returning the value without multiplying normal velocity for guiding
+        return { -1, value0 };
+    }
+}
 
 
-    Vector3fC n = normalize(cross(_its2.n, proj));
-    value0 *= sign(dot(e, bss.edge2))*sign(dot(e, n));
 
-    const Vector3fD &v0 = tri_info.p0,
-                    &e1 = tri_info.e1,
-                    &e2 = tri_info.e2;
+void PathTracer::render_secondary_edges(const Scene &scene, int sensor_id, SpectrumD &result) const {
+    const RenderOption &opts = scene.m_opts;
+    Vector3fC sample3 = scene.m_samplers[2].next_nd<3, false>();
+    if (scene.m_opts.log_level > 0) {
+        std::cout << "render_secondary_edges" << std::endl;
+    }
+    FloatC pdf0 = (m_warpper.empty() || m_warpper[sensor_id] == nullptr) ?
+                  1.f : m_warpper[sensor_id]->sample_reuse(sample3);
 
-    RayD shadow_ray(its1.p, normalize(bss.p0 - its1.p));
-    Vector2fD uv;
-    std::tie(uv, std::ignore) = ray_intersect_triangle<true>(v0, e1, e2, shadow_ray);
-    Vector3fD u2 = bilinear<true>(detach(v0), detach(e1), detach(e2), uv);
-
-    SpectrumD result_b = (SpectrumD(value0)*dot(Vector3fD(n), u2)) & valid;
-
-    IntC idx_b = select(valid, sds.pixel_idx, -1);
-    SpectrumD value_b = result_b - detach(result_b);
-
-
-    masked(value_b, ~drjit::isfinite<SpectrumD>(value_b)) = 0.f;
+    auto [idx, value] = eval_secondary_edge<true>(scene, *scene.m_sensors[sensor_id], sample3);
+    // masked(value, ~drjit::isfinite<SpectrumD>(value)) = 0.f;
+    masked(value, pdf0 > Epsilon) /= pdf0;
     if ( likely(opts.sppse > 1) ) {
-        value_b /= static_cast<float>(opts.sppse);
+        value /= static_cast<float>(opts.sppse);
     }
 
     for (int j=0; j<3; ++j) {
-        scatter_reduce(ReduceOp::Add, result[j], value_b[j], IntD(idx_b), idx_b >= 0);
+        scatter_reduce(ReduceOp::Add, result[j], value[j], IntD(idx), idx >= 0);
     }
 
 }

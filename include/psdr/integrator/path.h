@@ -10,6 +10,7 @@ public:
     virtual ~PathTracer();
 
     bool m_hide_emitters = false; 
+    void preprocess_secondary_edges(const Scene &scene, int sensor_id, const ScalarVector4i &reso, int nrounds = 1);
 
 protected:
     SpectrumC Li(const Scene &scene, Sampler &sampler, const RayC &ray, MaskC active = true) const override;
@@ -20,7 +21,13 @@ protected:
 
     void render_secondary_edges(const Scene &scene, int sensor_id, SpectrumD &result) const override;
 
+
+    template <bool ad>
+    std::pair<IntC, Spectrum<ad>> eval_secondary_edge(const Scene &scene, const Sensor &sensor, const Vector3fC &sample3) const;
+
     int m_max_depth;
+
+    std::vector<HyperCubeDistribution3f*> m_warpper;
 
 PSDR_CLASS_DECL_END(PathTracer)
 

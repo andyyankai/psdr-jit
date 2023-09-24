@@ -427,6 +427,7 @@ PYBIND11_MODULE(psdr_jit, m) {
 
     py::class_<PathTracer, Integrator>(m, "PathTracer")
         .def(py::init<int>(), "max_depth"_a = 1)
+        .def("preprocess_secondary_edges", &PathTracer::preprocess_secondary_edges, "scene"_a, "sensor_id"_a, "resolution"_a, "nrounds"_a = 1)
         .def_readwrite("hide_emitters", &PathTracer::m_hide_emitters);
 
 
