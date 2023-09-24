@@ -148,19 +148,19 @@ void PathTracer::preprocess_secondary_edges(const Scene &scene, int sensor_id, c
     sampler.seed(arange<UInt64C>(num_samples));
 
     FloatC result = zeros<FloatC>(num_cells);
-    // for ( int j = 0; j < nrounds; ++j ) {
-    //     SpectrumC value0;
-    //     std::tie(std::ignore, value0) = eval_secondary_edge<false>(scene, *scene.m_sensors[sensor_id],
-    //                                                                (sample_base + sampler.next_nd<3, false>())*warpper->m_unit);
-    //     masked(value0, ~drjit::isfinite<SpectrumC>(value0)) = 0.f;
-    //     if ( likely(reso[3] > 1) ) {
-    //         value0 /= static_cast<float>(reso[3]);
-    //     }
-    //     //PSDR_ASSERT(all(hmin(value0) > -Epsilon));
-    //     scatter_reduce(ReduceOp::Add, result, drjit::hmax(value0), idx);
-    // }
-    // if ( nrounds > 1 ) result /= static_cast<float>(nrounds);
-    // warpper->set_mass(result);
+    for ( int j = 0; j < nrounds; ++j ) {
+        SpectrumC value0;
+        std::tie(std::ignore, value0) = eval_secondary_edge<false>(scene, *scene.m_sensors[sensor_id],
+                                                                   (sample_base + sampler.next_nd<3, false>())*warpper->m_unit);
+        masked(value0, ~drjit::isfinite<SpectrumC>(value0)) = 0.f;
+        if ( likely(reso[3] > 1) ) {
+            value0 /= static_cast<float>(reso[3]);
+        }
+        //PSDR_ASSERT(all(hmin(value0) > -Epsilon));
+        scatter_reduce(ReduceOp::Add, result, drjit::max(value0), idx);
+    }
+    if ( nrounds > 1 ) result /= static_cast<float>(nrounds);
+    warpper->set_mass(result);
 
     // cuda_eval(); cuda_sync();
 }
