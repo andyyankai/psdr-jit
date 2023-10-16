@@ -1,5 +1,6 @@
 # psdr-jit
 Path-space differentiable renderer with [`drjit`](https://drjit.readthedocs.io/en/latest/) as the numerical backend.
+Old repo: https://github.com/uci-rendering/psdr-cuda
 
 
 ## Installation
