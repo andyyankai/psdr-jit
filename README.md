@@ -1,6 +1,7 @@
 # psdr-jit
 Path-space differentiable renderer with [`drjit`](https://drjit.readthedocs.io/en/latest/) as the numerical backend.
 
+
 ## Installation
 We use [`OptiX 7`](https://developer.nvidia.com/rtx/ray-tracing/optix) to accelerate ray tracing. Make sure [`cudatoolkit`](https://developer.nvidia.com/cuda-toolkit) (you may install it using `conda`) and an appropriate NVIDIA display driver that support `OptiX 7` are installed. The latest version we tested was `cudatoolkit==11.7`. Then run
 ```bash
@@ -97,3 +98,6 @@ diff_img = diff_img.numpy().reshape((sc.opts.width, sc.opts.height, 3))
 output = cv2.cvtColor(diff_img, cv2.COLOR_RGB2BGR)
 cv2.imwrite("psdr_jit_diff_debug.exr", output)
 ```
+
+### More Tutorial
+More tutorial in [`tutorial`](https://github.com/andyyankai/psdr-jit/tree/main/tutorials) folder
