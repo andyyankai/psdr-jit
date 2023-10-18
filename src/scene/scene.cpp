@@ -1,5 +1,6 @@
 #include <chrono>
 #include <misc/Exception.h>
+#include <misc/utils.h>
 
 #include <psdr/core/ray.h>
 #include <psdr/core/intersection.h>
@@ -282,9 +283,10 @@ void Scene::add_Mesh(Mesh *mesh_, const char *bsdf_id, Emitter *emitter) {
 }
 
 void Scene::configure(std::vector<int> active_sensor) {
+
+    StopWatch sw;
     
     // Build the parameter map
-
     m_loaded = true;
     PSDR_ASSERT_MSG(m_loaded, "Scene not loaded yet!");
 
@@ -294,11 +296,11 @@ void Scene::configure(std::vector<int> active_sensor) {
     PSDR_ASSERT(m_num_sensors == static_cast<int>(m_sensors.size()));
     PSDR_ASSERT(m_num_meshes == static_cast<int>(m_meshes.size()));
 
-    using namespace std::chrono;
-    auto start_time = high_resolution_clock::now();
+    // using namespace std::chrono;
+    // auto start_time = high_resolution_clock::now();
 
 
-
+    sw.start("seed samplers");
     // Seed samplers
     if ( m_opts.spp  > 0 ) {
         int64_t sample_count = static_cast<int64_t>(m_opts.height)*m_opts.width*m_opts.spp;
@@ -315,7 +317,9 @@ void Scene::configure(std::vector<int> active_sensor) {
         if ( m_samplers[2].m_sample_count != sample_count )
             m_samplers[2].seed(arange<UInt64C>(sample_count)+seed);
     }
+    sw.stop();
 
+    sw.start("reserve space");
     // Preprocess meshes
     PSDR_ASSERT_MSG(!m_meshes.empty(), "Missing meshes!");
     std::vector<int> face_offset, edge_offset;
@@ -324,11 +328,17 @@ void Scene::configure(std::vector<int> active_sensor) {
     edge_offset.reserve(m_num_meshes + 1);
     edge_offset.push_back(0);
 
-
     m_lower = full<Vector3fC>(std::numeric_limits<float>::max());
     m_upper = full<Vector3fC>(std::numeric_limits<float>::min());
+
+    sw.stop();
+
     for ( Mesh *mesh : m_meshes ) {
+        sw.start("configure mesh");
         mesh->configure();
+        sw.stop();
+
+        sw.start("push faces and edges");
         face_offset.push_back(face_offset.back() + mesh->m_num_faces);
         if ( m_opts.sppse > 0 && mesh->m_enable_edges ) {
             // std::cout << (mesh->m_sec_edge_info)->size() << std::endl;
@@ -336,10 +346,14 @@ void Scene::configure(std::vector<int> active_sensor) {
         } else {
             edge_offset.push_back(edge_offset.back());
         }
+        sw.stop();
+
+        sw.start("update range");
         for ( int i = 0; i < 3; ++i ) {
             m_lower[i] = minimum(m_lower[i], min(detach(mesh->m_vertex_positions[i])));
             m_upper[i] = maximum(m_upper[i], max(detach(mesh->m_vertex_positions[i])));
         }
+        sw.stop();
     }
 
 
@@ -352,6 +366,7 @@ void Scene::configure(std::vector<int> active_sensor) {
     if ( m_opts.sppe > 0 ) num_edges.reserve(m_sensors.size());
 
     if (active_sensor.size() > 0) {
+        sw.start("per sensor configure");
         for (int sensor_id=0; sensor_id<m_num_sensors; ++sensor_id) {
             m_sensors[sensor_id]->m_edge_info = empty<PrimaryEdgeInfo>(0);
             m_sensors[sensor_id]->m_edge_distrb.init(FloatC(1));
@@ -368,7 +383,9 @@ void Scene::configure(std::vector<int> active_sensor) {
             m_sensors[sensor_id]->configure(true);
             if ( m_opts.sppe > 0 ) num_edges.push_back(m_sensors[sensor_id]->m_edge_distrb.m_size);
         }
+        sw.stop();
     } else {
+        sw.start("init sensor config");
         // std::cout << "Inital Config! Remember to call sc.configure(active_sensor=[...], dirty=True/False) again!" << std::endl;
         for ( Sensor *sensor : m_sensors ) {
             sensor->m_resolution = ScalarVector2i(m_opts.width, m_opts.height);
@@ -386,6 +403,7 @@ void Scene::configure(std::vector<int> active_sensor) {
                 }
             }
         }
+        sw.stop();
     }
     
 
@@ -405,6 +423,7 @@ void Scene::configure(std::vector<int> active_sensor) {
 
 
     // Handling env. lighting
+    sw.start("handle envmap");
     if ( m_emitter_env != nullptr && (!m_has_bound_mesh) ) {
         FloatC margin = min((m_upper - m_lower)*0.05f);
         m_lower -= margin; m_upper += margin;
@@ -456,9 +475,10 @@ void Scene::configure(std::vector<int> active_sensor) {
             log("Bounding mesh added for environmental lighting.");
         }
     }
-
+    sw.stop();
 
     // Preprocess emitters
+    sw.start("handle emitters");
     if ( !m_emitters.empty() ) {
         std::vector<float> weights;
         weights.reserve(m_emitters.size());
@@ -486,12 +506,14 @@ void Scene::configure(std::vector<int> active_sensor) {
             e->m_sampling_weight *= inv_total_weight;
         }
     }
+    sw.stop();
 
 
     // PSDR_ASSERT(0);
 
 
     // Initialize CUDA arrays
+    sw.start("init cuda arrays");
     if ( !m_emitters.empty() ) {
         m_emitters_cuda = load<EmitterArrayD>(m_emitters.data(), m_emitters.size());
 
@@ -513,10 +535,12 @@ void Scene::configure(std::vector<int> active_sensor) {
             scatter(m_triangle_uv, *mesh.m_triangle_uv, idx);
         }
     }
+    sw.stop();
 
 
 
     // Generate global sec. edge arrays
+    sw.start("generate global sec. edge arrays");
     if ( m_opts.sppse > 0 ) {
         m_sec_edge_info = empty<SecondaryEdgeInfo>(edge_offset.back());
         for ( int i = 0; i < m_num_meshes; ++i ) {
@@ -542,11 +566,14 @@ void Scene::configure(std::vector<int> active_sensor) {
     } else {
         m_sec_edge_info = empty<SecondaryEdgeInfo>();
     }
+    sw.stop();
 
     // Initialize OptiX
-
+    sw.start("init optix");
     m_optix->configure(m_meshes);
+    sw.stop();
 
+    sw.start("clean up");
     // Cleanup
     for ( int i = 0; i < m_num_meshes; ++i ) {
         Mesh *mesh = m_meshes[i];
@@ -563,13 +590,14 @@ void Scene::configure(std::vector<int> active_sensor) {
             }
         }
     }
+    sw.stop();
 
-    auto end_time = high_resolution_clock::now();
-    if ( m_opts.log_level > 0 ) {
-        std::stringstream oss;
-        oss << "Configured in " << duration_cast<duration<double>>(end_time - start_time).count() << " seconds.";
-        log(oss.str().c_str());
-    }
+    // auto end_time = high_resolution_clock::now();
+    // if ( m_opts.log_level > 0 ) {
+    //     std::stringstream oss;
+    //     oss << "Configured in " << duration_cast<duration<double>>(end_time - start_time).count() << " seconds.";
+    //     log(oss.str().c_str());
+    // }
     // PSDR_ASSERT(0);
 }
 
