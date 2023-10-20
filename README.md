@@ -102,3 +102,6 @@ cv2.imwrite("psdr_jit_diff_debug.exr", output)
 
 ### More Tutorial
 More tutorial in [`tutorial`](https://github.com/andyyankai/psdr-jit/tree/main/tutorials) folder
+
+### Project based on psdr-jit
+TBA
