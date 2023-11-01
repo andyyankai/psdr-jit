@@ -283,10 +283,9 @@ void Scene::add_Mesh(Mesh *mesh_, const char *bsdf_id, Emitter *emitter) {
 }
 
 void Scene::configure(std::vector<int> active_sensor) {
-
-    StopWatch sw(false);
     
     // Build the parameter map
+
     m_loaded = true;
     PSDR_ASSERT_MSG(m_loaded, "Scene not loaded yet!");
 
