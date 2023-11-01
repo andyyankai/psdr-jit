@@ -11,6 +11,7 @@
 #include <psdr/sensor/perspective.h>
 #include <psdr/integrator/path.h>
 #include <drjit/loop.h>
+#include <misc/utils.h>
 
 NAMESPACE_BEGIN(psdr_jit)
 
@@ -33,16 +34,20 @@ SpectrumD PathTracer::Li(const Scene &scene, Sampler &sampler, const RayD &ray, 
 
 template <bool ad>
 Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad> &_ray, Mask<ad> active) const {
-    Ray<ad> curr_ray(_ray);
+    StopWatch sw(false);
 
+    Ray<ad> curr_ray(_ray);
+    sw.start("ray intersect");
     Intersection<ad> its = scene.ray_intersect<ad>(curr_ray, active);
     active &= its.is_valid();
+    sw.stop();
 
     Spectrum<ad> throughput(1.0f);
     Spectrum<ad> eta(1.0f); // Tracks radiance scaling due to index of refraction changes
     Spectrum<ad> result = m_hide_emitters ? zeros<Spectrum<ad>>() : its.Le(active);
 
     for (int depth=0; depth < m_max_depth; depth++) {
+        sw.start("direct illumination");
         BSDFArray<ad> bsdf_array = its.shape->bsdf();
         {
 
@@ -80,7 +85,10 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
             result[active_direct] += tmp_di;
             
         }
+        drjit::eval(result);
+        sw.stop();
 
+        sw.start("indirect illumination");
         // Indirect illumination
         {
             BSDFSample<ad> bs;
@@ -120,6 +128,8 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
             result[active] += tmp_b;
             its = its1;
         }
+        drjit::eval(result);
+        sw.stop();
     }
     return result;
 }

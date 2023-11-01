@@ -284,7 +284,7 @@ void Scene::add_Mesh(Mesh *mesh_, const char *bsdf_id, Emitter *emitter) {
 
 void Scene::configure(std::vector<int> active_sensor) {
 
-    StopWatch sw;
+    StopWatch sw(false);
     
     // Build the parameter map
     m_loaded = true;

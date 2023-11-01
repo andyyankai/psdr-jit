@@ -6,6 +6,7 @@
 #include <psdr/scene/scene.h>
 #include <psdr/sensor/sensor.h>
 #include <psdr/integrator/integrator.h>
+#include <misc/utils.h>
 
 NAMESPACE_BEGIN(psdr_jit)
 
@@ -32,18 +33,28 @@ SpectrumC Integrator::renderC(const Scene &scene, int sensor_id, int npass) cons
 SpectrumD Integrator::renderD(const Scene &scene, int sensor_id) const {
     using namespace std::chrono;
     auto start_time = high_resolution_clock::now();
+    StopWatch sw(false);
 
     // Interior integral
+    sw.start("interior");
     SpectrumD result = __render<true>(scene, sensor_id);
+    drjit::eval(result);
+    sw.stop();
 
     // Boundary integral
+    sw.start("primary boundary");
     if ( likely(scene.m_opts.sppe > 0) ) {
         render_primary_edges(scene, sensor_id, result);
     }
-
+    drjit::eval(result);
+    sw.stop();
+    
+    sw.start("secondary boundary");
     if ( likely(scene.m_opts.sppse > 0) ) {
         render_secondary_edges(scene, sensor_id, result);
     }
+    drjit::eval(result);
+    sw.stop();
     
     auto end_time = high_resolution_clock::now();
     if ( scene.m_opts.log_level ) {
@@ -51,7 +62,9 @@ SpectrumD Integrator::renderD(const Scene &scene, int sensor_id) const {
         oss << "Rendered in " << duration_cast<duration<double>>(end_time - start_time).count() << " seconds.";
         log(oss.str().c_str());
     }
+    sw.start("eval");
     drjit::eval(result);
+    sw.stop();
     return result;
 }
 
@@ -97,21 +110,35 @@ Spectrum<ad> Integrator::__render(const Scene &scene, int sensor_id) const {
 void Integrator::render_primary_edges(const Scene &scene, int sensor_id, SpectrumD &result) const {
     const RenderOption &opts = scene.m_opts;
     const Sensor *sensor = scene.m_sensors[sensor_id];
+    StopWatch sw(false);
     if ( sensor->m_enable_edges ) {
+        sw.start("sample primary edge");
         PrimaryEdgeSample edge_samples = sensor->sample_primary_edge(scene.m_samplers[1].next_1d<false>());
+        drjit::eval(edge_samples);
+        sw.stop();
         MaskC valid = (edge_samples.idx >= 0);
+        sw.start("delta L");
         SpectrumC delta_L = Li(scene, scene.m_samplers[1], edge_samples.ray_n, valid) - 
                             Li(scene, scene.m_samplers[1], edge_samples.ray_p, valid);
+        drjit::eval(delta_L);
+        sw.stop();
+
+        sw.start("compute value");
         SpectrumD value = edge_samples.x_dot_n*SpectrumD(delta_L/edge_samples.pdf);
         masked(value, ~drjit::isfinite<SpectrumD>(value)) = 0.f;
         if ( likely(opts.sppe > 1) ) {
             value /= static_cast<float>(opts.sppe);
         }
         value -= detach(value);
+        drjit::eval(value);
+        sw.stop();
 
+        sw.start("scatter reduce");
         for (int j=0; j<3; ++j) {
             scatter_reduce(ReduceOp::Add, result[j], value[j], IntD(edge_samples.idx), valid);
         }
+        drjit::eval(result);
+        sw.stop();
     }
 }
 
