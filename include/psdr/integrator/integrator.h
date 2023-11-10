@@ -9,8 +9,8 @@ PSDR_CLASS_DECL_BEGIN(Integrator,, Object)
 public:
     virtual ~Integrator() {}
 
-    SpectrumC renderC(const Scene &scene, int sensor_id = 0, int npass=1) const;
-    SpectrumD renderD(const Scene &scene, int sensor_id = 0) const;
+    SpectrumC renderC(const Scene &scene, int sensor_id = 0, int seed=-1) const;
+    SpectrumD renderD(const Scene &scene, int sensor_id = 0, int seed=-1) const;
 
 protected:
     virtual SpectrumC Li(const Scene &scene, Sampler &sampler, const RayC &ray, MaskC active = true) const = 0;

@@ -414,8 +414,8 @@ PYBIND11_MODULE(psdr_jit, m) {
 
 
     py::class_<Integrator, Object>(m, "Integrator")
-        .def("renderC", &Integrator::renderC, "scene"_a, "sensor_id"_a = 0, "npass"_a = 1)
-        .def("renderD", &Integrator::renderD, "scene"_a, "sensor_id"_a = 0);
+        .def("renderC", &Integrator::renderC, "scene"_a, "sensor_id"_a = 0, "seed"_a = -1)
+        .def("renderD", &Integrator::renderD, "scene"_a, "sensor_id"_a = 0, "seed"_a = -1);
 
     py::class_<FieldExtractionIntegrator, Integrator>(m, "FieldExtractionIntegrator")
         .def(py::init<char*>());

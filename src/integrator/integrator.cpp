@@ -9,17 +9,23 @@
 
 NAMESPACE_BEGIN(psdr_jit)
 
-SpectrumC Integrator::renderC(const Scene &scene, int sensor_id, int npass) const {
+SpectrumC Integrator::renderC(const Scene &scene, int sensor_id, int seed) const {
     using namespace std::chrono;
     auto start_time = high_resolution_clock::now();
 
     const RenderOption &opts = scene.m_opts;
+
+    if (seed != -1) {
+        int64_t sample_count = static_cast<int64_t>(opts.height)*opts.width*opts.spp;
+        scene.m_samplers[0].seed(arange<UInt64C>(sample_count)+seed);
+    }
+    
     const int num_pixels = opts.width*opts.height;
     IntC idx = arange<IntC>(num_pixels);
     SpectrumC result = __render<false>(scene, sensor_id);
     
     auto end_time = high_resolution_clock::now();
-    if ( scene.m_opts.log_level ) {
+    if ( opts.log_level ) {
         std::stringstream oss;
         oss << "Rendered in " << duration_cast<duration<double>>(end_time - start_time).count() << " seconds.";
         log(oss.str().c_str());
@@ -29,9 +35,21 @@ SpectrumC Integrator::renderC(const Scene &scene, int sensor_id, int npass) cons
 }
 
 
-SpectrumD Integrator::renderD(const Scene &scene, int sensor_id) const {
+SpectrumD Integrator::renderD(const Scene &scene, int sensor_id, int seed) const {
     using namespace std::chrono;
     auto start_time = high_resolution_clock::now();
+    const RenderOption &opts = scene.m_opts;
+
+    int64_t sample_count = static_cast<int64_t>(opts.height)*opts.width*opts.sppe;
+    if (seed != -1) {
+        scene.m_samplers[0].seed(arange<UInt64C>(sample_count)+seed);
+    }
+    if ( opts.sppe > 0 && seed != -1) {
+        scene.m_samplers[1].seed(arange<UInt64C>(sample_count)+seed);
+    }
+    if ( opts.sppse > 0 && seed != -1) {
+        scene.m_samplers[2].seed(arange<UInt64C>(sample_count)+seed);
+    }
 
     // Interior integral
     SpectrumD result = __render<true>(scene, sensor_id);
