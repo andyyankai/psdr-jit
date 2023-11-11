@@ -210,6 +210,9 @@ std::pair<IntC, Spectrum<ad>> PathTracer::eval_secondary_edge(const Scene &scene
         valid &= its1.is_valid() && norm(its1.p - _p1) < ShadowEpsilon;
     }
 
+
+
+
     // calculate base_value
     FloatC      dist    = norm(_p2 - _p1),
                 cos2    = abs(dot(_its2.n, -_dir));
@@ -235,6 +238,9 @@ std::pair<IntC, Spectrum<ad>> PathTracer::eval_secondary_edge(const Scene &scene
     } else {
         BSDFArrayC bsdf_array = _its1.shape->bsdf();
         bsdf_val = bsdf_array->eval(_its1, d0_local, (valid));
+        if ( scene.m_emitter_env != nullptr ) {
+            valid &= neq(bsdf_array, nullptr);
+        }
     }
     // accounting for BSDF's asymmetry caused by shading normals
     FloatC correction = abs((_its1.wi.z()*dot(d0, _its1.n))/(d0_local.z()*dot(_dir, _its1.n)));
