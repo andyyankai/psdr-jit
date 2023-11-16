@@ -169,7 +169,7 @@ RayC PerspectiveCamera::sample_primary_ray(const Vector2fC &samples) const {
 
 
 RayD PerspectiveCamera::sample_primary_ray(const Vector2fD &samples) const {
-    Vector3fD d = normalize(transform_pos<FloatD>(m_sample_to_camera, concat(samples, Vectorf<1, false>(0.f))));
+    Vector3fD d = detach(normalize(transform_pos<FloatD>(m_sample_to_camera, concat(samples, Vectorf<1, false>(0.f)))));
     Matrix4fD m_to_world = m_to_world_left * m_to_world_raw * m_to_world_right;
     return RayD(
         transform_pos<FloatD>(m_to_world, zeros<Vector3fD>(slices(samples))),
