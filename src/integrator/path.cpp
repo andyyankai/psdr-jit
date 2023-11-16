@@ -121,6 +121,7 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
             its = its1;
         }
     }
+    drjit::eval(result);
     return result;
 }
 
