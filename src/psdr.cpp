@@ -51,6 +51,7 @@
 #include <psdr/integrator/field.h>
 #include <psdr/integrator/collocated.h>
 #include <psdr/integrator/path.h>
+#include <psdr/integrator/direct.h>
 
 #include <psdr/jit_optix_test.h>
 
@@ -430,5 +431,9 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def("preprocess_secondary_edges", &PathTracer::preprocess_secondary_edges, "scene"_a, "sensor_id"_a, "resolution"_a, "nrounds"_a = 1)
         .def_readwrite("hide_emitters", &PathTracer::m_hide_emitters);
 
+    py::class_<PathTracer, Integrator>(m, "Direct")
+        .def(py::init<int>(), "mis"_a = 2)
+        .def("preprocess_secondary_edges", &PathTracer::preprocess_secondary_edges, "scene"_a, "sensor_id"_a, "resolution"_a, "nrounds"_a = 1)
+        .def_readwrite("hide_emitters", &PathTracer::m_hide_emitters);
 
 }

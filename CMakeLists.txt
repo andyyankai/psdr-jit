@@ -142,6 +142,10 @@ set(PSDR_SOURCE_FILES
     ${PSDR_INCLUDE_DIR}/integrator/collocated.h
     ${PSDR_SOURCE_DIR}/integrator/collocated.cpp
 
+    ${PSDR_INCLUDE_DIR}/integrator/direct.h
+    ${PSDR_SOURCE_DIR}/integrator/direct.cpp
+
+
     ${PSDR_INCLUDE_DIR}/integrator/path.h
     ${PSDR_SOURCE_DIR}/integrator/path.cpp
 
