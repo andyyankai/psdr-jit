@@ -284,6 +284,8 @@ PYBIND11_MODULE(psdr_jit, m) {
         .def_readwrite("reflectance", &Diffuse::m_reflectance);
 
     py::class_<RoughConductor, BSDF>(m, "RoughConductorBSDF")
+        .def(py::init<>())
+        .def(py::init<const Bitmap1fD&, const Bitmap3fD&, const Bitmap3fD&>())
         .def_readwrite("alpha_u", &RoughConductor::m_alpha_u)
         .def_readwrite("alpha_v", &RoughConductor::m_alpha_v)
         .def_readwrite("eta", &RoughConductor::m_eta)
