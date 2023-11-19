@@ -10,6 +10,7 @@
 #include <psdr/bsdf/microfacet.h>
 #include <psdr/bsdf/microfacet_pv.h>
 #include <psdr/bsdf/normalmap.h>
+#include <psdr/bsdf/roughconductor.h>
 
 #include <psdr/emitter/area.h>
 
@@ -157,6 +158,23 @@ void Scene::add_BSDF(BSDF* bsdf, const char *bsdf_id, bool twoSide) {
     } else if (Microfacet *bsdf_buff = dynamic_cast<Microfacet *>(bsdf)) {
         if ( m_opts.log_level > 0 ) std::cout << "add_BSDF: " << "Microfacet" << " " << bsdf_id << std::endl;
         Microfacet *bsdf_temp = new Microfacet(bsdf_buff->m_specularReflectance, bsdf_buff->m_diffuseReflectance, bsdf_buff->m_roughness);
+        bsdf_temp->m_twoSide = twoSide;
+        bsdf_temp->m_id = bsdf_id;
+        m_bsdfs.push_back(bsdf_temp);
+
+        Scene::ParamMap &param_map = m_param_map;
+        std::stringstream oss1, oss2;
+        oss1 << "BSDF[" << m_bsdfs.size() - 1 << "]";
+        oss2 << "BSDF[id=" << bsdf_id << "]";
+        param_map.insert(Scene::ParamMap::value_type(oss1.str(), *bsdf_temp));
+
+        bool is_new;
+        std::tie(std::ignore, is_new) = param_map.insert(Scene::ParamMap::value_type(oss2.str(), *bsdf_temp));
+        PSDR_ASSERT_MSG(is_new, std::string("Duplicate BSDF id: ") + bsdf_id);
+
+    } else if (RoughConductor *bsdf_buff = dynamic_cast<RoughConductor *>(bsdf)) {
+        if ( m_opts.log_level > 0 ) std::cout << "add_BSDF: " << "RoughConductor" << " " << bsdf_id << std::endl;
+        RoughConductor *bsdf_temp = new RoughConductor(bsdf_buff->m_alpha_u, bsdf_buff->m_alpha_v, bsdf_buff->m_eta, bsdf_buff->m_k, bsdf_buff->m_specular_reflectance);
         bsdf_temp->m_twoSide = twoSide;
         bsdf_temp->m_id = bsdf_id;
         m_bsdfs.push_back(bsdf_temp);
