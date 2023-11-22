@@ -126,7 +126,7 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
 }
 
 
-void PathTracer::preprocess_secondary_edges(const Scene &scene, int sensor_id, const ScalarVector4i &reso, int nrounds) {
+void PathTracer::preprocess_secondary_edges(const Scene &scene, int sensor_id, const ScalarVector4i &reso, int nrounds, int seed) {
     PSDR_ASSERT(nrounds > 0);
     PSDR_ASSERT_MSG(scene.is_ready(), "Scene needs to be configured!");
 
@@ -146,7 +146,7 @@ void PathTracer::preprocess_secondary_edges(const Scene &scene, int sensor_id, c
     Vector3iC sample_base = gather<Vector3iC>(warpper->m_cells, idx);
 
     Sampler sampler;
-    sampler.seed(arange<UInt64C>(num_samples));
+    sampler.seed(arange<UInt64C>(num_samples) + seed);
 
     FloatC result = zeros<FloatC>(num_cells);
     for ( int j = 0; j < nrounds; ++j ) {

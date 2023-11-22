@@ -10,7 +10,7 @@ public:
     virtual ~PathTracer();
 
     bool m_hide_emitters = false; 
-    void preprocess_secondary_edges(const Scene &scene, int sensor_id, const ScalarVector4i &reso, int nrounds = 1);
+    void preprocess_secondary_edges(const Scene &scene, int sensor_id, const ScalarVector4i &reso, int nrounds = 1, int seed = 0);
 
 protected:
     SpectrumC Li(const Scene &scene, Sampler &sampler, const RayC &ray, MaskC active = true) const override;
