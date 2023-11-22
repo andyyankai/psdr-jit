@@ -55,19 +55,19 @@ SpectrumD Integrator::renderD(const Scene &scene, int sensor_id, int seed, IntD 
     auto start_time = high_resolution_clock::now();
     const RenderOption &opts = scene.m_opts;
 
-    int64_t sample_count = static_cast<int64_t>(opts.height)*opts.width*opts.spp;
-    if (seed != -1) {
+    int64_t num_pixels = static_cast<int64_t>(opts.height)*opts.width;
+    if (opts.spp > 0 && seed != -1) {
         if (pix_id == -1) {
-            scene.m_samplers[0].seed(arange<UInt64C>(sample_count)+seed);
+            scene.m_samplers[0].seed(arange<UInt64C>(num_pixels * opts.spp) + seed);
         } else {
-            scene.m_samplers[0].seed(arange<UInt64C>((pix_id.size()*opts.spp))+seed);
+            scene.m_samplers[0].seed(arange<UInt64C>((pix_id.size()*opts.spp)) + seed);
         }
     }
-    if ( opts.sppe > 0 && seed != -1) {
-        scene.m_samplers[1].seed(arange<UInt64C>(sample_count)+seed);
+    if (opts.sppe > 0 && seed != -1) {
+        scene.m_samplers[1].seed(arange<UInt64C>(num_pixels * opts.sppe) + seed);
     }
-    if ( opts.sppse > 0 && seed != -1) {
-        scene.m_samplers[2].seed(arange<UInt64C>(sample_count)+seed);
+    if (opts.sppse > 0 && seed != -1) {
+        scene.m_samplers[2].seed(arange<UInt64C>(num_pixels * opts.sppse) + seed);
     }
 
     // Interior integral
