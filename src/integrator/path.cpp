@@ -205,12 +205,13 @@ std::pair<IntC, Spectrum<ad>> PathTracer::eval_secondary_edge(const Scene &scene
         camera_ray = sensor.sample_primary_ray(Vector2fD(sds.q));
         its1 = scene.ray_intersect<true, false>(camera_ray, valid);
         valid &= detach(its1.is_valid() )&& norm(detach(its1.p) - _p1) < ShadowEpsilon;
+        valid &= detach(neq(its1.shape->bsdf(), nullptr));
     } else {
         camera_ray = sensor.sample_primary_ray(sds.q);
         its1 = scene.ray_intersect<false>(camera_ray, valid);
         valid &= its1.is_valid() && norm(its1.p - _p1) < ShadowEpsilon;
+        valid &= neq(its1.shape->bsdf(), nullptr);
     }
-
 
 
 
