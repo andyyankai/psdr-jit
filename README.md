@@ -101,7 +101,11 @@ cv2.imwrite("psdr_jit_diff_debug.exr", output)
 ```
 
 ### More Tutorial
-More tutorial in [`tutorial`](https://github.com/andyyankai/psdr-jit/tree/main/tutorials) folder
+gradient evaluation tutorial in [`tutorial`](https://github.com/andyyankai/psdr-jit/tree/main/tutorials) folder
+
+Object level optimization example: [`Neural-PBIR`](https://neural-pbir.github.io/) (ICCV 2023)
+
+Scene level optimization example: [`psdr-room`](https://github.com/andyyankai/psdr-room) (SIGGRAPH ASIA 2023)
 
 ### Project based on psdr-jit
 TBA
