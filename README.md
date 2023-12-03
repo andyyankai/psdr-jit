@@ -107,5 +107,7 @@ Object level optimization example: [`Neural-PBIR`](https://neural-pbir.github.io
 
 Scene level optimization example: [`psdr-room`](https://github.com/andyyankai/psdr-room) (SIGGRAPH ASIA 2023)
 
+SDF+Nerf optimization example: to be released
+
 ### Project based on psdr-jit
 TBA
