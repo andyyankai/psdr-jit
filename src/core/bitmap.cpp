@@ -83,9 +83,17 @@ typename Bitmap<channels>::template Value<ad> Bitmap<channels>::eval(Vector2f<ad
             uv.y() += -.5f+detach(m_scale)/2;
             uv += detach(m_trans);
         }
-          
-        uv -= floor(uv);
-        uv *= Vector2f<ad>(envmap_mode ? m_resolution : m_resolution - 1);
+
+        if (envmap_mode) {
+            uv.x() -= 0.5 / width;
+            uv -= floor(uv);
+            uv.x() *= m_resolution.x();
+            uv.y() *= m_resolution.y() - 1;
+        }
+        else {
+            uv -= floor(uv);
+            uv *= m_resolution - 1;
+        }
 
         Vector2i<ad> pos = floor2int<Vector2i<ad>, Vector2f<ad>>(uv);
         Vector2f<ad> w1 = uv - Vector2f<ad>(pos), w0 = 1.0f - w1;
