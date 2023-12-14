@@ -3,6 +3,7 @@
 #include <psdr/core/bitmap.h>
 #include <psdr/core/transform.h>
 #include <drjit/math.h>
+#include <drjit/idiv.h>
 
 NAMESPACE_BEGIN(psdr_jit)
 
@@ -44,7 +45,7 @@ void Bitmap<channels>::load_openexr(const char *file_name) {
 
 template <int channels>
 template <bool ad>
-typename Bitmap<channels>::template Value<ad> Bitmap<channels>::eval(Vector2f<ad> uv, bool flip_v) const {
+typename Bitmap<channels>::template Value<ad> Bitmap<channels>::eval(Vector2f<ad> uv, bool flip_v, bool envmap_mode) const {
     const int width = m_resolution.x(), height = m_resolution.y();
 
     if ( static_cast<int>(slices<ValueD>(m_data)) != width*height )
@@ -82,31 +83,36 @@ typename Bitmap<channels>::template Value<ad> Bitmap<channels>::eval(Vector2f<ad
             uv.y() += -.5f+detach(m_scale)/2;
             uv += detach(m_trans);
         }
-
           
         uv -= floor(uv);
-        uv *= Vector2f<ad>(m_resolution - 1);
+        uv *= Vector2f<ad>(envmap_mode ? m_resolution : m_resolution - 1);
 
         Vector2i<ad> pos = floor2int<Vector2i<ad>, Vector2f<ad>>(uv);
         Vector2f<ad> w1 = uv - Vector2f<ad>(pos), w0 = 1.0f - w1;
-        pos = minimum(pos, m_resolution - 2);
 
-        //Int<ad> idx = pos.y()*width + pos.x();
-        Int<ad> idx = fmadd(pos.y(), width, pos.x());
-
+        Int<ad> yw, xp1;
+        if (envmap_mode) {
+            yw = minimum(pos.y(), m_resolution.y() - 2) * width;
+            xp1 = imod(pos.x() + 1, m_resolution.x()); 
+        }
+        else {
+            pos = minimum(pos, m_resolution - 2);
+            yw = pos.y() * width;
+            xp1 = pos.x() + 1; 
+        }
 
         Value<ad> v00, v10, v01, v11;
         if constexpr ( ad ) {
-            v00 = gather<ValueD>(m_data, idx);
-            v10 = gather<ValueD>(m_data, idx + 1);
-            v01 = gather<ValueD>(m_data, idx + width);
-            v11 = gather<ValueD>(m_data, idx + width + 1);
+            v00 = gather<ValueD>(m_data, yw + pos.x());
+            v10 = gather<ValueD>(m_data, yw + xp1);
+            v01 = gather<ValueD>(m_data, yw + pos.x() + width);
+            v11 = gather<ValueD>(m_data, yw + xp1 + width);
         } else {
             const ValueC &data = detach(m_data);
-            v00 = gather<ValueC>(data, idx);
-            v10 = gather<ValueC>(data, idx + 1);
-            v01 = gather<ValueC>(data, idx + width);
-            v11 = gather<ValueC>(data, idx + width + 1);
+            v00 = gather<ValueC>(data, yw + pos.x());
+            v10 = gather<ValueC>(data, yw + xp1);
+            v01 = gather<ValueC>(data, yw + pos.x() + width);
+            v11 = gather<ValueC>(data, yw + xp1 + width);
         }
 
         // Bilinear interpolation
@@ -121,10 +127,10 @@ typename Bitmap<channels>::template Value<ad> Bitmap<channels>::eval(Vector2f<ad
 template struct Bitmap<1>;
 template struct Bitmap<3>;
 
-template FloatC Bitmap<1>::eval<false>(Vector2fC, bool) const;
-template FloatD Bitmap<1>::eval<true>(Vector2fD, bool) const;
+template FloatC Bitmap<1>::eval<false>(Vector2fC, bool, bool) const;
+template FloatD Bitmap<1>::eval<true>(Vector2fD, bool, bool) const;
 
-template Vector3fC Bitmap<3>::eval<false>(Vector2fC, bool) const;
-template Vector3fD Bitmap<3>::eval<true>(Vector2fD, bool) const;
+template Vector3fC Bitmap<3>::eval<false>(Vector2fC, bool, bool) const;
+template Vector3fD Bitmap<3>::eval<true>(Vector2fD, bool, bool) const;
 
 NAMESPACE_END(psdr_jit)

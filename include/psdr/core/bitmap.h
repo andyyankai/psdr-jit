@@ -29,7 +29,7 @@ struct Bitmap {
         m_data = ValueD(value);
     }
 
-    template <bool ad> Value<ad> eval(Vector2f<ad> uv, bool flip_v = true) const;
+    template <bool ad> Value<ad> eval(Vector2f<ad> uv, bool flip_v = true, bool envmap_mode = false) const;
 
     ScalarVector2i m_resolution;
     ValueD m_data;

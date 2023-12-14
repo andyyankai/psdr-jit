@@ -27,7 +27,7 @@ void EnvironmentMap::configure() {
     // m_cube_distrb.set_resolution(ScalarVector2i(width, height));
 
     Vector2fC uv = (m_cell_distrb.m_cells + Vector2fC(.5f, .5f))*m_cell_distrb.m_unit;
-    SpectrumC val = m_radiance.eval<false>(uv, false);
+    SpectrumC val = m_radiance.eval<false>(uv, false, true);
     FloatC theta = ((arange<IntC>(width*height) % (height)) + .5f)*(Pi/static_cast<float>(height));  
     m_cell_distrb.set_mass(rgb2luminance<false>(val)*sin(theta));
 
@@ -66,9 +66,9 @@ Spectrum<ad> EnvironmentMap::eval_direction(const Vector3f<ad> &wi, Mask<ad> act
     Vector2f<ad> uv(atan2(v.x(), -v.z())*InvTwoPi, safe_acos(v.y())*InvPi);
     uv -= floor(uv);
     if constexpr ( ad ) {
-        return m_radiance.eval<true>(uv, false)*m_scale;
+        return m_radiance.eval<true>(uv, false, true)*m_scale;
     } else {
-        return m_radiance.eval<false>(uv, false)*detach(m_scale);
+        return m_radiance.eval<false>(uv, false, true)*detach(m_scale);
     }
 }
 
