@@ -217,10 +217,10 @@ std::pair<IntC, Spectrum<ad>> PathTracer::eval_secondary_edge(const Scene &scene
 
     // calculate base_value
     FloatC      dist    = norm(_p2 - _p1),
-                cos2    = abs(dot(_its2.n, -_dir));
+                cos2    = abs(dot(bss.n, -_dir));
     Vector3fC   e       = cross(bss.edge, _dir);
     FloatC      sinphi  = norm(e);
-    Vector3fC   proj    = normalize(cross(e, _its2.n));
+    Vector3fC   proj    = normalize(cross(e, bss.n));
     FloatC      sinphi2 = norm(cross(_dir, proj));
     FloatC      base_v  = (_its1.t/dist)*(sinphi/sinphi2)*cos2;
     valid &= (sinphi > Epsilon) && (sinphi2 > Epsilon);
@@ -250,7 +250,7 @@ std::pair<IntC, Spectrum<ad>> PathTracer::eval_secondary_edge(const Scene &scene
 
     SpectrumC value0 = (bsdf_val*_its2.Le(valid)*(base_v*sds.sensor_val/bss.pdf)) & valid;
     if constexpr ( ad ) {
-        Vector3fC n = normalize(cross(_its2.n, proj));
+        Vector3fC n = normalize(cross(bss.n, proj));
         value0 *= sign(dot(e, bss.edge2))*sign(dot(e, n));
         const Vector3fD &v0 = tri_info.p0,
                         &e1 = tri_info.e1,

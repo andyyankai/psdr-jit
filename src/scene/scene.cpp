@@ -1040,12 +1040,13 @@ BoundarySegSampleDirect Scene::sample_boundary_segment_direct(const Vector3fC &s
     // Sample a point ps2 on a emitter
     PositionSampleC ps2 = sample_emitter_position<false>(p0, tail<2>(sample3), active);
     result.p2 = ps2.p;
+    result.n = ps2.n;
 
     // Construct the edge "ray" and check if it is valid
     Vector3fC e = result.p2 - p0;
     const FloatC distSqr = squared_norm(e);
     e /= safe_sqrt(distSqr);
-    const FloatC cosTheta = dot(ps2.n, -e);
+    const FloatC cosTheta = dot(result.n, -e);
 
     IntC sgn0 = sign<false>(dot(detach(info_n0), e), EdgeEpsilon),
          sgn1 = sign<false>(dot(detach(info_n1), e), EdgeEpsilon);

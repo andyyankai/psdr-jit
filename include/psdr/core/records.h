@@ -55,7 +55,7 @@ struct BoundarySegSampleDirect : public SampleRecord_<FloatC> {
     Vector3fC           edge, edge2;
 
     // Sample point on an emitter
-    Vector3fC           p2; // for indirect, p2 is a direction
+    Vector3fC           p2, n; // for indirect, p2 is a direction
 };
 
 template <typename Float_>
