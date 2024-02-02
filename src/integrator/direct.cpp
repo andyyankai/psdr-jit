@@ -75,6 +75,7 @@ Spectrum<ad> DirectIntegrator::__Li(const Scene &scene, Sampler &sampler, const 
                 pdf1 = bsdf_array->pdfC(its, wo_local, active_direct);
                 pdf1 *= G_val;
             }
+            active_direct &= neq(pdf1, 0.f);
             Float<ad> weight1 = mis_weight<ad>(ps.pdf, pdf1);
             if (m_mis == 0) {
                 weight1 = 1.0;
