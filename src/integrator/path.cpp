@@ -75,6 +75,7 @@ Spectrum<ad> PathTracer::__Li(const Scene &scene, Sampler &sampler, const Ray<ad
                 pdf1 = bsdf_array->pdfC(its, wo_local, active_direct);
                 pdf1 *= G_val;
             }
+            active_direct &= neq(pdf1, 0.f);
             Float<ad> weight1 = mis_weight<ad>(ps.pdf, pdf1);
             auto tmp_di = throughput * emitter_val * bsdf_val2 * weight1;
             result[active_direct] += tmp_di;
