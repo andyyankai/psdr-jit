@@ -89,9 +89,8 @@ BSDFSample<ad> MicrofacetPerVertex::__sample(const Intersection<ad>& _its, const
 
     BSDFSample<ad> bs;
     Float<ad> cos_theta_i = Frame<ad>::cos_theta(its.wi);
-    Float<ad> alpha_u = roughness;
-    Float<ad> alpha_v = roughness;
-    GGXDistribution distr(alpha_u, alpha_v);
+    Float<ad> alpha = sqr(roughness);
+    GGXDistribution distr(alpha);
 
     auto m_pair = distr.sample<ad>(its.wi, sample);
     Vector3f<ad> m = std::get<0>(m_pair);
@@ -134,9 +133,8 @@ Float<ad> MicrofacetPerVertex::__pdf(const Intersection<ad> &_its, const Vector3
     active &= cos_theta_i > 0.f && cos_theta_o > 0.f &&
               dot(its.wi, m) > 0.f && dot(wo, m) > 0.f;
 
-    Float<ad> alpha_u = roughness;
-    Float<ad> alpha_v = roughness;
-    GGXDistribution distr(alpha_u, alpha_v);
+    Float<ad> alpha = sqr(roughness);
+    GGXDistribution distr(alpha);
 
     Float<ad> result = (distr.eval<ad>(m) * distr.smith_g1<ad>(its.wi, m) /
                        (4.f * cos_theta_i));
