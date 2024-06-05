@@ -21,10 +21,11 @@ SpectrumC Integrator::renderC(const Scene &scene, int sensor_id, int seed, IntC 
     }
 
     if (seed != -1) {
+        auto seeds = arange<UInt64C>(sample_count) + seed;
         if (pix_id == -1) {
-            scene.m_samplers[0].seed(arange<UInt64C>(sample_count)+seed);
+            scene.m_samplers[0].seed(seeds);
         } else {
-            scene.m_samplers[0].seed(arange<UInt64C>(pix_id.size()*opts.spp)+seed);
+            scene.m_samplers[0].seed(gather<UInt64C>(seeds, repeat(pix_id, opts.spp)));
         }
     }
 
@@ -57,10 +58,11 @@ SpectrumD Integrator::renderD(const Scene &scene, int sensor_id, int seed, IntD 
 
     int64_t num_pixels = static_cast<int64_t>(opts.height)*opts.width;
     if (opts.spp > 0 && seed != -1) {
+        auto seeds = arange<UInt64C>(num_pixels * opts.spp) + seed;
         if (pix_id == -1) {
-            scene.m_samplers[0].seed(arange<UInt64C>(num_pixels * opts.spp) + seed);
+            scene.m_samplers[0].seed(seeds);
         } else {
-            scene.m_samplers[0].seed(arange<UInt64C>((pix_id.size()*opts.spp)) + seed);
+            scene.m_samplers[0].seed(gather<UInt64C>(seeds, repeat(pix_id, opts.spp)));
         }
     }
     if (opts.sppe > 0 && seed != -1) {
