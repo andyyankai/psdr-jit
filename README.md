@@ -24,6 +24,11 @@ Then compile and install `psdr-jit` via
 ```bash
 pip install .
 ```
+or
+```bash
+pip install --no-build-isolation -ve .
+```
+
 Notice that it would also install `drjit` as `psdr-jit` depends on it. `cudatoolkit` is also required.
 
 ## Getting Started
