@@ -39,26 +39,22 @@ Spectrum<ad> Microfacet::__eval(const Intersection<ad> &_its, const Vector3f<ad>
     Spectrum<ad> diffuse = m_diffuseReflectance.eval<ad>(its.uv) * InvPi;
 
     Vector3f<ad> H = normalize(its.wi + wo);
-    Float<ad> cos_theta_nh = Frame<ad>::cos_theta(H),
-              cos_theta_vh = dot(H, its.wi);
+    Float<ad> cos_theta_vh = dot(H, its.wi);
 
     Spectrum<ad> F0 = m_specularReflectance.eval<ad>(its.uv);
     Float<ad> roughness = m_roughness.eval<ad>(its.uv);
     Float<ad> alpha = sqr(roughness);
-    Float<ad> k = sqr(roughness + 1.f) / 8.f;
+    GGXDistribution distr(alpha);
 
     // GGX NDF term
-    Float<ad> tmp = alpha / (cos_theta_nh * cos_theta_nh * (sqr(alpha) - 1.f) + 1.f);
-    Float<ad> ggx = tmp * tmp * InvPi;
+    Float<ad> ggx = distr.eval<ad>(H);
 
     // Fresnel term
     Float<ad> coeff = cos_theta_vh * (-5.55473f * cos_theta_vh - 6.8316f);
     Spectrum<ad> fresnel = F0 + (1.f - F0) * pow(2.f, coeff);
 
     // Geometry term
-    Float<ad> smithG1 = cos_theta_nv / (cos_theta_nv * (1.f - k) + k);
-    Float<ad> smithG2 = cos_theta_nl / (cos_theta_nl * (1.f - k) + k);
-    Float<ad> smithG = smithG1 * smithG2;
+    Float<ad> smithG = distr.smith_g1<ad>(its.wi, H) * distr.smith_g1<ad>(wo, H);
 
     Spectrum<ad> numerator = ggx * smithG * fresnel;
     Float<ad> denominator = 4.f * cos_theta_nl * cos_theta_nv;
@@ -93,9 +89,7 @@ BSDFSample<ad> Microfacet::__sample(const Intersection<ad>& _its, const Vector3f
     Float<ad> alpha = sqr(m_roughness.eval<ad>(its.uv));
     GGXDistribution distr(alpha);
 
-    auto m_pair = distr.sample<ad>(its.wi, sample);
-    Vector3f<ad> m = std::get<0>(m_pair);
-    Float<ad> m_pdf = std::get<1>(m_pair);
+    auto [m, m_pdf] = distr.sample<ad>(its.wi, sample);
     bs.wo = fmsub(Vector3f<ad>(m), 2.f * dot(its.wi, m), its.wi);
     bs.eta = 1.0f; // TODO: Fix later
     bs.pdf = (m_pdf / (4.f * dot(bs.wo, m)));
