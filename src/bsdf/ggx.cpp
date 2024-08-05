@@ -28,7 +28,7 @@ Float<ad> GGXDistribution::eval(const Vector3f<ad>& m) const {
     else {
         result = rcp(Pi * alpha_uv * sqr(sqr(m.x() / detach(m_alpha_u)) + sqr(m.y() / detach(m_alpha_v)) + sqr(m.z())));
     }
-    return select(result * cos_theta > 1e-5f, result, 0.f);
+    return select(result * cos_theta > 1e-20f, result, 0.f);
 }
 
 
