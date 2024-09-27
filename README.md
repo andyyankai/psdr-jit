@@ -1,3 +1,4 @@
+[![PyPI version](https://badge.fury.io/py/psdr-jit.svg?kill_cache=1)](https://badge.fury.io/py/psdr-jit)
 [![DOI](https://zenodo.org/badge/530067467.svg)](https://zenodo.org/doi/10.5281/zenodo.13777324)
 # psdr-jit
 Path-space differentiable renderer with [`drjit`](https://drjit.readthedocs.io/en/latest/) as the numerical backend.
