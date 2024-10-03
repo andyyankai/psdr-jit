@@ -16,6 +16,7 @@
 
 #include <psdr/emitter/envmap.h>
 #include <psdr/sensor/perspective.h>
+#include <psdr/sensor/orthographic.h>
 #include <psdr/shape/mesh.h>
 
 #include <psdr/scene/scene_optix.h>
@@ -111,7 +112,15 @@ void Scene::add_Sensor(Sensor* sensor) {
         m_sensors.push_back(sensor_temp);
         build_param_map<Sensor >(m_param_map, m_sensors , "Sensor" );
         m_num_sensors = static_cast<int>(m_sensors.size());
-    } else {
+    } 
+    else if (OrthographicCamera *sensor_buff = dynamic_cast<OrthographicCamera *>(sensor)) {
+        Sensor *sensor_temp = new OrthographicCamera(*sensor_buff);
+        sensor_temp->m_to_world_raw = Matrix4fD(Matrix4fD(sensor_buff->m_to_world_raw));
+        m_sensors.push_back(sensor_temp);
+        build_param_map<Sensor >(m_param_map, m_sensors , "Sensor" );
+        m_num_sensors = static_cast<int>(m_sensors.size());
+    }
+    else {
         PSDR_ASSERT_MSG(0, "Unknown sensor type!");
     }
 }
