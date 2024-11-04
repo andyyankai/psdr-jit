@@ -15,7 +15,9 @@ public:
     Mesh() = default;
     ~Mesh() override;
 
-    void load_raw(const Vector3fC &new_vertex_positions, const Vector3iC &new_face_indices, bool verbose = false);
+    void load_raw(const Vector3fC &new_vertex_positions, const Vector3iC &new_face_indices, 
+                 const Vector2fC &new_vertex_uv = Vector2fC(), const Vector3iC &new_face_uv_indices = Vector3iC(), 
+                 bool verbose = false);
     void load(const char *fname, bool verbose = false);
     void configure();
     void prepare_optix_buffers();

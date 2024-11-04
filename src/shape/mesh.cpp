@@ -71,16 +71,24 @@ Mesh::~Mesh() {
 }
 
 
-void Mesh::load_raw(const Vector3fC &new_vertex_positions, const Vector3iC &new_face_indices, bool verbose) {
+void Mesh::load_raw(const Vector3fC &new_vertex_positions, const Vector3iC &new_face_indices, 
+                   const Vector2fC &new_vertex_uv, const Vector3iC &new_face_uv_indices, bool verbose) {
     using namespace std::chrono;
     
     m_num_vertices = slices(new_vertex_positions);
     // Loading vertex positions
     m_vertex_positions_raw = Vector3fD(new_vertex_positions);
-    // Loading vertex uv coordinates
-    m_has_uv = false;
-    m_vertex_uv = Vector2fD();
-    m_face_uv_indices = Vector3iD();
+    
+    // Loading vertex uv coordinates if provided
+    m_has_uv = slices(new_vertex_uv) > 0;
+    if (m_has_uv) {
+        m_vertex_uv = Vector2fD(new_vertex_uv);
+        m_face_uv_indices = Vector3iD(new_face_uv_indices);
+    } else {
+        m_vertex_uv = Vector2fD();
+        m_face_uv_indices = Vector3iD();
+    }
+
     m_num_faces = slices(new_face_indices);
     // Loading face indices
     m_face_indices = Vector3iD(new_face_indices);
@@ -151,8 +159,6 @@ void Mesh::load_raw(const Vector3fC &new_vertex_positions, const Vector3iC &new_
     }
     drjit::eval(); drjit::sync_thread();
     m_ready = false;
-
-
 }
 
 
