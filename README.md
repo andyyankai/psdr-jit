@@ -118,3 +118,5 @@ SDF+Nerf optimization example: to be released
 
 ### Project based on psdr-jit
 TBA
+
+AI Free checkpoint: 476ba6ef39e24474e85953ba3743bb0b967c797e
